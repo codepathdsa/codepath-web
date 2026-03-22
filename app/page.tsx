@@ -1,14 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ROADMAP } from './data';
 import { useProgress } from './hooks/useProgress';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
 
 export default function Home() {
   const { solvedState, toggleSolve, streak } = useProgress();
   const [openLevels, setOpenLevels] = useState<Record<string, boolean>>({ l1: true });
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const solvedCount = Object.keys(solvedState).length;
   const totalCount = ROADMAP.reduce((acc, lvl) => acc + lvl.topics.reduce((a, t) => a + t.problems_list.length, 0), 0);
@@ -31,6 +44,11 @@ export default function Home() {
           <li><Link href="#practice">Practice</Link></li>
           <li><Link href="#why">Why Written?</Link></li>
           <li><span style={{color:'var(--muted)', fontSize:'0.82rem'}}>✓ {solvedCount} solved</span></li>
+          {!user ? (
+            <li><Link href="/login" style={{ color: 'var(--ink2)', fontWeight: 500 }}>Log in</Link></li>
+          ) : (
+            <li><button onClick={() => createClient().auth.signOut()} style={{ background: 'none', border: 'none', color: 'var(--ink2)', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>Log out</button></li>
+          )}
           <li><Link href="#practice" className="nav-cta">Start Free →</Link></li>
         </ul>
       </nav>
