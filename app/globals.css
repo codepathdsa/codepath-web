@@ -1379,6 +1379,7 @@ strong { font-weight: 700; }
   .topic-row { position:relative; margin-bottom:10px; }
   .topic-row::before { content:''; position:absolute; left:-42px; top:24px; width:10px; height:10px; border-radius:50%; background:var(--border2); border:2px solid var(--bg); transition:background .2s; z-index:2; }
   .topic-row::after { content:''; position:absolute; left:-32px; top:28px; width:32px; height:2px; background:var(--border); }
+  .pattern-view-row::before, .pattern-view-row::after { display: none; }
   .topic-row.t-solved::before { background:var(--green); }
   .topic-row.t-partial::before { background:var(--amber); }
   .topic-row.t-active::before { background:var(--accent); }

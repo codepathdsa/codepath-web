@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ROADMAP } from './data';
+import { ROADMAP, ROADMAP_SD, PATTERN_LIBRARY } from './data';
 import { useProgress } from './hooks/useProgress';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
@@ -9,8 +9,9 @@ import ThemeToggle from '@/app/components/ThemeToggle';
 
 export default function Home() {
   const { solvedState, toggleSolve, streak } = useProgress();
-  const [openLevels, setOpenLevels] = useState<Record<string, boolean>>({ l1: true });
+  const [openLevels, setOpenLevels] = useState<Record<string, boolean>>({ l1: true, 'sd-l1': true });
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<'dsa' | 'sd' | 'patterns'>('dsa');
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -130,7 +131,13 @@ export default function Home() {
           </div>
 
           <div className="roadmap-wrap" id="roadmap-root">
-            {ROADMAP.map((lvl) => {
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
+              <button className={`btn ${activeTab === 'dsa' ? 'btn--primary' : 'btn--outline'}`} onClick={() => setActiveTab('dsa')}>Algorithms Track</button>
+              <button className={`btn ${activeTab === 'sd' ? 'btn--primary' : 'btn--outline'}`} onClick={() => setActiveTab('sd')}>System Design Focus</button>
+              <button className={`btn ${activeTab === 'patterns' ? 'btn--primary' : 'btn--outline'}`} onClick={() => setActiveTab('patterns')}>Pattern Library</button>
+            </div>
+
+            {activeTab !== 'patterns' && (activeTab === 'dsa' ? ROADMAP : ROADMAP_SD).map((lvl) => {
               const allP = lvl.topics.flatMap(t => t.problems_list);
               const s = allP.filter(p => solvedState[p.slug]?.status === 'solved').length;
               const t = allP.length;
@@ -207,6 +214,56 @@ export default function Home() {
                       })}
                     </div>
                   )}
+                </div>
+              );
+            })}
+
+            {activeTab === 'patterns' && PATTERN_LIBRARY.map(topic => {
+              const ts = topic.problems_list.filter(p => solvedState[p.slug]?.status === 'solved').length;
+              const tt = topic.problems_list.length;
+              const isTopicOpen = openTopics[topic.id];
+              let topicState = '';
+              if (tt > 0 && ts === tt) topicState = 't-solved';
+              else if (ts > 0) topicState = 't-partial';
+
+              return (
+                <div key={topic.id} className={`topic-row pattern-view-row ${topicState} ${isTopicOpen ? 'open' : ''}`}>
+                  <div className="topic-card-tree">
+                    <div className="topic-card-top" onClick={(e) => handleToggleTopic(topic.id, e)}>
+                      <div className="topic-icon-wrap">{topic.icon}</div>
+                      <div className="topic-info">
+                        <div className="topic-name-tree">{topic.name}</div>
+                        <div className="topic-chips">
+                          <span className={`chip ${topic.difficulty === 'easy' ? 'easy' : topic.difficulty === 'medium' ? 'med' : 'hard'}`}>{topic.difficulty}</span>
+                          <span className="chip">{topic.articles} articles</span>
+                        </div>
+                      </div>
+                      <div className="topic-right">
+                        <div className="topic-counts"><strong>{ts}</strong> / {tt} solved</div>
+                      </div>
+                      <button className="topic-expand-btn">▼</button>
+                    </div>
+                    
+                    {isTopicOpen && (
+                      <div className="problem-list">
+                        {topic.problems_list.map(p => {
+                          const isSolved = solvedState[p.slug]?.status === 'solved';
+                          return (
+                            <Link key={p.slug} className="problem-item" href={`/${p.slug}`}>
+                              <span 
+                                className={`p-status ${isSolved ? 'solved' : ''}`} 
+                                onClick={(e) => { e.preventDefault(); toggleSolve(p.slug); }}
+                              ></span>
+                              <span className="p-num">{p.num}</span>
+                              <span className="p-name">{p.name}</span>
+                              <span className={`p-diff diff-${p.diff.toLowerCase()}`}>{p.diff === 'E' ? 'Easy' : p.diff === 'M' ? 'Med' : 'Hard'}</span>
+                              <span className="p-read">Read →</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}

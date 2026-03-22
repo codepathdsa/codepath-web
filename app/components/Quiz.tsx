@@ -14,11 +14,17 @@ export default function Quiz({ question, options, answerIndex, explanation }: Qu
 
   const hasAnswered = selected !== null;
 
+  let safeOptions: string[] = [];
+  if (Array.isArray(options)) safeOptions = options;
+  else if (typeof options === 'string') {
+    try { safeOptions = JSON.parse(options); } catch (e) {}
+  }
+
   return (
     <div className="quiz-container">
       <div className="quiz-question">{question}</div>
       <div className="quiz-options">
-        {options.map((option, index) => {
+        {safeOptions.map((option, index) => {
           let btnClass = 'quiz-option';
           if (hasAnswered) {
             if (index === answerIndex) {

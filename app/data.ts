@@ -128,8 +128,18 @@ export const ROADMAP = [
       {num:'—',name:'CN: TCP/IP, DNS, HTTP',diff:'E',slug:'cn-fundamentals'},
       {num:'—',name:'OOPs: SOLID, Design Patterns',diff:'M',slug:'oops-fundamentals'},
     ]},
-    { id:'system-design', icon:'🏗️', name:'System Design', articles:15, problems:10, difficulty:'hard', desc:'Architecting scalable distributed systems.', problems_list:[
+  ]},
+];
+
+export const ROADMAP_SD = [
+  { id: 'sd-l1', level: 1, name: 'System Design Foundations', desc: 'Weeks 1–4 · Core distributed systems concepts', checkpoint: 'Start here.', topics: [
+    { id: 'system-design-core', icon: '🏗️', name: 'System Design', articles: 15, problems: 10, difficulty: 'hard', desc: 'Architecting scalable distributed systems.', problems_list: [
       {num:'—',name:'Design a URL Shortener',diff:'M',slug:'url-shortener'},
     ]},
   ]},
 ];
+
+export const PATTERN_LIBRARY = [...ROADMAP, ...ROADMAP_SD]
+  .flatMap(lvl => lvl.topics)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
