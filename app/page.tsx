@@ -35,36 +35,81 @@ export default function Home() {
         </ul>
       </nav>
 
-      <main className="editorial-layout">
-        <header className="hero" style={{ textAlign: 'center', padding: '80px 5%', maxWidth: 800, margin: '0 auto' }}>
-          <div className="hero-badge" style={{ display: 'inline-block', padding: '6px 14px', background: 'var(--accent-bg)', color: 'var(--accent)', borderRadius: 99, fontSize: '0.8rem', fontWeight: 600, marginBottom: 20 }}>
-            Now in open beta
-          </div>
-          <h1 style={{ fontSize: '3.4rem', fontFamily: 'var(--serif)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 24 }}>
-            Stop watching. <br/>Start reading.
-          </h1>
-          <p style={{ fontSize: '1.25rem', color: 'var(--ink2)', marginBottom: 40, lineHeight: 1.6 }}>
-            Master Data Structures & Algorithms through clear written explanations, structured roadmaps, and 500+ free problems. No videos, no fluff.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <Link href="#practice" className="btn btn--primary">Start Practicing →</Link>
-            <Link href="#why" className="btn btn--ghost">Why Written?</Link>
-          </div>
-        </header>
-
-        <section id="practice" className="container" style={{ paddingTop: 80, paddingBottom: 100 }}>
-          <div className="stats-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 24, borderBottom: '1px solid var(--border)', marginBottom: 40 }}>
+      <main>
+        <section className="hero">
+          <div className="hero-inner">
             <div>
-              <h2 style={{ fontFamily: 'var(--serif)', fontSize: '2rem', marginBottom: 8 }}>The Practice Tree</h2>
-              <p style={{ color: 'var(--muted)' }}>Solve top-down. Do not skip levels.</p>
+              <div className="hero-eyebrow">Written-first  No videos  No paywall</div>
+              <h1 className="hero-headline">
+                Learn DSA the way<br/>
+                <em>books taught CS.</em>
+              </h1>
+              <p className="hero-sub">
+                Deep written editorials for every problem. Clear explanations, multiple approaches, complexity analysis  all free. No subscription required. Ever.
+              </p>
+              <div className="hero-actions">
+                <Link href="#practice" className="btn btn--primary">Start Practicing →</Link>
+                <Link href="#why" className="btn btn--outline">Why written? </Link>
+              </div>
+              <div className="hero-proof">
+                <div className="proof-item"><span className="proof-num">500+</span><span className="proof-label">Free problems</span></div>
+                <div className="proof-divider"></div>
+                <div className="proof-item"><span className="proof-num">100%</span><span className="proof-label">Free, forever</span></div>
+                <div className="proof-divider"></div>
+                <div className="proof-item"><span className="proof-num">3</span><span className="proof-label">Faster to read than watch</span></div>
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '2rem', fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--accent)', lineHeight: 1 }}>{solvedCount}</div>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginTop: 4 }}>of {totalCount} Solved</div>
+            
+            <div className="preview-card reveal" style={{ opacity: 1, transform: 'none' }}>
+              <div className="preview-header">
+                <div className="preview-dot" style={{background:'#ff5f57'}}></div>
+                <div className="preview-dot" style={{background:'#febc2e'}}></div>
+                <div className="preview-dot" style={{background:'#28c840'}}></div>
+                <span className="preview-title">two-sum.html  CodePath Editorial</span>
+              </div>
+              <div className="preview-body">
+                <div className="preview-problem-title">#1. Two Sum</div>
+                <div className="preview-tags">
+                  <span className="badge badge--easy">Easy</span>
+                  <span className="badge badge--topic">Arrays</span>
+                  <span className="badge badge--topic">Hashing</span>
+                </div>
+                <div className="preview-section-label">Intuition</div>
+                <p className="preview-text">The brute force checks every pair in O(n). But we can do better: for each number <code>x</code>, we need to know if <code>target - x</code> already exists. A hash map gives us O(1) lookup</p>
+                <div className="preview-insight"><p>ð Key insight: store what you've <em>seen</em>, check what you <em>need</em>. One pass, no second loop.</p></div>
+              </div>
+              <div className="preview-footer">
+                <div className="complexity-pills"><span className="cpill">T: O(n)</span><span className="cpill">S: O(n)</span></div>
+                <span>3 approaches  5 min read</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="practice" className="practice-section">
+          <div className="practice-header">
+            <div className="practice-header-inner">
+              <div className="section-eyebrow">Structured Practice Path</div>
+              <h2 className="page-title">DSA Practice — Zero to FAANG Ready</h2>
+              <p className="page-sub">8 levels &middot; 16 topics &middot; 500+ problems. Follow the tree in order &mdash; written editorials, all free.</p>
+              
+              <div className="stats-bar">
+                <div className="stat-item"><div className="stat-num">{solvedCount}</div><div className="stat-label">Solved</div></div>
+                <div className="stat-divider"></div>
+                <div className="stat-item"><div className="stat-num">500<span style={{color:'var(--accent)'}}>+</span></div><div className="stat-label">Total problems</div></div>
+                <div className="stat-divider"></div>
+                <div className="stat-item"><div className="stat-num">8</div><div className="stat-label">Levels</div></div>
+                <div className="stat-divider"></div>
+                <div className="stat-item"><div className="stat-num">{streak}</div><div className="stat-label">🔥 Day streak</div></div>
+                <div className="overall-bar-wrap">
+                  <div className="overall-bar-label"><span>Overall progress</span><span>{percent}%</span></div>
+                  <div className="overall-bar"><div className="overall-bar-fill" style={{width: `${percent}%`}}></div></div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div id="roadmap-root">
+          <div className="roadmap-wrap" id="roadmap-root">
             {ROADMAP.map((lvl) => {
               const allP = lvl.topics.flatMap(t => t.problems_list);
               const s = allP.filter(p => solvedState[p.slug]?.status === 'solved').length;
