@@ -241,7 +241,7 @@ strong { font-weight: 700; }
   font-family: var(--mono); font-size: 0.875rem; line-height: 1.7;
   color: #d4d0c8;
 }
-/* syntax colours */
+/* syntax colours — legacy hand-applied classes */
 .c-kw  { color: #c792ea; }
 .c-fn  { color: #82aaff; }
 .c-cm  { color: #546e7a; font-style: italic; }
@@ -249,6 +249,68 @@ strong { font-weight: 700; }
 .c-num { color: #f78c6c; }
 .c-op  { color: #89ddff; }
 .c-type { color: #ffcb6b; }
+
+/* ── HIGHLIGHT.JS TOKEN COLOURS ──────────────────────────── */
+/* These map rehype-highlight output onto our existing palette */
+.hljs { color: #d4d0c8; background: transparent; }
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag { color: #c792ea; }
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-function { color: #82aaff; }
+
+.hljs-comment,
+.hljs-quote { color: #546e7a; font-style: italic; }
+
+.hljs-string,
+.hljs-doctag,
+.hljs-formula { color: #c3e88d; }
+
+.hljs-number,
+.hljs-literal { color: #f78c6c; }
+
+.hljs-operator,
+.hljs-punctuation { color: #89ddff; }
+
+.hljs-type,
+.hljs-class,
+.hljs-variable.language_,
+.hljs-attr { color: #ffcb6b; }
+
+.hljs-params { color: #d4d0c8; }
+
+.hljs-meta { color: #546e7a; }
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
+
+/* ── MDX ARTICLE CONTENT — extra polish ─────────────────── */
+/* Horizontal rules between sections */
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 36px 0;
+}
+
+/* Bold emphasis */
+.article-content strong { color: var(--ink); }
+
+/* Inline code — slight contrast boost inside article */
+.article-content p code,
+.article-content li code {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
 
 /* ── COMPLEXITY TABLE ────────────────────────────────────── */
 .complexity-table {

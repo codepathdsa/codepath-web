@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import ProblemInteractiveClient from './ProblemInteractiveClient';
 import PremiumGate from '@/app/components/PremiumGate';
+import { buildMdxComponents } from '@/app/components/mdxComponents';
+import rehypeHighlight from 'rehype-highlight';
 
 // Generates static metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -41,13 +43,12 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const { data: { user } } = await supabase.auth.getUser();
   const isAuthenticated = !!user;
 
-  // Build MDX component map — Premium is pre-bound with auth state so MDX
-  // files can just write <Premium>...</Premium> without any logic.
-  const mdxComponents = {
+  // Build full component map: styled pre/code/table + per-page Premium gate.
+  const mdxComponents = buildMdxComponents({
     Premium: ({ children }: { children: React.ReactNode }) => (
       <PremiumGate isAuthenticated={isAuthenticated}>{children}</PremiumGate>
     ),
-  };
+  });
 
   return (
     <>
@@ -109,7 +110,15 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="article-content">
-            <MDXRemote source={content} components={mdxComponents} />
+            <MDXRemote
+              source={content}
+              components={mdxComponents}
+              options={{
+                mdxOptions: {
+                  rehypePlugins: [rehypeHighlight],
+                },
+              }}
+            />
           </div>
         </article>
 
