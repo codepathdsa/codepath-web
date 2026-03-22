@@ -128,5 +128,8 @@ export const ROADMAP = [
       {num:'—',name:'CN: TCP/IP, DNS, HTTP',diff:'E',slug:'cn-fundamentals'},
       {num:'—',name:'OOPs: SOLID, Design Patterns',diff:'M',slug:'oops-fundamentals'},
     ]},
+    { id:'system-design', icon:'🏗️', name:'System Design', articles:15, problems:10, difficulty:'hard', desc:'Architecting scalable distributed systems.', problems_list:[
+      {num:'—',name:'Design a URL Shortener',diff:'M',slug:'url-shortener'},
+    ]},
   ]},
 ];

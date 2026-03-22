@@ -1,0 +1,67 @@
+---
+title: "System Design: URL Shortener"
+difficulty: "Medium"
+topics: ["System Design", "Databases", "Hashing"]
+readTime: "8 min read"
+approaches: 2
+companies: ["Google", "Facebook", "Amazon"]
+acceptance: "~N/A"
+leetcode_url: "https://example.com"
+---
+
+## 1. Requirements
+
+Before jumping into architecture, we must define the scope. In an interview, always ask clarifying questions.
+
+<div className="callout">
+  <p><strong>Functional Requirements:</strong></p>
+  <ul>
+    <li>Given a long URL, the service generates a shorter, unique alias.</li>
+    <li>When users visit the short URL, they are redirected to the original link.</li>
+    <li>Links expire after a default timespan (e.g., 5 years).</li>
+  </ul>
+</div>
+
+<div className="callout warning">
+  <p><strong>Non-functional Requirements (Scale):</strong></p>
+  <ul>
+    <li>Extremely low latency for redirects.</li>
+    <li>High availability. It is a read-heavy system.</li>
+    <li>Assume 100 million new URLs generated per month.</li>
+  </ul>
+</div>
+
+---
+
+## 2. API Design
+
+We need two primary endpoints:
+
+1. `POST /api/v1/data/shorten`
+   - **Body:** `{ originalUrl: "https://example.com/very/long", expireAt: "2029-01-01" }`
+   - **Returns:** `{ shortUrl: "hash123" }`
+
+2. `GET /api/v1/<short_url>`
+   - **Returns:** 301 HTTP Redirect to the original URL.
+
+---
+
+## 3. The Core Challenge: Hashing
+
+To generate a short URL, we need a unique hash. We can use Base62 encoding (A-Z, a-z, 0-9 = 62 characters). If we use 7 characters, we have `62^7 = 3.5 trillion` possible URLs.
+
+<Drill question="If two users submit the exact same long URL, should we return the same short URL or a completely new one? What are the tradeoffs?">
+  <p>If we return the <strong>same</strong> short URL, we save database space, but we must do a database lookup before generation, which increases write latency. Plus, users won't get isolated click-tracking metrics.</p>
+  <p>If we return a <strong>new</strong> short URL every time (by appending a user ID or random salt to the hash), we use more storage, but generation is faster and users get isolated metrics. In most commercial systems (like bit.ly), generating a sequence-based unique ID is preferred.</p>
+</Drill>
+
+---
+
+## 4. Scaling the Database
+
+Since this is a read-heavy system (reads outnumber writes 100:1), we should consider our database carefully. Relational databases (PostgreSQL) work fine, but NoSQL (Cassandra, DynamoDB) is often preferred here because we don't need complex joins, and we need massive horizontal read scalability.
+
+<Drill question="What changes in your architecture if the Read QPS increases 10x but writes stay constant?">
+  <p>Since reading a short link is incredibly repetitive, we should introduce a <strong>Caching Layer (Redis or Memcached)</strong> between our Application servers and the Database.</p>
+  <p>When a `GET` request comes in, we check Redis first. If the mapping is there (Cache Hit), we return the 301 redirect immediately. If not (Cache Miss), we query the DB, store it in Redis, and then return it. Given the pareto principle (20% of links get 80% of traffic), a cache will absorb almost all the 10x read spike.</p>
+</Drill>

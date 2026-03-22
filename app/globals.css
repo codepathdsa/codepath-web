@@ -1621,3 +1621,129 @@ strong { font-weight: 700; }
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── MDX DRILL COMPONENT (SYSTEM DESIGN) ─────────────────── */
+.drill-container {
+  margin: 40px 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  overflow: hidden;
+}
+
+.drill-header {
+  padding: 16px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.drill-icon {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.drill-question {
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.drill-interactive {
+  padding: 24px;
+}
+
+.drill-textarea {
+  width: 100%;
+  padding: 16px;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s;
+}
+
+.drill-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.drill-submit-btn {
+  margin-top: 16px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drill-submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.drill-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.drill-result {
+  animation: slideDownIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.drill-user-response {
+  padding: 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.drill-model-answer {
+  padding: 24px;
+  background: var(--green-bg);
+  color: var(--ink);
+}
+
+.drill-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.drill-model-answer .drill-label {
+  color: var(--green);
+}
+
+.drill-user-response p {
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-style: italic;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.drill-model-content {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.drill-model-content strong {
+  color: var(--ink);
+}

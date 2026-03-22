@@ -2,6 +2,7 @@ import type { MDXComponents } from 'mdx/types';
 import { CopyButton } from './CopyButton';
 import Spoiler from './Spoiler';
 import Quiz from './Quiz';
+import Drill from './Drill';
 import React from 'react';
 
 /**
@@ -95,6 +96,8 @@ export function buildMdxComponents(
     Spoiler: Spoiler as unknown as MDXComponents['Spoiler'],
     // Explicit Quiz component
     Quiz: Quiz as unknown as MDXComponents['Quiz'],
+    // Explicit Drill component for System Design
+    Drill: Drill as unknown as MDXComponents['Drill'],
     // Per-page extras (e.g. Premium)
     ...extras,
   };
