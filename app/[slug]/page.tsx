@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import ProblemInteractiveClient from './ProblemInteractiveClient';
+import PremiumGate from '@/app/components/PremiumGate';
 
 // Generates static metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -38,9 +39,15 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   // Authenticate user
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
 
-  // Premium gating logic can go here in the future
-  // if (data.premiumOnly && !user) { return <PremiumPaywall /> }
+  // Build MDX component map — Premium is pre-bound with auth state so MDX
+  // files can just write <Premium>...</Premium> without any logic.
+  const mdxComponents = {
+    Premium: ({ children }: { children: React.ReactNode }) => (
+      <PremiumGate isAuthenticated={isAuthenticated}>{children}</PremiumGate>
+    ),
+  };
 
   return (
     <>
@@ -102,7 +109,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="article-content">
-            <MDXRemote source={content} />
+            <MDXRemote source={content} components={mdxComponents} />
           </div>
         </article>
 

@@ -121,6 +121,8 @@ def twoSum(nums, target):
 
 **Complexity:** Time O(n log n) · Space O(n).
 
+<Premium>
+
 ### Approach 3 — HashMap (One Pass) ★ Optimal
 
 Iterate through the array once. For each element `nums[i]`, calculate `diff = target - nums[i]`. If `diff` is already in our hash map, we found the pair. Otherwise, add `nums[i]` to the map (mapping value to index) and continue.
@@ -160,3 +162,5 @@ Never submit without running through these mentally:
 <div className="callout warning">
   <p><strong>3. Can I use the same element twice?</strong> The problem explicitly says no. The one-pass approach is safe: <code>seen[n] = i</code> is only added <em>after</em> checking for the complement, so we never use index i for both values.</p>
 </div>
+
+</Premium>
