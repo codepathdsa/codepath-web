@@ -1,0 +1,162 @@
+---
+title: "#1. Two Sum"
+difficulty: "Easy"
+topics: ["Arrays", "Hashing"]
+readTime: "5 min read"
+approaches: 3
+companies: ["Google", "Amazon", "Meta"]
+acceptance: "~49% acceptance"
+leetcode_url: "https://leetcode.com/problems/two-sum/"
+---
+
+## Problem Statement
+
+Given an array of integers `nums` and an integer `target`, return *indices of the two numbers such that they add up to `target`*.
+
+You may assume that each input would have **exactly one solution**, and you may not use the same element twice. You can return the answer in any order.
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>nums = [2,7,11,15]</code>, <code>target = 9</code><br/>
+  Output: <code>[0,1]</code><br/>
+  Explanation: Because <code>nums[0] + nums[1] == 9</code>, we return [0, 1].</p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 2 ≤ nums.length ≤ 10⁴ · -10⁹ ≤ nums[i] ≤ 10⁹ · -10⁹ ≤ target ≤ 10⁹ · <strong>Exactly one valid answer exists.</strong></p>
+</div>
+
+## Intuition — Building the Insight
+
+Before jumping to code, let's build the core intuition. This is the step most people skip, and it's exactly why they struggle to solve *new* problems.
+
+Read the problem again: we want two numbers in the array that **sum to a target**. The naive question to ask: "can I just check every pair?"
+
+Yes — but that's O(n²). With n up to 10,000, that's up to 100 million operations. LeetCode will pass it, but interviewers expect better.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>For every number <code>x</code> we encounter, we don't need to search the whole array for its complement — we just need to know if <code>target - x</code> has appeared <em>before</em>. A hash map tells us this in O(1).</p>
+</div>
+
+This reframe — from "find a pair" to "check if complement exists in memory" — is the entire algorithm. Everything else is mechanics.
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brute Force (nested loops)</td>
+      <td>O(n²)</td>
+      <td>O(1)</td>
+      <td>Check every pair. Simple but slow.</td>
+    </tr>
+    <tr>
+      <td>Sort + Two Pointers</td>
+      <td>O(n log n)</td>
+      <td>O(n)</td>
+      <td>Elegant but loses original indices without extra work.</td>
+    </tr>
+    <tr className="best">
+      <td>HashMap (One Pass) ★ Best</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Single traversal, O(1) lookups.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Brute Force
+
+For each element `nums[i]`, scan every element `nums[j]` where `j > i`. Check if they sum to `target`.
+
+<div className="callout warning">
+  <p><strong>Why it works:</strong> You check every possible pair, so you'll definitely find the one that sums to target. <br/>
+  <strong>Why it's slow:</strong> n elements × n elements = O(n²) checks.</p>
+</div>
+
+```python
+def twoSum(nums, target):
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []
+```
+
+**Complexity:** Time O(n²) · Space O(1). Passes LeetCode but will fail in interviews for large inputs.
+
+### Approach 2 — Sort + Two Pointers
+
+Sort the array. Then use two pointers: one at the start (`left`) and one at the end (`right`). Move them based on whether the current sum is too small or too large.
+
+```python
+def twoSum(nums, target):
+    # Store (value, original_index) pairs
+    indexed = sorted(enumerate(nums), key=lambda x: x[1])
+
+    left, right = 0, len(indexed) - 1
+
+    while left < right:
+        current_sum = indexed[left][1] + indexed[right][1]
+
+        if current_sum == target:
+            return [indexed[left][0], indexed[right][0]]
+        elif current_sum < target:
+            left += 1   # need bigger sum
+        else:
+            right -= 1  # need smaller sum
+
+    return []
+```
+
+**Complexity:** Time O(n log n) · Space O(n).
+
+### Approach 3 — HashMap (One Pass) ★ Optimal
+
+Iterate through the array once. For each element `nums[i]`, calculate `diff = target - nums[i]`. If `diff` is already in our hash map, we found the pair. Otherwise, add `nums[i]` to the map (mapping value to index) and continue.
+
+<div className="insight">
+  <div className="insight-label">Why this works</div>
+  <p>We process elements left to right. When we're at index <code>i</code>, every element with index <code>j &lt; i</code> is already in the map. So when we look up <code>diff</code>, we're guaranteed it came before <code>i</code> — no duplicate index possible.</p>
+</div>
+
+```python
+def twoSum(nums, target):
+    seen = {}  # value : index
+
+    for i, n in enumerate(nums):
+        diff = target - n
+
+        if diff in seen:
+            return [seen[diff], i]  # found it!
+
+        seen[n] = i  # remember this value for later
+
+    return []
+```
+
+**Complexity:** Time O(n) · Space O(n). Optimal for this problem.
+
+## Edge Cases to Test
+
+Never submit without running through these mentally:
+
+<div className="callout">
+  <p><strong>1. Duplicate values:</strong> <code>nums = [3, 3]</code>, <code>target = 6</code> → Should return <code>[0, 1]</code>. The one-pass solution handles this because when we see the second 3, the first 3 is already in <code>seen</code>.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Negative numbers:</strong> Works perfectly, hash maps handle negative keys fine.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Can I use the same element twice?</strong> The problem explicitly says no. The one-pass approach is safe: <code>seen[n] = i</code> is only added <em>after</em> checking for the complement, so we never use index i for both values.</p>
+</div>

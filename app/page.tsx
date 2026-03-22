@@ -185,7 +185,7 @@ export default function Home() {
                                   {topic.problems_list.map(p => {
                                     const isSolved = solvedState[p.slug]?.status === 'solved';
                                     return (
-                                      <Link key={p.slug} className="problem-item" href={`/${p.slug}.html`}>
+                                      <Link key={p.slug} className="problem-item" href={`/${p.slug}`}>
                                         <span 
                                           className={`p-status ${isSolved ? 'solved' : ''}`} 
                                           onClick={(e) => { e.preventDefault(); toggleSolve(p.slug); }}
