@@ -5,6 +5,7 @@ import { ROADMAP } from './data';
 import { useProgress } from './hooks/useProgress';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 export default function Home() {
   const { solvedState, toggleSolve, streak } = useProgress();
@@ -44,6 +45,7 @@ export default function Home() {
           <li><Link href="#practice">Practice</Link></li>
           <li><Link href="#why">Why Written?</Link></li>
           <li><span style={{color:'var(--muted)', fontSize:'0.82rem'}}>✓ {solvedCount} solved</span></li>
+          <li><ThemeToggle /></li>
           {!user ? (
             <li><Link href="/login" style={{ color: 'var(--ink2)', fontWeight: 500 }}>Log in</Link></li>
           ) : (

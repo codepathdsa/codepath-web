@@ -28,6 +28,8 @@ You may assume that each input would have **exactly one solution**, and you may 
 
 ## Intuition — Building the Insight
 
+<Spoiler title="Reveal Core Intuition">
+
 Before jumping to code, let's build the core intuition. This is the step most people skip, and it's exactly why they struggle to solve *new* problems.
 
 Read the problem again: we want two numbers in the array that **sum to a target**. The naive question to ask: "can I just check every pair?"
@@ -40,6 +42,8 @@ Yes — but that's O(n²). With n up to 10,000, that's up to 100 million operati
 </div>
 
 This reframe — from "find a pair" to "check if complement exists in memory" — is the entire algorithm. Everything else is mechanics.
+
+</Spoiler>
 
 ## All 3 Approaches
 

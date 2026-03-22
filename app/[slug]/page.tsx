@@ -9,6 +9,7 @@ import ProblemInteractiveClient from './ProblemInteractiveClient';
 import PremiumGate from '@/app/components/PremiumGate';
 import { buildMdxComponents } from '@/app/components/mdxComponents';
 import rehypeHighlight from 'rehype-highlight';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 // Generates static metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -57,6 +58,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
         <ul className="nav-links">
           <li><Link href="/#practice">Practice</Link></li>
           <li><Link href="/#why">Why Written?</Link></li>
+          <li><ThemeToggle /></li>
           <li><Link href="/#practice" className="nav-cta">Back to Practice →</Link></li>
         </ul>
       </nav>

@@ -31,9 +31,23 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const scriptContent = `
+    (function() {
+      try {
+        var localTheme = window.localStorage.getItem('theme');
+        var theme = localTheme ? localTheme : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${instrumentSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: scriptContent }} />
+      </head>
       <body>{children}</body>
     </html>
   );
 }
+

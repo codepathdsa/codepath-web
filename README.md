@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodePath DSA
+
+CodePath is a written Data Structures & Algorithms (DSA) preparation platform for engineers who prefer reading over watching videos.
+
+Built with:
+- **Next.js 15** (App Router)
+- **MDX** (Markdown with React components)
+- **Supabase** (Authentication & eventual progress tracking)
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies and run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Adding New Problems
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All problems are written in MDX (Markdown) and stored in the `content/problems/` directory.
 
-## Learn More
+> **See [ADDING_PROBLEMS.md](ADDING_PROBLEMS.md) for the complete guide on the MDX syntax, components, and how to add a problem to the roadmap.**
 
-To learn more about Next.js, take a look at the following resources:
+## Technology Choices
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Content**: `next-mdx-remote` and `gray-matter` are used to parse Markdown files with YAML frontmatter at build time. Code blocks are automatically syntax-highlighted using `rehype-highlight` and `highlight.js`.
+- **Styling**: `globals.css` using custom properties (CSS variables).
+- **Authentication**: `supabase/ssr` to handle Google/GitHub OAuth and email logins.
