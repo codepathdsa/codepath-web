@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 
 /**
  * Client-side copy button for code blocks.
- * Reads text from a sibling <code> element.
+ * Receives the text to copy as a plain string (safe across the RSC boundary).
  */
-export function CopyButton({ getValue }: { getValue: () => string }) {
+export function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(getValue());
+      await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

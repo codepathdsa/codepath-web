@@ -41,7 +41,7 @@ function CodeBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>)
     <div className="code-block">
       <div className="code-header">
         <span className="code-lang">{lang || 'code'}</span>
-        <CopyButton getValue={() => rawText} />
+        <CopyButton value={rawText} />
       </div>
       <pre {...props}>{children}</pre>
     </div>
