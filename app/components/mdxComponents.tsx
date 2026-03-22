@@ -1,6 +1,7 @@
 import type { MDXComponents } from 'mdx/types';
 import { CopyButton } from './CopyButton';
 import Spoiler from './Spoiler';
+import Quiz from './Quiz';
 import React from 'react';
 
 /**
@@ -92,6 +93,8 @@ export function buildMdxComponents(
     blockquote: Blockquote as MDXComponents['blockquote'],
     // Explicit Spoiler component
     Spoiler: Spoiler as unknown as MDXComponents['Spoiler'],
+    // Explicit Quiz component
+    Quiz: Quiz as unknown as MDXComponents['Quiz'],
     // Per-page extras (e.g. Premium)
     ...extras,
   };

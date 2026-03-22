@@ -26,6 +26,18 @@ You may assume that each input would have **exactly one solution**, and you may 
   <p><strong>Constraints:</strong> 2 ≤ nums.length ≤ 10⁴ · -10⁹ ≤ nums[i] ≤ 10⁹ · -10⁹ ≤ target ≤ 10⁹ · <strong>Exactly one valid answer exists.</strong></p>
 </div>
 
+<Quiz 
+  question="Quick check: If you check every single pair using a nested loop, what would be the time complexity?" 
+  options={[
+    "O(n) - We only traverse the array once.", 
+    "O(n log n) - We sort the array first.", 
+    "O(n²) - We traverse the array N times for each N elements.", 
+    "O(1) - The answer is mathematically derived."
+  ]} 
+  answerIndex={2} 
+  explanation="Exactly! Checking every pair requires a nested loop, which compares n elements against n elements, leading to n * n (Quadratic) time complexity."
+/>
+
 ## Intuition — Building the Insight
 
 <Spoiler title="Reveal Core Intuition">
