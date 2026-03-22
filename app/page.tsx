@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ROADMAP, ROADMAP_SD, PATTERN_LIBRARY } from './data';
 import { useProgress } from './hooks/useProgress';
 import Link from 'next/link';
+import ActivityHeatmap from './components/ActivityHeatmap';
 import { createClient } from '@/utils/supabase/client';
 import ThemeToggle from '@/app/components/ThemeToggle';
 
@@ -127,6 +128,8 @@ export default function Home() {
                   <div className="overall-bar"><div className="overall-bar-fill" style={{width: `${percent}%`}}></div></div>
                 </div>
               </div>
+
+              <ActivityHeatmap />
             </div>
           </div>
 
