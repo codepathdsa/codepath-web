@@ -1,0 +1,160 @@
+---
+title: "Analyze Sorting Algorithms"
+difficulty: "Easy"
+topics: ["Time Complexity", "Sorting", "Big-O"]
+readTime: "5 min read"
+approaches: 2
+companies: ["Google", "Microsoft", "Amazon"]
+acceptance: "~72% acceptance"
+leetcode_url: ""
+---
+
+## Problem Statement
+
+Given the code implementations of **Bubble Sort**, **Merge Sort**, and **Quick Sort**, analyze each algorithm and determine its **best-case**, **worst-case**, and **average-case** time complexity, as well as its **space complexity**.
+
+<div className="callout">
+  <p><strong>Example:</strong><br/>
+  Input: An unsorted array <code>arr = [5, 3, 8, 1, 2]</code><br/>
+  Task: Identify which sorting algorithm runs in O(n log n) in the worst case.<br/>
+  Output: Merge Sort — it guarantees O(n log n) regardless of input.</p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Key Terms:</strong> Best case = most favorable input · Worst case = least favorable input · Average case = expected over random inputs · Space complexity = extra memory used beyond input.</p>
+</div>
+
+<Quiz
+  question="What is the worst-case time complexity of Bubble Sort?"
+  options='["O(n)", "O(n log n)", "O(n²)", "O(log n)"]'
+  answerIndex="2"
+  explanation="Bubble Sort compares adjacent elements and swaps them. In the worst case (reverse-sorted array), it performs n passes of n comparisons, giving O(n²)."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+Analyzing an algorithm's complexity is really just asking: **how many operations does this perform relative to input size n?**
+
+The trick is to count *loops and recursive calls*, not lines of code. A single line inside a nested loop that runs n × n times is O(n²).
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Every time you see a loop inside a loop, suspect O(n²). Every time you see the input being <em>halved</em> at each step, suspect O(log n). Combining them — looping n times while halving — gives O(n log n).</p>
+</div>
+
+Think of it like this:
+- **Bubble Sort**: two nested loops over n elements → O(n²)
+- **Merge Sort**: splits in half log n times, merges n elements each time → O(n log n)
+- **Quick Sort**: splits around a pivot, averages O(n log n) but degrades to O(n²) if pivot is always the smallest/largest
+
+</Spoiler>
+
+## All 2 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>What you're counting</th>
+      <th>Accuracy</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Manual Loop Counting</td>
+      <td>Nested loops, recursive calls</td>
+      <td>High for simple cases</td>
+      <td>Good first pass. Count loop iterations as a function of n.</td>
+    </tr>
+    <tr className="best">
+      <td>Recurrence Relations ★ Best</td>
+      <td>Mathematical breakdown</td>
+      <td>Exact</td>
+      <td>Essential for recursive algorithms like Merge Sort.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Manual Loop Counting
+
+Read the code and identify how many times each loop runs as a function of `n`. Multiply nested loops together.
+
+<div className="callout warning">
+  <p><strong>Rule of thumb:</strong> One loop = O(n). Nested loops = multiply their complexities. Loop that halves each iteration = O(log n).</p>
+</div>
+
+```python
+# Bubble Sort — count the loops
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):           # runs n times
+        for j in range(n - i - 1):  # runs ~n times
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+    # Two nested loops over n → O(n²)
+```
+
+```python
+# Merge Sort — spot the halving
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2         # halves input → log n levels
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)   # merge does O(n) work per level
+    # log n levels × O(n) work = O(n log n)
+```
+
+**Summary Table:**
+
+| Algorithm   | Best     | Average  | Worst    | Space  |
+|-------------|----------|----------|----------|--------|
+| Bubble Sort | O(n)     | O(n²)    | O(n²)    | O(1)   |
+| Merge Sort  | O(n log n) | O(n log n) | O(n log n) | O(n) |
+| Quick Sort  | O(n log n) | O(n log n) | O(n²)  | O(log n) |
+
+<Premium>
+
+### Approach 2 — Recurrence Relations (Recursive Algorithms)
+
+For recursive algorithms, write a **recurrence relation** then solve it using the **Master Theorem**.
+
+<div className="insight">
+  <div className="insight-label">Master Theorem (simplified)</div>
+  <p>For recurrences of the form <code>T(n) = a·T(n/b) + O(n^d)</code>:<br/>
+  If d &gt; log_b(a) → O(n^d) · If d = log_b(a) → O(n^d · log n) · If d &lt; log_b(a) → O(n^log_b(a))</p>
+</div>
+
+```
+Merge Sort recurrence:
+  T(n) = 2·T(n/2) + O(n)
+  a=2, b=2, d=1
+  log_b(a) = log_2(2) = 1 = d
+  → O(n^1 · log n) = O(n log n) ✓
+
+Quick Sort recurrence (average):
+  T(n) = 2·T(n/2) + O(n)   (balanced pivot on average)
+  → same as merge sort: O(n log n) ✓
+
+Quick Sort recurrence (worst — pivot always min/max):
+  T(n) = T(n-1) + O(n)
+  → O(n²) ✗
+```
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Already sorted input:</strong> Bubble Sort degrades to O(n) with an early-exit flag. Without it, it's still O(n²). Quick Sort degrades to O(n²).</p>
+</div>
+<div className="callout">
+  <p><strong>2. All elements identical:</strong> Most sorting algorithms handle this, but it reveals whether the implementation avoids unnecessary swaps.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Quick Sort pivot choice:</strong> Always picking the first element as pivot on a sorted array gives worst-case O(n²). Random pivot or median-of-three avoids this.</p>
+</div>
+
+</Premium>

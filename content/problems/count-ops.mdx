@@ -1,0 +1,170 @@
+---
+title: "Count Operations in Loop"
+difficulty: "Easy"
+topics: ["Time Complexity", "Big-O", "Loop Analysis"]
+readTime: "4 min read"
+approaches: 2
+companies: ["Amazon", "Apple", "Meta"]
+acceptance: "~80% acceptance"
+leetcode_url: ""
+---
+
+## Problem Statement
+
+Given a function with one or more loops, **count the total number of basic operations** performed as a function of the input size `n`. Express your answer in **Big-O notation**.
+
+<div className="callout">
+  <p><strong>Example 1 — Single Loop:</strong><br/>
+  <code>for i in range(n): print(i)</code><br/>
+  Operations: n prints → <strong>O(n)</strong></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2 — Nested Loop:</strong><br/>
+  <code>for i in range(n):</code><br/>
+  &nbsp;&nbsp;<code>for j in range(n): print(i, j)</code><br/>
+  Operations: n × n prints → <strong>O(n²)</strong></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> Focus on the dominant term only · Drop constants and lower-order terms · n represents the size of the input collection.</p>
+</div>
+
+<Quiz
+  question="How many times does the inner print execute? for i in range(n): for j in range(i): print(j)"
+  options='["n times", "n² times", "n(n-1)/2 times — still O(n²)", "n log n times"]'
+  answerIndex="2"
+  explanation="The inner loop runs 0, 1, 2, ..., n-1 times. That sums to n(n-1)/2 ≈ n²/2. We drop constants, so it's O(n²)."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+Counting operations is not about counting every single line. It's about identifying **which part of the code runs most often** and expressing that as a function of `n`.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Big-O is about <em>rate of growth</em>, not exact counts. Constants and lower-order terms don't matter as n grows large. <code>5n² + 3n + 100</code> is just <code>O(n²)</code>.</p>
+</div>
+
+The process:
+1. Identify the innermost operation (the thing being "done")
+2. Count how many times it runs as a function of n
+3. Drop constants and non-dominant terms
+4. That's your Big-O
+
+</Spoiler>
+
+## All 2 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time to Apply</th>
+      <th>Best For</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Direct Counting</td>
+      <td>Fast</td>
+      <td>Simple loops</td>
+      <td>Trace the loop bounds and multiply.</td>
+    </tr>
+    <tr className="best">
+      <td>Summation Formula ★ Best</td>
+      <td>Medium</td>
+      <td>Triangular / variable loops</td>
+      <td>Use math when inner loop bound depends on outer variable.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Direct Counting
+
+Trace each loop and multiply their iteration counts together.
+
+```python
+# Pattern 1: Single loop → O(n)
+for i in range(n):
+    do_something()   # runs n times
+
+# Pattern 2: Nested loops, same bound → O(n²)
+for i in range(n):
+    for j in range(n):
+        do_something()   # runs n × n times
+
+# Pattern 3: Loop that halves → O(log n)
+i = n
+while i > 0:
+    do_something()
+    i //= 2   # n → n/2 → n/4 → ... → 1: log₂(n) steps
+
+# Pattern 4: Nested — outer O(n), inner O(log n) → O(n log n)
+for i in range(n):
+    j = n
+    while j > 0:
+        do_something()
+        j //= 2
+```
+
+<div className="callout">
+  <p><strong>Golden rules:</strong><br/>
+  Sequential blocks → <strong>add</strong> complexities, then keep the dominant term.<br/>
+  Nested blocks → <strong>multiply</strong> complexities.</p>
+</div>
+
+```python
+# Sequential → O(n) + O(n²) = O(n²)  (dominant term wins)
+for i in range(n):        # O(n)
+    do_a()
+for i in range(n):        # O(n)
+    for j in range(n):    # → O(n²)
+        do_b()
+```
+
+<Premium>
+
+### Approach 2 — Summation Formula (Triangular Loops)
+
+When the inner loop bound depends on the outer variable, you can't just multiply — you need to **sum the series**.
+
+<div className="insight">
+  <div className="insight-label">Key Formula</div>
+  <p>Sum of 1 + 2 + 3 + ... + n = n(n+1)/2 ≈ O(n²)<br/>
+  This is the <em>triangular number</em> and appears constantly in algorithm analysis.</p>
+</div>
+
+```python
+# Inner loop runs i times, outer runs n times
+# Total = 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
+for i in range(n):
+    for j in range(i):    # j goes 0..i, not 0..n
+        do_something()
+```
+
+```python
+# Trickier: what about this?
+for i in range(n):
+    for j in range(i, n):   # j goes i..n
+        do_something()
+# Inner runs: n, n-1, n-2, ..., 1
+# Sum = n(n+1)/2 = O(n²) — same result, different direction
+```
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Loop with a fixed inner bound:</strong> <code>for i in range(n): for j in range(10):</code> — the inner loop runs exactly 10 times, a constant. Total: O(10n) = <strong>O(n)</strong>.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Early exit (break):</strong> A loop with <code>break</code> is O(n) <em>worst case</em> but O(1) best case. Big-O typically refers to worst case unless stated otherwise.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Misleading constant multipliers:</strong> <code>for i in range(3 * n):</code> is still O(n). Constants are always dropped. This trips up beginners who count 3n and say "O(3n)".</p>
+</div>
+
+</Premium>

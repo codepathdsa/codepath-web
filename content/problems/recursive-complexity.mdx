@@ -1,0 +1,196 @@
+---
+title: "Recursive Complexity"
+difficulty: "Medium"
+topics: ["Time Complexity", "Recursion", "Recurrence Relations"]
+readTime: "7 min read"
+approaches: 3
+companies: ["Google", "Meta", "Microsoft"]
+acceptance: "~61% acceptance"
+leetcode_url: ""
+---
+
+## Problem Statement
+
+Given a recursive function, determine its **time and space complexity**. You must account for the number of recursive calls, the work done per call, and the **call stack depth** for space complexity.
+
+<div className="callout">
+  <p><strong>Example — Fibonacci (Naive):</strong><br/>
+  <code>def fib(n): return fib(n-1) + fib(n-2)</code><br/>
+  Time: <strong>O(2ⁿ)</strong> — exponential, each call branches into two.<br/>
+  Space: <strong>O(n)</strong> — maximum call stack depth is n.</p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Key distinction:</strong> Space complexity of a recursive function includes the <strong>call stack</strong>. Even if you use no extra data structures, deep recursion uses O(depth) space.</p>
+</div>
+
+<Quiz
+  question="What is the time complexity of this: def sum(n): return 0 if n == 0 else n + sum(n-1)?"
+  options='["O(1)", "O(log n)", "O(n)", "O(n²)"]'
+  answerIndex="2"
+  explanation="Each call reduces n by 1 and does O(1) work. The function is called n+1 times total, making it O(n) time and O(n) space (call stack depth)."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+Recursive complexity is tricky because you can't just count a loop. Instead, think in terms of a **recursion tree**: 
+
+- How many **nodes** are in the tree? → Total recursive calls → relates to **time complexity**
+- How **deep** is the tree? → Max call stack at once → relates to **space complexity**
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Draw the recursion tree. Count the total nodes for time complexity. Count the maximum depth (longest path from root to leaf) for space complexity.</p>
+</div>
+
+For a function that makes **2 recursive calls** and reduces the problem by **half** each time:
+- Depth = log n
+- Nodes = 2⁰ + 2¹ + 2² + ... + 2^(log n) = 2n - 1 ≈ O(n)
+
+For a function that makes **2 recursive calls** and reduces by **1** each time (like naive Fibonacci):
+- Depth = n
+- Nodes = 2⁰ + 2¹ + ... + 2ⁿ ≈ O(2ⁿ)
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Best For</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Recursion Tree</td>
+      <td>Visual, intuitive</td>
+      <td>Simple branching</td>
+      <td>Draw it out, count nodes and depth.</td>
+    </tr>
+    <tr>
+      <td>Substitution Method</td>
+      <td>Mathematical</td>
+      <td>Proving a guess</td>
+      <td>Guess the answer, prove by induction.</td>
+    </tr>
+    <tr className="best">
+      <td>Master Theorem ★ Best</td>
+      <td>Fast formula</td>
+      <td>Standard divide-and-conquer</td>
+      <td>Covers most recursive algorithms in interviews.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Recursion Tree
+
+Draw the tree. Label each node with the work done at that call. Sum up all the work.
+
+```python
+# Example: Binary recursion, halving input
+def f(n):
+    if n <= 1:
+        return 1
+    return f(n // 2) + f(n // 2) + n   # O(n) work per call level
+
+# Recursion tree for n=8:
+#          f(8)          → n=8 work
+#        /       \
+#     f(4)       f(4)    → 2 × n/2 = n work
+#    /    \     /    \
+#  f(2)  f(2) f(2) f(2)  → 4 × n/4 = n work
+# ... log n levels, each does O(n) work total
+# → O(n log n)
+```
+
+```
+Work per level:
+  Level 0: n
+  Level 1: 2 × (n/2) = n
+  Level 2: 4 × (n/4) = n
+  ...
+  Level log n: n × (1) = n
+  Total: n × log n levels = O(n log n)
+```
+
+### Approach 2 — Substitution Method
+
+<div className="callout warning">
+  <p><strong>When to use:</strong> When you already have a guess and need to verify it — common in formal analysis or tough interviews.</p>
+</div>
+
+```
+Guess T(n) = O(n log n) for T(n) = 2T(n/2) + n
+
+Assume T(k) ≤ c·k·log(k) for all k < n.
+Then:
+  T(n) = 2T(n/2) + n
+       ≤ 2·c·(n/2)·log(n/2) + n
+       = c·n·(log n - 1) + n
+       = c·n·log n - c·n + n
+       ≤ c·n·log n    (for c ≥ 1)
+
+Confirmed: T(n) = O(n log n) ✓
+```
+
+<Premium>
+
+### Approach 3 — Master Theorem ★ Optimal
+
+For recurrences of the form **T(n) = a·T(n/b) + O(n^d)**, the Master Theorem gives a direct answer.
+
+<div className="insight">
+  <div className="insight-label">Master Theorem — 3 Cases</div>
+  <p>
+  Let c = log_b(a) (the "critical exponent")<br/><br/>
+  Case 1: d &lt; c → <strong>T(n) = O(n^c)</strong> — recursion dominates<br/>
+  Case 2: d = c → <strong>T(n) = O(n^d · log n)</strong> — balanced<br/>
+  Case 3: d &gt; c → <strong>T(n) = O(n^d)</strong> — work-per-level dominates
+  </p>
+</div>
+
+```python
+# Apply to common algorithms:
+
+# Merge Sort: T(n) = 2T(n/2) + O(n)
+#   a=2, b=2, d=1 → c = log_2(2) = 1 = d
+#   Case 2 → O(n log n) ✓
+
+# Binary Search: T(n) = T(n/2) + O(1)
+#   a=1, b=2, d=0 → c = log_2(1) = 0 = d
+#   Case 2 → O(log n) ✓
+
+# Naive Fibonacci: NOT applicable — T(n) = T(n-1) + T(n-2)
+#   Master Theorem requires equal subproblem sizes (n/b), not n-1
+```
+
+```python
+# Common recursive patterns and their complexities:
+patterns = {
+    "Linear recursion (one call, n-1)":    "O(n) time, O(n) space",
+    "Binary recursion (two calls, n/2)":   "O(n) time, O(log n) space",
+    "Naive Fibonacci (two calls, n-1)":    "O(2ⁿ) time, O(n) space",
+    "Merge Sort":                           "O(n log n) time, O(n) space",
+    "Binary Search":                        "O(log n) time, O(log n) space",
+}
+```
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Memoization changes everything:</strong> Naive Fibonacci is O(2ⁿ). Add a memo dict and it becomes O(n) — each subproblem is only solved once.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Tail recursion:</strong> Some languages optimize tail-recursive calls to use O(1) stack space. Python does NOT — every call still uses stack space.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Space ≠ Time for recursion:</strong> A function can be O(2ⁿ) time but only O(n) space. The call stack only holds the current active path (root → leaf), not every node simultaneously.</p>
+</div>
+
+</Premium>
