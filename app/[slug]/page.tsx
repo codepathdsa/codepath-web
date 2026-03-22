@@ -1,4 +1,5 @@
 import fs from 'fs';
+import NotesPanel from '@/app/components/NotesPanel';
 import path from 'path';
 import matter from 'gray-matter';
 import { MDXRemote } from 'next-mdx-remote/rsc';
@@ -151,8 +152,9 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
                    ))}
                  </div>
                </div>
-            )}
+             )}
           </div>
+          <NotesPanel slug={slug} isAuthenticated={isAuthenticated} />
         </aside>
       </div>
 
