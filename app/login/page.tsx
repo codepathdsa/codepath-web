@@ -1,4 +1,4 @@
-import { login, signup } from './actions';
+import { login, signup, signInOAuth } from './actions';
 import Link from 'next/link';
 
 export default async function LoginPage({
@@ -37,6 +37,24 @@ export default async function LoginPage({
         )}
 
         <form style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+            <button formAction={signInOAuth.bind(null, 'github')} style={{ padding: '12px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border2)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'background 0.15s' }}>
+              <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="18" height="18" alt="GitHub" />
+              Continue with GitHub
+            </button>
+            <button formAction={signInOAuth.bind(null, 'google')} style={{ padding: '12px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border2)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'background 0.15s' }}>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" height="18" alt="Google" />
+              Continue with Google
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', gap: 12, marginBottom: 4 }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
+            <span>Or continue with email</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label htmlFor="email" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ink2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email address</label>
             <input 
