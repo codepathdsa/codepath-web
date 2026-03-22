@@ -1,0 +1,159 @@
+---
+title: "#217. Contains Duplicate"
+difficulty: "Easy"
+topics: ["Arrays", "Hashing"]
+readTime: "4 min read"
+approaches: 3
+companies: ["Amazon", "Apple", "Netflix"]
+acceptance: "~61% acceptance"
+leetcode_url: "https://leetcode.com/problems/contains-duplicate/"
+---
+
+## Problem Statement
+
+Given an integer array `nums`, return `true` if any value appears **at least twice** in the array, and return `false` if every element is distinct.
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>nums = [1,2,3,1]</code><br/>
+  Output: <code>true</code></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: <code>nums = [1,2,3,4]</code><br/>
+  Output: <code>false</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 1 ≤ nums.length ≤ 10⁵ · -10⁹ ≤ nums[i] ≤ 10⁹</p>
+</div>
+
+<Quiz
+  question="What data structure gives us O(1) average-time membership checks?"
+  options='["Array", "Linked List", "Hash Set", "Binary Tree"]'
+  answerIndex="2"
+  explanation="A hash set uses hashing to map values to buckets, giving O(1) average time for both insertions and lookups — perfect for tracking seen elements."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+The naive approach asks: "have I seen this number before?" If you scan the whole array from scratch for each element, that's O(n²). The insight is to **remember what you've seen** as you go.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>A hash set stores elements in O(1). As you walk the array, check if the current element is already in your set. If yes — duplicate found. If no — add it and continue. One pass, done.</p>
+</div>
+
+This is almost identical to Two Sum's complement-lookup trick: instead of looking up `target - x`, you're looking up `x` itself.
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brute Force (nested loops)</td>
+      <td>O(n²)</td>
+      <td>O(1)</td>
+      <td>Compare every pair. Too slow for large inputs.</td>
+    </tr>
+    <tr>
+      <td>Sort + Linear Scan</td>
+      <td>O(n log n)</td>
+      <td>O(1)</td>
+      <td>Duplicates become adjacent after sorting.</td>
+    </tr>
+    <tr className="best">
+      <td>Hash Set (One Pass) ★ Best</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Single traversal, O(1) lookups.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Brute Force
+
+For each element, check every other element after it. Return `true` if any match is found.
+
+```python
+def containsDuplicate(nums):
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] == nums[j]:
+                return True
+    return False
+```
+
+**Complexity:** Time O(n²) · Space O(1). Correct but impractical for n up to 10⁵.
+
+### Approach 2 — Sort + Linear Scan
+
+Sort the array so that duplicate values sit next to each other, then do a single pass checking adjacent elements.
+
+```python
+def containsDuplicate(nums):
+    nums.sort()
+    for i in range(len(nums) - 1):
+        if nums[i] == nums[i + 1]:
+            return True
+    return False
+```
+
+**Complexity:** Time O(n log n) · Space O(1). Better, but modifies the original array.
+
+<Premium>
+
+### Approach 3 — Hash Set (One Pass) ★ Optimal
+
+Iterate once. For each number, check if it's already in a set. If yes, it's a duplicate. If no, add it.
+
+<div className="insight">
+  <div className="insight-label">One-liner variant</div>
+  <p>Because a set only stores unique values, <code>len(set(nums)) != len(nums)</code> is true if and only if duplicates were removed. This is the same logic compressed into a single expression.</p>
+</div>
+
+```python
+def containsDuplicate(nums):
+    seen = set()
+    for num in nums:
+        if num in seen:
+            return True
+        seen.add(num)
+    return False
+```
+
+```python
+# One-liner (same O(n) time, builds full set before checking)
+def containsDuplicate(nums):
+    return len(set(nums)) != len(nums)
+```
+
+**Complexity:** Time O(n) · Space O(n). Optimal.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Single element:</strong> <code>nums = [1]</code> → <code>false</code>. No pair exists to duplicate against.</p>
+</div>
+<div className="callout">
+  <p><strong>2. All duplicates:</strong> <code>nums = [2,2,2,2]</code> → <code>true</code>. The set approach catches this on the second element.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Negative numbers:</strong> <code>nums = [-1,-1]</code> → <code>true</code>. Hash sets handle negative keys — no special casing needed.</p>
+</div>
+
+</Premium>

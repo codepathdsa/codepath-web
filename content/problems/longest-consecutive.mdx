@@ -1,0 +1,187 @@
+---
+title: "#128. Longest Consecutive Sequence"
+difficulty: "Medium"
+topics: ["Arrays", "Hashing"]
+readTime: "6 min read"
+approaches: 3
+companies: ["Google", "Amazon", "Facebook"]
+acceptance: "~47% acceptance"
+leetcode_url: "https://leetcode.com/problems/longest-consecutive-sequence/"
+---
+
+## Problem Statement
+
+Given an unsorted array of integers `nums`, return the length of the **longest consecutive elements sequence**.
+
+You must write an algorithm that runs in **O(n) time**.
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>nums = [100,4,200,1,3,2]</code><br/>
+  Output: <code>4</code><br/>
+  Explanation: The longest consecutive sequence is <code>[1,2,3,4]</code>.</p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: <code>nums = [0,3,7,2,5,8,4,6,0,1]</code><br/>
+  Output: <code>9</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 0 ≤ nums.length ≤ 10⁵ · -10⁹ ≤ nums[i] ≤ 10⁹ · <strong>Must run in O(n) time.</strong></p>
+</div>
+
+<Quiz
+  question="Why can't we just sort the array and scan for the longest run?"
+  options='["Sorting doesn't work on integers", "It would give wrong answers", "Sorting takes O(n log n) — violates the O(n) constraint", "We can't detect consecutive numbers after sorting"]'
+  answerIndex="2"
+  explanation="Sorting is correct but costs O(n log n). The problem explicitly requires O(n). We need a hash-based approach that finds sequences without sorting."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+The O(n log n) path is obvious: sort, then scan for consecutive runs. The O(n) insight is less obvious.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Only start counting a sequence at its <strong>true beginning</strong> — a number <code>n</code> where <code>n-1</code> does NOT exist in the set. From there, count up: n+1, n+2, ... until the chain breaks. This ensures every element is visited at most twice total: once in the outer loop, once in the inner count. That's O(n).</p>
+</div>
+
+Without this "start only at sequence heads" trick, you'd wastefully restart counting from numbers that are in the middle of a sequence.
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brute Force</td>
+      <td>O(n³)</td>
+      <td>O(1)</td>
+      <td>For each number, linearly scan for next. Extremely slow.</td>
+    </tr>
+    <tr>
+      <td>Sort + Scan</td>
+      <td>O(n log n)</td>
+      <td>O(1)</td>
+      <td>Correct and simple, but violates the O(n) constraint.</td>
+    </tr>
+    <tr className="best">
+      <td>Hash Set + Sequence Heads ★ Best</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Only start counting from sequence beginnings.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Brute Force
+
+For each number, try to build the longest sequence starting from it by checking if `n+1`, `n+2`, ... exist using a linear scan.
+
+```python
+def longestConsecutive(nums):
+    longest = 0
+    num_set = set(nums)
+
+    for n in nums:
+        length = 1
+        while (n + length) in num_set:  # linear scan per start → O(n²) total
+            length += 1
+        longest = max(longest, length)
+
+    return longest
+```
+
+**Complexity:** Time O(n²) · Space O(n). Using a set makes lookups O(1), but we still restart from every number.
+
+### Approach 2 — Sort + Scan
+
+Sort to bring consecutive numbers adjacent. Then scan once, counting current streak and resetting on gaps.
+
+```python
+def longestConsecutive(nums):
+    if not nums:
+        return 0
+
+    nums.sort()
+    longest = 1
+    current = 1
+
+    for i in range(1, len(nums)):
+        if nums[i] == nums[i - 1]:
+            continue          # skip duplicates
+        elif nums[i] == nums[i - 1] + 1:
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 1       # gap — reset streak
+
+    return longest
+```
+
+**Complexity:** Time O(n log n) · Space O(1). Clean, but the sort disqualifies it for the O(n) requirement.
+
+<Premium>
+
+### Approach 3 — Hash Set + Sequence Heads ★ Optimal
+
+Load all numbers into a set for O(1) lookups. For each number, check if it's a **sequence head** (i.e., `n-1` is not in the set). Only from heads do we count upward.
+
+<div className="insight">
+  <div className="insight-label">Why it's truly O(n)</div>
+  <p>Every number either: (a) gets skipped immediately as a non-head, or (b) is counted exactly once as part of exactly one sequence. Across the entire input, the inner <code>while</code> loop runs a total of n iterations — not n per outer loop.</p>
+</div>
+
+```python
+def longestConsecutive(nums):
+    num_set = set(nums)
+    longest = 0
+
+    for n in num_set:           # iterate set to avoid processing duplicates
+        if (n - 1) not in num_set:   # n is a sequence head
+            length = 1
+            while (n + length) in num_set:
+                length += 1
+            longest = max(longest, length)
+
+    return longest
+```
+
+**Walkthrough for `nums = [100,4,200,1,3,2]`:**
+- Set = {1,2,3,4,100,200}
+- n=1: 0 not in set → head. Count: 1→2→3→4 → length=4
+- n=2: 1 in set → skip
+- n=3: 2 in set → skip
+- n=4: 3 in set → skip
+- n=100: 99 not in set → head. Count: just 100 → length=1
+- n=200: 199 not in set → head. Count: just 200 → length=1
+- Result: 4 ✓
+
+**Complexity:** Time O(n) · Space O(n). Optimal.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Empty array:</strong> <code>[]</code> → <code>0</code>. The set is empty, the loop never runs.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Duplicates:</strong> <code>[1,2,2,3]</code> → <code>3</code>. Duplicates are collapsed by the set. The sequence is still 1→2→3.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. All isolated numbers:</strong> <code>[10,5,1]</code> → <code>1</code>. Every number is a sequence head, but no number has a neighbor, so all sequences have length 1.</p>
+</div>
+
+</Premium>

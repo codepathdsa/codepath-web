@@ -1,0 +1,182 @@
+---
+title: "#36. Valid Sudoku"
+difficulty: "Medium"
+topics: ["Arrays", "Hashing", "Matrix"]
+readTime: "6 min read"
+approaches: 2
+companies: ["Apple", "Snapchat", "Uber"]
+acceptance: "~58% acceptance"
+leetcode_url: "https://leetcode.com/problems/valid-sudoku/"
+---
+
+## Problem Statement
+
+Determine if a **9×9 Sudoku board** is valid. Only the filled cells need to be validated according to these rules:
+
+1. Each **row** must contain the digits 1–9 without repetition.
+2. Each **column** must contain the digits 1–9 without repetition.
+3. Each of the nine **3×3 sub-boxes** must contain the digits 1–9 without repetition.
+
+**Note:** A board may be valid but not necessarily solvable. Only validate filled cells (`.` represents empty).
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: The standard partially-filled Sudoku board shown below.<br/>
+  Output: <code>true</code></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: A board where the same digit appears twice in a row.<br/>
+  Output: <code>false</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> board.length == 9 · board[i].length == 9 · board[i][j] is a digit 1–9 or <code>'.'</code></p>
+</div>
+
+<Quiz
+  question="How do you determine which 3×3 box a cell at position (row, col) belongs to?"
+  options='["row * 3 + col", "row // 3 and col // 3", "row % 3 and col % 3", "row + col // 3"]'
+  answerIndex="1"
+  explanation="Integer division by 3 maps any row/col into the range [0,1,2], identifying which of the three box-rows and box-columns a cell falls into. Box index = (row//3, col//3) — there are 9 combinations for the 9 boxes."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+You need to check three independent constraints simultaneously: rows, columns, and 3×3 boxes. The naive approach checks each separately with three passes. The insight is that you can check all three **in a single pass** over the 81 cells.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>For each cell <code>(i,j)</code> with value <code>v</code>: check if <code>v</code> already appeared in row <code>i</code>, column <code>j</code>, or box <code>(i//3, j//3)</code>. Use three separate sets (or hash maps) to track seen values per row, column, and box simultaneously.</p>
+</div>
+
+The box index is the trickiest part: `box_id = (row // 3, col // 3)` gives a unique (row_group, col_group) pair for each of the 9 boxes.
+
+</Spoiler>
+
+## All 2 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Three Separate Passes</td>
+      <td>O(1) — fixed 81 cells</td>
+      <td>O(1)</td>
+      <td>One pass per constraint. Clear but repetitive.</td>
+    </tr>
+    <tr className="best">
+      <td>Single Pass with Sets ★ Best</td>
+      <td>O(1) — fixed 81 cells</td>
+      <td>O(1)</td>
+      <td>Check all 3 constraints simultaneously. Cleaner.</td>
+    </tr>
+  </tbody>
+</table>
+
+Note: Since the board is always 9×9 = 81 cells, complexity is technically O(1) — constant size. But we reason about it as O(n²) for a general n×n board.
+
+### Approach 1 — Three Separate Passes
+
+Check rows, then columns, then boxes — three independent loops.
+
+```python
+def isValidSudoku(board):
+    # Check rows
+    for row in board:
+        seen = set()
+        for val in row:
+            if val == '.': continue
+            if val in seen: return False
+            seen.add(val)
+
+    # Check columns
+    for col in range(9):
+        seen = set()
+        for row in range(9):
+            val = board[row][col]
+            if val == '.': continue
+            if val in seen: return False
+            seen.add(val)
+
+    # Check 3×3 boxes
+    for box_row in range(3):
+        for box_col in range(3):
+            seen = set()
+            for i in range(3):
+                for j in range(3):
+                    val = board[box_row*3 + i][box_col*3 + j]
+                    if val == '.': continue
+                    if val in seen: return False
+                    seen.add(val)
+
+    return True
+```
+
+**Complexity:** Time O(1) · Space O(1). Correct but iterates 81 cells three times.
+
+<Premium>
+
+### Approach 2 — Single Pass with Sets ★ Optimal
+
+Use three dictionaries of sets — one per constraint — and validate all three in a single traversal of the 81 cells.
+
+<div className="insight">
+  <div className="insight-label">Key mapping: cell to box</div>
+  <p><code>(row // 3, col // 3)</code> uniquely identifies one of the 9 boxes:<br/>
+  (0,0)=top-left · (0,1)=top-center · (0,2)=top-right<br/>
+  (1,0)=mid-left · (1,1)=center · (1,2)=mid-right<br/>
+  (2,0)=bot-left · (2,1)=bot-center · (2,2)=bot-right</p>
+</div>
+
+```python
+from collections import defaultdict
+
+def isValidSudoku(board):
+    rows    = defaultdict(set)   # rows[i]       = digits seen in row i
+    cols    = defaultdict(set)   # cols[j]       = digits seen in col j
+    boxes   = defaultdict(set)   # boxes[(r,c)]  = digits seen in 3×3 box
+
+    for i in range(9):
+        for j in range(9):
+            val = board[i][j]
+            if val == '.':
+                continue
+
+            box_key = (i // 3, j // 3)
+
+            if val in rows[i] or val in cols[j] or val in boxes[box_key]:
+                return False
+
+            rows[i].add(val)
+            cols[j].add(val)
+            boxes[box_key].add(val)
+
+    return True
+```
+
+**Complexity:** Time O(1) · Space O(1). Single pass, all constraints checked simultaneously.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Duplicate in same row:</strong> Two <code>'5'</code>s in row 0. Caught immediately when the second <code>'5'</code> is checked against <code>rows[0]</code>.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Duplicate in box but not in row/column:</strong> e.g. same digit at <code>(0,0)</code> and <code>(1,1)</code>. Different row, different column — but same 3×3 box. The <code>boxes</code> set catches it.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Valid but unsolvable board:</strong> A board can pass all three constraints but still have no solution. This problem only asks for validity — do not attempt to solve it.</p>
+</div>
+
+</Premium>

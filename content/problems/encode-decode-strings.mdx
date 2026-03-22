@@ -1,0 +1,179 @@
+---
+title: "#271. Encode and Decode Strings"
+difficulty: "Medium"
+topics: ["Arrays", "Strings", "Design"]
+readTime: "5 min read"
+approaches: 3
+companies: ["Google", "Facebook", "Twitter"]
+acceptance: "~40% acceptance"
+leetcode_url: "https://leetcode.com/problems/encode-and-decode-strings/"
+---
+
+## Problem Statement
+
+Design an algorithm to **encode** a list of strings to a single string, and **decode** that single string back to the original list. The encoded string is sent over the network and decoded back to the original list of strings.
+
+You must implement:
+- `encode(strs)` — encodes a list of strings into a single string
+- `decode(s)` — decodes the single string back to the list of strings
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>["neet","code","love","you"]</code><br/>
+  Encoded: some single string<br/>
+  Decoded Output: <code>["neet","code","love","you"]</code></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: <code>["we","say",":","yes"]</code><br/>
+  Decoded Output: <code>["we","say",":","yes"]</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 0 ≤ strs.length ≤ 200 · 0 ≤ strs[i].length ≤ 200 · strs[i] contains any possible characters, including special characters and the delimiter you might choose.</p>
+</div>
+
+<Quiz
+  question="Why can't we just join strings with a delimiter like '|'?"
+  options='["It is too slow", "A string might contain that delimiter character itself", "Delimiters are not allowed in strings", "Encoding would exceed memory limits"]'
+  answerIndex="1"
+  explanation="If any string contains the delimiter you chose (e.g. '|'), the decoder can't tell if it's a separator or part of the string. Strings can contain ANY valid character — no single character is guaranteed to be safe."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+The problem is harder than it looks because you can't pick a "safe" delimiter — the strings can contain any character.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Instead of using a delimiter to separate strings, <strong>prefix each string with its length</strong>. During decoding, read the length first, then read exactly that many characters. No matter what characters the string contains, you always know exactly where it ends.</p>
+</div>
+
+This is the same idea used in network protocols like HTTP — length-prefixed framing. The format is: `"length#string"` repeated for each entry.
+
+For example, `["neet","co#de"]` encodes as `"4#neet5#co#de"`. The decoder reads `4`, extracts `neet`, reads `5`, extracts `co#de` — the `#` inside the string causes no confusion.
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Simple Delimiter</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Fails if string contains the delimiter. Incorrect.</td>
+    </tr>
+    <tr>
+      <td>Non-ASCII Delimiter</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Use a rare char like chr(257). Fragile — problem says any char.</td>
+    </tr>
+    <tr className="best">
+      <td>Length Prefix ★ Best</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Prefix each string with its length. Handles all characters.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Simple Delimiter (Incorrect)
+
+Join with a special character. Fails when strings contain that character.
+
+```python
+# WRONG — fails for inputs like ["a#b", "c"]
+def encode(strs):
+    return "#".join(strs)
+
+def decode(s):
+    return s.split("#")
+```
+
+**Why it fails:** `encode(["a#b","c"])` → `"a#b#c"` → `decode("a#b#c")` → `["a","b","c"]` ✗
+
+### Approach 2 — Non-ASCII Delimiter
+
+Use a character outside the standard ASCII range as a separator. Better, but the problem states strings may contain any character.
+
+```python
+DELIMITER = chr(257)   # ā — outside ASCII, rare in practice
+
+def encode(strs):
+    return DELIMITER.join(strs)
+
+def decode(s):
+    return s.split(DELIMITER)
+```
+
+**Why it's fragile:** Relies on the assumption that strings won't contain `chr(257)`. Not guaranteed by the problem constraints.
+
+<Premium>
+
+### Approach 3 — Length Prefix ★ Optimal
+
+Format: `"<length>#<string>"` for each string, concatenated. During decode, find the `#`, read `length` characters after it, then advance the pointer.
+
+<div className="insight">
+  <div className="insight-label">The # as separator between length and content</div>
+  <p>We use <code>#</code> to separate the length from the string content. This <code>#</code> is unambiguous because we <em>know</em> the length — we always read exactly <code>length</code> characters after it. Even if the string starts with <code>#</code>, we skip exactly the right number of bytes.</p>
+</div>
+
+```python
+class Codec:
+    def encode(self, strs):
+        result = ""
+        for s in strs:
+            result += str(len(s)) + "#" + s
+        return result
+        # ["neet","code"] → "4#neet4#code"
+        # ["co#de"]       → "5#co#de"
+
+    def decode(self, s):
+        result = []
+        i = 0
+        while i < len(s):
+            # Find the '#' that separates length from content
+            j = i
+            while s[j] != '#':
+                j += 1
+            length = int(s[i:j])        # parse length
+            result.append(s[j+1 : j+1+length])  # extract exactly 'length' chars
+            i = j + 1 + length          # advance pointer past this string
+        return result
+```
+
+**Walkthrough for `s = "4#neet5#co#de"`:**
+- i=0: j finds `#` at index 1, length=4, extract `neet`, i=6
+- i=6: j finds `#` at index 7, length=5, extract `co#de`, i=13
+- Result: `["neet","co#de"]` ✓
+
+**Complexity:** Time O(n total chars) · Space O(n). Correct for all inputs.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Empty list:</strong> <code>[]</code> → encode to <code>""</code> → decode back to <code>[]</code>. The while loop never runs on an empty string.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Strings containing <code>#</code>:</strong> <code>["a#b"]</code> → <code>"4#a#b"</code> → decode reads length 4, extracts exactly <code>a#b</code> by position — the embedded <code>#</code> causes no issue.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Empty string in list:</strong> <code>["","a"]</code> → <code>"0#1#a"</code> → decode reads length 0, appends <code>""</code>, then reads length 1, appends <code>"a"</code> → <code>["","a"]</code> ✓.</p>
+</div>
+
+</Premium>

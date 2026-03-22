@@ -1,0 +1,183 @@
+---
+title: "#238. Product of Array Except Self"
+difficulty: "Medium"
+topics: ["Arrays", "Prefix Products"]
+readTime: "6 min read"
+approaches: 3
+companies: ["Amazon", "Facebook", "Microsoft"]
+acceptance: "~65% acceptance"
+leetcode_url: "https://leetcode.com/problems/product-of-array-except-self/"
+---
+
+## Problem Statement
+
+Given an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all elements of `nums` **except** `nums[i]`.
+
+You must write an algorithm that runs in **O(n) time** and **without using the division operation**.
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>nums = [1,2,3,4]</code><br/>
+  Output: <code>[24,12,8,6]</code></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: <code>nums = [-1,1,0,-3,3]</code><br/>
+  Output: <code>[0,0,9,0,0]</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 2 ≤ nums.length ≤ 10⁵ · -30 ≤ nums[i] ≤ 30 · The product of any prefix or suffix fits in a 32-bit integer · <strong>You may not use division.</strong></p>
+</div>
+
+<Quiz
+  question="Why can't we just compute total product and divide by nums[i]?"
+  options='["Division is too slow", "The problem explicitly forbids it", "It fails when nums[i] = 0", "Both B and C"]'
+  answerIndex="3"
+  explanation="The problem forbids division, AND dividing by zero is undefined. An array like [1,0,3] would cause a crash. Both reasons make division an invalid approach."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+The product of everything except `nums[i]` is really two things multiplied together: everything to the **left** of i, and everything to the **right** of i.
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p><code>answer[i] = (product of nums[0..i-1]) × (product of nums[i+1..n-1])</code><br/>
+  Precompute these two halves in two separate passes. Then combine in O(1) per element.</p>
+</div>
+
+This turns an O(n²) problem (compute full product for each index) into two O(n) passes — one left-to-right building prefix products, one right-to-left building suffix products.
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brute Force (nested loops)</td>
+      <td>O(n²)</td>
+      <td>O(1)</td>
+      <td>Recompute product from scratch for every index.</td>
+    </tr>
+    <tr>
+      <td>Prefix + Suffix Arrays</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Two extra arrays. Clean and easy to reason about.</td>
+    </tr>
+    <tr className="best">
+      <td>Prefix + Running Suffix ★ Best</td>
+      <td>O(n)</td>
+      <td>O(1)*</td>
+      <td>Output array only. *O(1) extra space, not counting output.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — Brute Force
+
+For each index `i`, loop through the entire array and multiply everything except `nums[i]`.
+
+```python
+def productExceptSelf(nums):
+    n = len(nums)
+    res = [0] * n
+    for i in range(n):
+        prod = 1
+        for j in range(n):
+            if i != j:
+                prod *= nums[j]
+        res[i] = prod
+    return res
+```
+
+**Complexity:** Time O(n²) · Space O(1). Fails for large inputs.
+
+### Approach 2 — Prefix + Suffix Arrays
+
+Build a `prefix` array where `prefix[i]` = product of all elements before index i. Build a `suffix` array where `suffix[i]` = product of all elements after index i. Answer is `prefix[i] * suffix[i]`.
+
+```python
+def productExceptSelf(nums):
+    n = len(nums)
+    prefix = [1] * n
+    suffix = [1] * n
+
+    for i in range(1, n):
+        prefix[i] = prefix[i - 1] * nums[i - 1]
+
+    for i in range(n - 2, -1, -1):
+        suffix[i] = suffix[i + 1] * nums[i + 1]
+
+    return [prefix[i] * suffix[i] for i in range(n)]
+```
+
+**Complexity:** Time O(n) · Space O(n). Correct, but uses two extra arrays.
+
+<Premium>
+
+### Approach 3 — Prefix + Running Suffix ★ Optimal
+
+Same idea as Approach 2, but instead of storing the full suffix array, maintain a **running suffix product** variable during the second pass and multiply directly into the output.
+
+<div className="insight">
+  <div className="insight-label">Why this saves space</div>
+  <p>In the first pass, we fill <code>res[i]</code> with the prefix product. In the second pass (right to left), we maintain a single <code>suffix</code> variable and multiply it into <code>res[i]</code> on the fly. No extra array needed.</p>
+</div>
+
+```python
+def productExceptSelf(nums):
+    n = len(nums)
+    res = [1] * n
+
+    # First pass: fill res[i] with product of everything to the LEFT of i
+    prefix = 1
+    for i in range(n):
+        res[i] = prefix
+        prefix *= nums[i]
+
+    # Second pass: multiply res[i] by product of everything to the RIGHT of i
+    suffix = 1
+    for i in range(n - 1, -1, -1):
+        res[i] *= suffix
+        suffix *= nums[i]
+
+    return res
+```
+
+**Walkthrough for `nums = [1,2,3,4]`:**
+
+After first pass (prefix products):
+`res = [1, 1, 2, 6]`
+
+After second pass (suffix products folded in):
+`res = [24, 12, 8, 6]` ✓
+
+**Complexity:** Time O(n) · Space O(1) extra. Optimal.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. Contains a zero:</strong> <code>[1,0,3]</code> → <code>[0,3,0]</code>. The prefix/suffix approach handles zeros naturally — no division, no crash.</p>
+</div>
+<div className="callout">
+  <p><strong>2. Two zeros:</strong> <code>[0,0,3]</code> → <code>[0,0,0]</code>. Every position has at least one zero in its product, so all outputs are 0.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Negative numbers:</strong> <code>[-1,1,0,-3,3]</code> → <code>[0,0,9,0,0]</code>. Negatives multiply through correctly — watch sign flips if you're reasoning through manually.</p>
+</div>
+
+</Premium>

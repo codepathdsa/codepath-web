@@ -1,0 +1,171 @@
+---
+title: "#347. Top K Frequent Elements"
+difficulty: "Medium"
+topics: ["Arrays", "Hashing", "Sorting", "Heap", "Bucket Sort"]
+readTime: "7 min read"
+approaches: 3
+companies: ["Amazon", "Facebook", "Lyft"]
+acceptance: "~63% acceptance"
+leetcode_url: "https://leetcode.com/problems/top-k-frequent-elements/"
+---
+
+## Problem Statement
+
+Given an integer array `nums` and an integer `k`, return the `k` **most frequent elements**. You may return the answer in **any order**.
+
+<div className="callout">
+  <p><strong>Example 1:</strong><br/>
+  Input: <code>nums = [1,1,1,2,2,3]</code>, <code>k = 2</code><br/>
+  Output: <code>[1,2]</code></p>
+</div>
+
+<div className="callout">
+  <p><strong>Example 2:</strong><br/>
+  Input: <code>nums = [1]</code>, <code>k = 1</code><br/>
+  Output: <code>[1]</code></p>
+</div>
+
+<div className="callout warning">
+  <p><strong>Constraints:</strong> 1 ≤ nums.length ≤ 10⁵ · -10⁴ ≤ nums[i] ≤ 10⁴ · k is in range [1, number of unique elements] · The answer is guaranteed to be unique.</p>
+</div>
+
+<Quiz
+  question="What is the time complexity of sorting elements by frequency using a standard sort?"
+  options='["O(n)", "O(n log n)", "O(k log n)", "O(n log k)"]'
+  answerIndex="1"
+  explanation="Counting frequencies takes O(n). Sorting the unique elements by frequency takes O(u log u) where u ≤ n, so overall O(n log n). The follow-up asks if we can do better."
+/>
+
+## Intuition — Building the Insight
+
+<Spoiler title="Reveal Core Intuition">
+
+The brute-force path: count frequencies, sort by frequency descending, return first k. That's O(n log n). But can we do better?
+
+<div className="insight">
+  <div className="insight-label">Core Insight</div>
+  <p>Frequencies range from 1 to n. Create an array of n+1 buckets where <code>bucket[freq]</code> holds all numbers that appear exactly <code>freq</code> times. Walk the buckets from high to low, collecting elements until you have k. This is <strong>Bucket Sort</strong> — O(n) time, no comparison sort needed.</p>
+</div>
+
+The key observation: you don't need to sort all elements. You just need the top k by frequency, and frequencies are bounded by n.
+
+</Spoiler>
+
+## All 3 Approaches
+
+<table className="complexity-table">
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>Time</th>
+      <th>Space</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>HashMap + Sort</td>
+      <td>O(n log n)</td>
+      <td>O(n)</td>
+      <td>Count frequencies, sort by them, take first k.</td>
+    </tr>
+    <tr>
+      <td>HashMap + Min-Heap</td>
+      <td>O(n log k)</td>
+      <td>O(n + k)</td>
+      <td>Maintain heap of size k. Better when k &lt;&lt; n.</td>
+    </tr>
+    <tr className="best">
+      <td>Bucket Sort ★ Best</td>
+      <td>O(n)</td>
+      <td>O(n)</td>
+      <td>Frequency-indexed buckets. Optimal.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Approach 1 — HashMap + Sort
+
+Count frequencies with a hash map, then sort the unique elements by frequency descending, and return the first k.
+
+```python
+from collections import Counter
+
+def topKFrequent(nums, k):
+    count = Counter(nums)   # {1: 3, 2: 2, 3: 1} for [1,1,1,2,2,3]
+
+    # Sort unique elements by frequency descending, take first k
+    return sorted(count.keys(), key=lambda x: -count[x])[:k]
+```
+
+**Complexity:** Time O(n log n) · Space O(n). Simple but the sort adds unnecessary cost.
+
+### Approach 2 — HashMap + Min-Heap
+
+Maintain a min-heap of size k. For each element's frequency, if the heap has fewer than k items, push. If the new frequency is greater than the heap's minimum, replace it.
+
+```python
+import heapq
+from collections import Counter
+
+def topKFrequent(nums, k):
+    count = Counter(nums)
+    # heapq.nlargest uses a heap internally — O(n log k)
+    return heapq.nlargest(k, count.keys(), key=count.get)
+```
+
+**Complexity:** Time O(n log k) · Space O(n). Better than sorting when k is small.
+
+<Premium>
+
+### Approach 3 — Bucket Sort ★ Optimal
+
+Frequencies range from 1 to n. Create `n+1` buckets. Place each number into `bucket[frequency]`. Walk buckets from right to left (highest frequency first) to collect the top k elements.
+
+<div className="insight">
+  <div className="insight-label">Why O(n)?</div>
+  <p>Building buckets takes O(n). Scanning them takes O(n). No comparison-based sort is involved — we're exploiting the known range of frequency values to avoid sorting entirely.</p>
+</div>
+
+```python
+from collections import Counter
+
+def topKFrequent(nums, k):
+    count = Counter(nums)
+
+    # bucket[i] = list of numbers that appear exactly i times
+    bucket = [[] for _ in range(len(nums) + 1)]
+    for num, freq in count.items():
+        bucket[freq].append(num)
+
+    result = []
+    # Walk from highest frequency to lowest
+    for freq in range(len(bucket) - 1, 0, -1):
+        for num in bucket[freq]:
+            result.append(num)
+            if len(result) == k:
+                return result
+
+    return result
+```
+
+**Walkthrough for `nums = [1,1,1,2,2,3]`, `k = 2`:**
+- Counts: `{1:3, 2:2, 3:1}`
+- Buckets: `[[], [3], [2], [1], [], [], []]`
+- Scan right-to-left: freq 3 → `[1]`, freq 2 → `[1,2]` → k=2 reached → return `[1,2]` ✓
+
+**Complexity:** Time O(n) · Space O(n). Optimal.
+
+## Edge Cases to Test
+
+<div className="callout">
+  <p><strong>1. k equals number of unique elements:</strong> <code>[1,2]</code>, <code>k=2</code> → <code>[1,2]</code>. All elements are returned.</p>
+</div>
+<div className="callout">
+  <p><strong>2. All elements the same:</strong> <code>[3,3,3]</code>, <code>k=1</code> → <code>[3]</code>. One bucket at index 3 gets all the entries.</p>
+</div>
+<div className="callout warning">
+  <p><strong>3. Tie in frequency:</strong> The problem guarantees a unique answer, so no two elements share the k-th frequency boundary. No tie-breaking needed.</p>
+</div>
+
+</Premium>
