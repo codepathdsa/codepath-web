@@ -20,6 +20,8 @@ export default function Quiz({ question, options, answerIndex, explanation }: Qu
     try { safeOptions = JSON.parse(options); } catch (e) {}
   }
 
+  const validAnswerIndex = Number(answerIndex);
+
   return (
     <div className="quiz-container">
       <div className="quiz-question">{question}</div>
@@ -27,7 +29,7 @@ export default function Quiz({ question, options, answerIndex, explanation }: Qu
         {safeOptions.map((option, index) => {
           let btnClass = 'quiz-option';
           if (hasAnswered) {
-            if (index === answerIndex) {
+            if (index === validAnswerIndex) {
               btnClass += ' correct';
             } else if (index === selected) {
               btnClass += ' wrong';
@@ -51,8 +53,8 @@ export default function Quiz({ question, options, answerIndex, explanation }: Qu
       </div>
       
       {hasAnswered && explanation && (
-        <div className={`quiz-explanation ${selected === answerIndex ? 'success' : 'error'}`}>
-          <strong>{selected === answerIndex ? 'Correct! 🎉' : 'Not quite. '}</strong>
+        <div className={`quiz-explanation ${selected === validAnswerIndex ? 'success' : 'error'}`}>
+          <strong>{selected === validAnswerIndex ? 'Correct! 🎉' : 'Not quite. '}</strong>
           {explanation}
         </div>
       )}
