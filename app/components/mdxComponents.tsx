@@ -3,6 +3,8 @@ import { CopyButton } from './CopyButton';
 import Spoiler from './Spoiler';
 import Quiz from './Quiz';
 import Drill from './Drill';
+import CodeEditor from './CodeEditor';
+import VisualTree from './VisualTree';
 import React from 'react';
 
 /**
@@ -98,6 +100,10 @@ export function buildMdxComponents(
     Quiz: Quiz as unknown as MDXComponents['Quiz'],
     // Explicit Drill component for System Design
     Drill: Drill as unknown as MDXComponents['Drill'],
+    // In-browser code editor
+    CodeEditor: CodeEditor as unknown as MDXComponents['CodeEditor'],
+    // Algorithm visual pseudo-code tree
+    VisualTree: VisualTree as unknown as MDXComponents['VisualTree'],
     // Per-page extras (e.g. Premium)
     ...extras,
   };

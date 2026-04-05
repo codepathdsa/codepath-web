@@ -1,0 +1,281 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.topBar {
+  height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  flex-shrink: 0;
+}
+
+.alertHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  color: var(--color-error);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.alertDot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--color-error);
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.timer {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+.timerCritical {
+  color: var(--color-error);
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  50% { opacity: 0.5; }
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.telemetryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-1);
+  background: var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.metricCard {
+  background: var(--bg-base);
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+.metricCard.danger {
+  background: rgba(239, 68, 68, 0.08); /* slight red tint */
+}
+
+.metricHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.metricLabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-weight: 600;
+}
+
+.metricValue {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+.metricValue.danger {
+  color: var(--color-error);
+}
+
+.metricTrend {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  display: flex; gap: 4px; align-items: center;
+}
+.metricTrend.good { color: var(--color-success); }
+
+.lowerWorkspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.terminalPanel {
+  flex: 2;
+  border-right: 1px solid var(--border-strong);
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminalHeader {
+  height: 48px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.terminalBody {
+  flex: 1;
+  padding: var(--space-6);
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.terminalOutput {
+  margin-bottom: var(--space-2);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.logWarning { color: var(--color-warning); }
+.logError { color: var(--color-error); }
+.logSuccess { color: var(--color-success); }
+.logSystem { color: var(--text-tertiary); }
+
+.terminalInputRow {
+  display: flex;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+.termPrompt { color: var(--accent); margin-right: 10px; font-weight: bold;}
+.termInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+}
+
+.remediationPanel {
+  flex: 1;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.rHeader {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rTitle {
+  font-weight: 600;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.rDesc {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  line-height: var(--leading-loose);
+}
+.rDesc strong { color: var(--text-primary); }
+
+.rList {
+  flex: 1;
+  padding: var(--space-6);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.actionBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  text-align: left;
+  cursor: pointer;
+  transition: all 150ms ease;
+  position: relative;
+  overflow: hidden;
+}
+.actionBtn:hover {
+  background: var(--bg-raised);
+  border-color: var(--border-default);
+  transform: translateY(-1px);
+}
+.actionTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+.actionSub {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+.resultPanel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.resultCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.resultCard.success { border-color: var(--color-success); }
+.resultCard.fail { border-color: var(--color-error); }
+
+.resultIcon {
+  width: 60px; height: 60px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; margin: 0 auto var(--space-4);
+}
+.resultIcon.success { background: var(--bg-success); color: var(--color-success); }
+.resultIcon.fail { background: var(--bg-error); color: var(--color-error); }
+
+.resultTitle { font-size: var(--text-2xl); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-2); }
+.resultDesc { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-6); line-height: var(--leading-loose); }

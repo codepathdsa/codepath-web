@@ -1,29 +1,22 @@
 import type { Metadata } from 'next';
-import { Fraunces, JetBrains_Mono, Instrument_Sans } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
-const instrumentSans = Instrument_Sans({ 
+const inter = Inter({ 
   subsets: ['latin'],
-  variable: '--sans',
-  weight: ['400', '500', '600', '700'] 
-});
-
-const fraunces = Fraunces({ 
-  subsets: ['latin'],
-  variable: '--serif',
-  style: ['normal', 'italic'],
-  weight: ['300', '500', '700', '900'] 
+  variable: '--font-sans',
+  weight: ['400', '500', '600'] 
 });
 
 const jetbrainsMono = JetBrains_Mono({ 
   subsets: ['latin'],
-  variable: '--mono',
+  variable: '--font-mono',
   weight: ['400', '500', '600'] 
 });
 
 export const metadata: Metadata = {
-  title: 'CodePath — Written DSA Prep',
-  description: 'Master Data Structures & Algorithms through clear written explanations, structured roadmaps, and 500+ free problems.',
+  title: 'EngPrep — Complete Product Specification',
+  description: 'The only interview platform built for how software actually works.',
 };
 
 export default function RootLayout({
@@ -31,23 +24,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const scriptContent = `
-    (function() {
-      try {
-        var localTheme = window.localStorage.getItem('theme');
-        var theme = localTheme ? localTheme : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) {}
-    })();
-  `;
-
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: scriptContent }} />
-      </head>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
     </html>
   );
 }
-

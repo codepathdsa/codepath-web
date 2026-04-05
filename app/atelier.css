@@ -1,0 +1,435 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   IDE / DSA Platform Dark Mode CSS
+   Matches standard dark programming UI styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ide-bg: #1e1e1e;
+  --ide-panel: #262626;
+  --ide-panel-dark: #1e1e1e;
+  --ide-border: #333333;
+  --ide-text: #e5e5e5;
+  --ide-text-muted: #8b8b8b;
+  --ide-green: #22c55e;
+  --ide-green-hover: #16a34a;
+  --ide-run-bg: #404040;
+  --ide-run-hover: #525252;
+  --ide-tab-active-bg: #333333;
+  --ide-tab-border: #1e1e1e;
+}
+
+.ide-root {
+  display: grid;
+  grid-template-columns: minmax(400px, 45%) 8px 1fr;
+  height: 100dvh;
+  width: 100vw;
+  background: #000;
+  color: var(--ide-text);
+  font-family: var(--sans), system-ui, sans-serif;
+  overflow: hidden;
+  padding: 8px;
+  gap: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LEFT PANEL (Description, Solutions, Notes)
+   ───────────────────────────────────────────────────────────────────────────── */
+.ide-left {
+  background: var(--ide-panel);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ide-border);
+}
+
+.ide-panel-tabs {
+  display: flex;
+  background: var(--ide-panel);
+  border-bottom: 1px solid var(--ide-border);
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.ide-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--ide-text-muted);
+  border: none;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-top: 2px solid transparent;
+  transition: color 0.15s;
+}
+
+.ide-tab:hover {
+  color: var(--ide-text);
+}
+
+.ide-tab.active {
+  color: var(--ide-text);
+  background: var(--ide-tab-active-bg);
+  border-top: 2px solid #3b82f6; /* slight blue accent for active tab */
+  border-radius: 6px 6px 0 0;
+}
+
+.ide-tab-icon {
+  display: flex;
+  align-items: center;
+}
+
+.ide-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ide-border) transparent;
+}
+
+.ide-content-scroll::-webkit-scrollbar { width: 8px; }
+.ide-content-scroll::-webkit-scrollbar-thumb { background: var(--ide-border); border-radius: 4px; }
+
+/* Article / Description Styles */
+.ide-article {
+  max-width: 800px;
+}
+
+.ide-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #fff;
+}
+
+.ide-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ide-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ide-topic-chip {
+  padding: 4px 10px;
+  background: #333;
+  color: #a3a3a3;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ide-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #d4d4d4;
+}
+
+.ide-description p { margin-bottom: 16px; }
+.ide-description h2 { font-size: 1.2rem; color: #fff; margin: 32px 0 16px; border-bottom: 1px solid var(--ide-border); padding-bottom: 8px;}
+.ide-description code {
+  background: #333;
+  color: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+.ide-description pre {
+  background: #1e1e1e;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--ide-border);
+  margin-bottom: 20px;
+}
+.ide-description pre code { background: transparent; padding: 0; }
+
+.ide-description .callout {
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid #3b82f6;
+  padding: 16px;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+
+.ide-empty {
+  color: var(--ide-text-muted);
+  text-align: center;
+  font-style: italic;
+  padding: 40px;
+}
+
+.ide-notes-cnt {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--ide-border);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DRAG SEAM
+   ───────────────────────────────────────────────────────────────────────────── */
+.ide-seam {
+  width: 8px;
+  cursor: col-resize;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 -4px; /* visually overlap */
+  z-index: 10;
+}
+
+.ide-seam::after {
+  content: '';
+  width: 4px;
+  height: 40px;
+  background: var(--ide-border);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.ide-seam:hover::after {
+  background: var(--ide-text-muted);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RIGHT PANEL (Editor, output)
+   ───────────────────────────────────────────────────────────────────────────── */
+.ide-right {
+  background: var(--ide-panel-dark);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ide-border);
+  position: relative;
+}
+
+.ide-editor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  background: var(--ide-panel);
+  border-bottom: 1px solid var(--ide-border);
+  padding: 0 16px;
+}
+
+.ide-lang-select {
+  background: var(--ide-run-bg);
+  border: 1px solid var(--ide-border);
+  color: var(--ide-text);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+}
+.ide-lang-select:hover { background: var(--ide-run-hover); }
+
+.ide-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ide-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--ide-text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.ide-icon-btn:hover { color: var(--ide-text); background: rgba(255,255,255,0.1); }
+
+.ide-editor-inner-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--ide-panel-dark);
+}
+
+.ide-inner-tab {
+  font-size: 0.8rem;
+  color: var(--ide-text);
+  background: #333;
+  padding: 4px 12px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-sol { color: var(--ide-text-muted); cursor: pointer; }
+
+.ide-inner-actions {
+  display: flex;
+  gap: 8px;
+}
+.ide-robot-btn, .ide-hint-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+.ide-robot-btn:hover, .ide-hint-btn:hover { color: var(--ide-text); }
+
+/* Hint Popup */
+.ide-hint-popup {
+  position: absolute;
+  top: 96px; /* below top bar */
+  right: 16px;
+  width: 400px;
+  max-height: 50vh;
+  background: var(--ide-panel);
+  border: 1px solid var(--ide-border);
+  border-radius: 8px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  animation: fade-in 0.15s ease-out;
+  overflow: hidden;
+}
+.ide-hint-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #333;
+  border-bottom: 1px solid var(--ide-border);
+}
+.hint-lbl { font-size: 0.85rem; font-weight: 600; color: #fbbf24; }
+.hint-close { background: none; border: none; color: #a3a3a3; cursor: pointer; transition: color 0.15s;}
+.hint-close:hover { color: #fff; }
+.ide-hint-popup .ide-description {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  color: #e5e5e5;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Monaco Wrapper */
+.ide-monaco-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Console Slide Up */
+.ide-output {
+  position: absolute;
+  bottom: 56px; /* above bottom bar */
+  left: 0; right: 0;
+  height: 250px;
+  background: var(--ide-panel);
+  border-top: 1px solid var(--ide-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  animation: slide-up 0.2s ease-out;
+}
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.ide-output-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #333;
+}
+.out-lbl { font-size: 0.8rem; font-weight: 600; color: #fff; }
+.out-close { background: none; border: none; color: #a3a3a3; cursor: pointer; }
+
+.ide-output-content {
+  flex: 1;
+  padding: 16px;
+  margin: 0;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #fff;
+  white-space: pre-wrap;
+}
+
+/* Bottom Bar */
+.ide-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  background: var(--ide-panel);
+  border-top: 1px solid var(--ide-border);
+  padding: 0 16px;
+}
+
+.ide-console-btn {
+  background: transparent;
+  border: none;
+  color: var(--ide-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ide-run-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.ide-btn-run {
+  background: var(--ide-run-bg);
+  color: var(--ide-text);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ide-btn-run:hover:not(:disabled) { background: var(--ide-run-hover); }
+
+.ide-btn-submit {
+  background: var(--ide-green);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ide-btn-submit:hover { background: var(--ide-green-hover); }

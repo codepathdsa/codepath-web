@@ -158,3 +158,54 @@ Quick Sort recurrence (worst — pivot always min/max):
 </div>
 
 </Premium>
+
+## 🌳 Algorithm Visual Walkthrough
+
+See how Merge Sort works step-by-step. **Click any node** to expand it and read the explanation.
+
+<VisualTree
+  title="Merge Sort — Visual Pseudo-code Tree"
+  complexityJson='{"time":"O(n log n)","space":"O(n)"}'
+  treeJson='{"id":"start","label":"merge_sort(arr)","type":"start","detail":"Entry point. Receives an unsorted array and recursively splits it in half until base case.","children":[{"id":"base","label":"len(arr) <= 1?","type":"decision","detail":"Base case check. A single element or empty array is already sorted — return it immediately.","yesLabel":"Yes → return arr","noLabel":"No → split","children":[{"id":"base-yes","label":"return arr (already sorted)","type":"return","detail":"Base case reached. Array of length 0 or 1 needs no sorting."},{"id":"split","label":"mid = len(arr) // 2","type":"step","detail":"Find the midpoint by integer division. This halves the problem each time → log n levels of recursion.","complexity":"O(1)","children":[{"id":"recurse-left","label":"left = merge_sort(arr[:mid])","type":"loop","detail":"Recursively sort the left half. Each call halves the input — this is where the log n in O(n log n) comes from.","children":[{"id":"recurse-right","label":"right = merge_sort(arr[mid:])","type":"loop","detail":"Recursively sort the right half. Runs sequentially after the left.","children":[{"id":"merge","label":"return merge(left, right)","type":"return","detail":"Merge two sorted halves into one sorted array. O(n) per level × log n levels = O(n log n) total.","complexity":"O(n)"}]}]}]}]}]}'
+/>
+
+
+## ⌨️ Practice Editor
+
+Try implementing Bubble Sort or Merge Sort yourself. **Python and JavaScript** run live in the browser — no setup needed!
+
+<CodeEditor
+  title="Sort it yourself"
+  language="python"
+  defaultCode={`# Implement merge sort
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Test it!
+arr = [38, 27, 43, 3, 9, 82, 10]
+print("Input: ", arr)
+print("Sorted:", merge_sort(arr))
+`}
+/>
+

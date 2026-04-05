@@ -1,0 +1,379 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+}
+
+.nav {
+  height: 60px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-6);
+}
+
+.navLogo {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.navLogo span {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--accent);
+  margin-left: 2px;
+  animation: cursor-blink 1.2s ease-in-out infinite;
+}
+
+.container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.clearFilters {
+  display: block;
+  float: right;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.clearFilters:hover {
+  text-decoration: underline;
+  color: var(--text-secondary);
+}
+
+.filterGroup {
+  margin-top: var(--space-6);
+}
+
+.filterTitle {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-3);
+}
+
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: var(--space-2);
+}
+.filterLabel:hover {
+  color: var(--text-primary);
+}
+
+.mainPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pageHeader {
+  padding: var(--space-6) var(--space-8);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.pageTitle {
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.pageSub {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.searchInput {
+  width: 320px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: all 150ms;
+}
+.searchInput:focus {
+  border-color: var(--border-strong);
+}
+
+.scrollArea {
+  flex: 1;
+  padding: var(--space-8);
+  overflow-y: auto;
+}
+
+.sectionHeader {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-10);
+}
+
+.challengeCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 150ms ease;
+  position: relative;
+  overflow: hidden;
+}
+.challengeCard:hover {
+  border-color: var(--border-default);
+  background: var(--bg-raised);
+}
+
+.cardMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.cardDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border-strong);
+}
+.cardDotActive {
+  background: var(--accent);
+}
+
+.cardTitleText {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.companyTags {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tagCompany {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.cliReveal {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 16px;
+  background: linear-gradient(to top, var(--bg-raised) 70%, transparent);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 200ms ease, transform 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.challengeCard:hover .cliReveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.copyLabel {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  animation: bgFade 0.2s ease-out;
+}
+
+@keyframes bgFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.drawer {
+  width: 500px;
+  height: 100%;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawerHeader {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.drawerTitle {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+}
+
+.drawerClose {
+  background: transparent;
+  color: var(--text-tertiary);
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+.drawerClose:hover { color: var(--text-primary); }
+
+.drawerBody {
+  padding: var(--space-6);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.drawerMeta {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.drawerMetaItem {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.drawerMetaItem .label {
+  font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.drawerMetaItem .value {
+  font-size: var(--text-sm); font-weight: 500; color: var(--text-primary);
+}
+
+.drawerDesc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-loose);
+  margin-bottom: var(--space-6);
+}
+
+.drawerCli {
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+}
+.drawerCliLabel {
+  font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: 8px; text-transform: uppercase;
+}
+.drawerCliCmd {
+  font-family: var(--font-mono); color: var(--text-primary); font-size: var(--text-sm);
+}
+
+.drawerFooter {
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex;
+  gap: var(--space-3);
+}
+
+.horizontalStrip {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-10);
+}
+.horizontalStrip::-webkit-scrollbar {
+  height: 4px;
+}
+.horizontalStrip::-webkit-scrollbar-track {
+  background: transparent;
+}
+.horizontalStrip::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+.stripCard {
+  min-width: 300px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.stripCard:hover {
+  border-color: var(--border-strong);
+}
+.stripCardLabel {
+  font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;
+}

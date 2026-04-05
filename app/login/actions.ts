@@ -16,11 +16,15 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/login?error=Invalid login credentials')
+    if (error.message.toLowerCase().includes('invalid login credentials')) {
+      redirect('/login?error=Incorrect password or no account found with this email')
+    } else {
+      redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    }
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/dashboard')
 }
 
 export async function signup(formData: FormData) {
@@ -34,26 +38,28 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp(data)
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    redirect(`/signup?error=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Check your email to verify your account.')
+  redirect('/onboarding')
 }
 
-export async function signInOAuth(provider: 'google' | 'github') {
+export async function signInOAuth(provider: 'google' | 'github', isSignup = false) {
   const supabase = await createClient();
   const origin = (await headers()).get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   
+  const callbackUrl = isSignup ? `${origin}/auth/callback?next=/onboarding` : `${origin}/auth/callback?next=/dashboard`;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: callbackUrl,
     },
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/${isSignup ? 'signup' : 'login'}?error=${encodeURIComponent(error.message)}`);
   }
 
   if (data.url) {
