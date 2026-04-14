@@ -35,6 +35,7 @@ export interface Challenge {
   whyItMatters?: string;
   approach?: string;
   walkthrough?: string[];
+  explanation?: string;
   solution: string;
   options?: ChallengeOption[];
   // DSA-specific enrichment
