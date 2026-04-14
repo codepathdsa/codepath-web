@@ -15,6 +15,12 @@ export interface TestCase {
   expected: string;
 }
 
+export interface ChallengeQuestion {
+  q: string;
+  hint: string;
+  answer: string;
+}
+
 export interface Challenge {
   id: string;
   type: ChallengeType;
@@ -40,6 +46,7 @@ export interface Challenge {
   // System Design enrichment
   simulation?: SimulationConfig;
   complexity?: string | { time: string; space: string };
+  questions?: ChallengeQuestion[];
 }
 
 export interface SimCheck {
