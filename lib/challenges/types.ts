@@ -1,5 +1,5 @@
 export type ChallengeType = 'DSA' | 'PR Review' | 'War Room' | 'System Design' | 'Tech Debt Tribunal';
-export type RoleLevel = 'SDE I' | 'SDE II' | 'SDE III' | 'Staff';
+export type RoleLevel = 'Junior' | 'Mid' | 'Senior';
 
 export interface ChallengeOption {
   label: string;
@@ -25,6 +25,10 @@ export interface Challenge {
   level: RoleLevel;
   status: 'In Progress' | 'Not Started' | 'Completed';
   desc: string;
+  realWorldContext?: string;
+  whyItMatters?: string;
+  approach?: string;
+  walkthrough?: string[];
   solution: string;
   options?: ChallengeOption[];
   // DSA-specific enrichment
@@ -33,5 +37,28 @@ export interface Challenge {
   topics?: string[];
   testCases?: TestCase[];
   nextChallengeId?: string;
+  // System Design enrichment
+  simulation?: SimulationConfig;
+  complexity?: string | { time: string; space: string };
 }
 
+export interface SimCheck {
+  type: 'hasNode' | 'hasPath' | 'hasEdge';
+  source: string;
+  target?: string;
+}
+
+export interface SimLevel {
+  traffic: number;
+  targetLatency: number;
+  successMsg: string;
+  failMsg: string;
+  failNode?: string;    // node type to apply animation to
+  failTooltip?: string; // string to show in tooltip
+  checks: SimCheck[];
+}
+
+export interface SimulationConfig {
+  constraints: { label: string; value: string }[];
+  levels: SimLevel[];
+}

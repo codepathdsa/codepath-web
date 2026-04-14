@@ -458,6 +458,30 @@ export default function DSAWorkspace() {
                   This problem is based on production scenarios faced by{' '}
                   <strong>{challenge.companies.join(' and ')}</strong> engineers.
                 </p>
+                {challenge.realWorldContext && (
+                  <p style={{ marginTop: '12px' }}>{challenge.realWorldContext}</p>
+                )}
+                {challenge.whyItMatters && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-raised)', borderRadius: '8px', borderLeft: '3px solid var(--accent)' }}>
+                    <strong>Why it matters:</strong> {challenge.whyItMatters}
+                  </div>
+                )}
+                {challenge.approach && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-raised)', borderRadius: '8px', borderLeft: '3px solid var(--text-tertiary)' }}>
+                    <strong>Approach:</strong> {challenge.approach}
+                  </div>
+                )}
+                {challenge.walkthrough && challenge.walkthrough.length > 0 && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-raised)', borderRadius: '8px', borderLeft: '3px solid var(--color-success)' }}>
+                    <strong>Walkthrough:</strong>
+                    <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
+                      {challenge.walkthrough.map((step, idx) => (
+                        <li key={idx} style={{ marginBottom: '6px' }}>{step}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className={styles.sectionTitle} style={{ marginTop: '24px' }}>Solution</div>
                 <p style={{ marginTop: '12px' }}>{challenge.solution}</p>
               </div>
             </div>

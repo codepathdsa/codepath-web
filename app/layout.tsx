@@ -2,21 +2,23 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['400', '500', '600'] 
+  weight: ['400', '500', '600'],
+  display: 'swap',
 });
 
-const jetbrainsMono = JetBrains_Mono({ 
+const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
-  weight: ['400', '500', '600'] 
+  weight: ['400', '500', '600'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'EngPrep — Complete Product Specification',
-  description: 'The only interview platform built for how software actually works.',
+  title: 'EngPrep — Real Engineering. Real Interviews.',
+  description: 'The only interview platform built for how software actually works — incidents, PRs, system failures, and real tradeoffs.',
 };
 
 export default function RootLayout({

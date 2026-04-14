@@ -327,7 +327,7 @@ export default function SystemDesignSimulator() {
               cursor: 'pointer',
               transition: 'background 0.2s',
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = '#22c55e'}
+            onMouseOver={(e) => e.currentTarget.style.background = '#62de61'}
             onMouseOut={(e) => e.currentTarget.style.background = '#4ade80'}
           >
             Evaluate Design
