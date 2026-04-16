@@ -1,6 +1,61 @@
 # Adding New Practice Problems to CodePath
 
-CodePath now runs entirely on **MDX** (Markdown with React Support). You no longer need to copy and paste hundreds of lines of raw HTML to add a new problem to the platform.
+---
+
+## A. Adding a DSA Challenge (Workspace with Monaco editor + test cases)
+
+Each challenge lives in its **own file** under `lib/challenges/dsa/`.  
+File names match the challenge ID: `ENG-DSA-001.ts`, `ENG-DSA-026.ts`, etc.
+
+### Step 1 — Copy an existing challenge
+
+```bash
+# From the project root
+cp lib/challenges/dsa/ENG-DSA-001.ts lib/challenges/dsa/ENG-DSA-026.ts
+```
+
+### Step 2 — Edit the new file
+
+Open `lib/challenges/dsa/ENG-DSA-026.ts` and update every field. TypeScript will
+red-underline anything missing or the wrong type — the `Challenge` type acts as
+a contract that enforces completeness.
+
+Key fields to fill:
+| Field | What it is |
+|---|---|
+| `id` | `'ENG-DSA-026'` — must match the filename |
+| `title` | `'Short descriptive title (Topic)'` |
+| `companies` | `['CompanyA', 'CompanyB']` |
+| `level` | `'Junior'` \| `'Mid'` \| `'Senior'` |
+| `topics` | `['Heaps', 'Greedy']` etc. |
+| `realWorldContext` | 2–3 sentence incident scenario (shown as 🚨 P0 banner) |
+| `desc` | One-sentence task description |
+| `whyItMatters` | Why this matters at scale — shown in Context tab |
+| `hints` | Array of 3 progressive hints (hidden by default) |
+| `complexity` | `{ time: 'O(n log n)', space: 'O(n)' }` |
+| `starterCode` | Python function with docstring and examples |
+| `testCases` | Array of `{ id, description, input, expected }` — first 2 are visible, rest hidden |
+
+**Test case format:**
+- `input` must be valid Python assignment(s): `nums = [1, 2, 3]`
+- `expected` must be a Python `repr()` string: `'6'` or `'[[1,2],[3,4]]'`
+- Pyodide runs your test input and the user's code against each other
+
+### Step 3 — Register it in the barrel
+
+Open `lib/challenges/dsa/index.ts` and add:
+1. One import line at the top: `import c026 from './ENG-DSA-026';`
+2. One entry in the array: `c026,`
+
+### Step 4 — Verify
+
+```bash
+npx next build   # must exit 0 — TypeScript errors will show here
+```
+
+---
+
+## B. Adding an MDX Editorial Problem (standalone reading page)
 
 ### Step 1: Create the MDX File
 1. Go to `content/problems/`

@@ -18,7 +18,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// -- Types ------------------------------------------------------------------
 type BlockType = 'client' | 'compute' | 'database' | 'cache' | 'queue' | 'storage';
 
 interface BaseNodeData extends Record<string, unknown> {
@@ -29,7 +29,7 @@ interface BaseNodeData extends Record<string, unknown> {
 
 type AppNode = Node<BaseNodeData>;
 
-// ── Custom Nodes ───────────────────────────────────────────────────────────
+// -- Custom Nodes -----------------------------------------------------------
 const iconMap: Record<BlockType, string> = {
   client: '📱',
   compute: '⚙️',
@@ -74,7 +74,7 @@ const CustomNodeComponent = ({ data, selected }: { data: BaseNodeData; selected:
 
 const nodeTypes = { custom: CustomNodeComponent };
 
-// ── Sidebar (Drag source) ──────────────────────────────────────────────────
+// -- Sidebar (Drag source) --------------------------------------------------
 const Sidebar = () => {
   const onDragStart = (event: React.DragEvent, nodeType: BlockType, label: string) => {
     event.dataTransfer.setData('application/reactflow', JSON.stringify({ type: nodeType, label }));
@@ -120,7 +120,7 @@ const Sidebar = () => {
   );
 };
 
-// ── Config Panel (Right) ───────────────────────────────────────────────────
+// -- Config Panel (Right) ---------------------------------------------------
 const ConfigPanel = ({ selectedNode, updateNodeLabel }: { selectedNode: AppNode | null, updateNodeLabel: (id: string, newLabel: string) => void }) => {
   if (!selectedNode) {
     return (
@@ -163,7 +163,7 @@ const ConfigPanel = ({ selectedNode, updateNodeLabel }: { selectedNode: AppNode 
   );
 };
 
-// ── Rule Evaluation Engine ──────────────────────────────────────────────────
+// -- Rule Evaluation Engine --------------------------------------------------
 // Very basic JSON rule engine implementation
 const ruleEngineJSON = {
   "required_nodes": ["client", "compute", "database"],
@@ -217,7 +217,7 @@ const evaluateArchitecture = (nodes: AppNode[], edges: Edge[]) => {
   return errors;
 };
 
-// ── Main Component ─────────────────────────────────────────────────────────
+// -- Main Component ---------------------------------------------------------
 export default function SystemDesignSimulator() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);

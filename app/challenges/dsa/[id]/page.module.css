@@ -52,6 +52,20 @@
   border-right: 1px solid var(--border-subtle);
 }
 
+.enginePill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
 .mainArea {
   display: flex;
   flex: 1;
@@ -202,11 +216,239 @@
   background: var(--bg-surface);
 }
 
+/* ── Incident scenario banner ──────────────────────────────── */
+.incidentBanner {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-left: 3px solid #ef4444;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 0;
+}
+
+.incidentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.incidentBadge {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #f87171;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.incidentCompany {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.incidentText {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.incidentAssignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(239,68,68,0.15);
+}
+
+.incidentAssigneeYou {
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ── Task box ───────────────────────────────────────────────── */
+.taskBox {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.complexityRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.complexityChip {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(98,222,97,0.08);
+  color: #62de61;
+  border: 1px solid rgba(98,222,97,0.25);
+  white-space: nowrap;
+}
+
+/* ── Solution lock ──────────────────────────────────────────── */
+.solutionLock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 32px;
+  gap: 12px;
+}
+
+.lockGlyph {
+  font-size: 40px;
+  line-height: 1;
+  filter: grayscale(0.3);
+  margin-bottom: 4px;
+}
+
+.lockTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lockBody {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 340px;
+  margin: 0;
+}
+
+/* ── Right panel ────────────────────────────────────────────── */
 .rightPanel {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
+}
+
+/* ── Button FX ──────────────────────────────────────────────────────────── */
+
+/* Wrapper: clips the scan beam to the button boundary */
+.fxBtn {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scan beam — child span inside the button */
+.scanBeam {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.07) 20%,
+    rgba(255, 255, 255, 0.38) 50%,
+    rgba(255, 255, 255, 0.07) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+
+.scanActive {
+  animation: fxScan 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Aurora gradient while compiling ── */
+.submitting {
+  background: linear-gradient(
+    90deg,
+    #6366f1 0%,
+    #8b5cf6 25%,
+    #3b82f6 50%,
+    #06b6d4 75%,
+    #6366f1 100%
+  ) !important;
+  background-size: 300% 100% !important;
+  animation: fxAurora 1.1s linear infinite !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+/* Green nova on accepted ── */
+.accepted {
+  background: #15803d !important;
+  border-color: #16a34a !important;
+  animation: fxAccepted 1.2s ease-out forwards !important;
+}
+
+/* Red shake on wrong answer ── */
+.rejected {
+  animation: fxShake 500ms ease-in-out, fxRedPulse 600ms ease-out !important;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────────────── */
+
+@keyframes fxScan {
+  0%   { left: -60%; opacity: 0; }
+  8%   { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
+}
+
+@keyframes fxAurora {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
+}
+
+@keyframes fxAccepted {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.85),
+                0 0 30px rgba(34, 197, 94, 0.5);
+  }
+  35% {
+    box-shadow: 0 0 0 20px rgba(34, 197, 94, 0),
+                0 0 50px rgba(34, 197, 94, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes fxShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15%       { transform: translateX(-6px) rotate(-1.5deg); }
+  30%       { transform: translateX(6px) rotate(1.5deg); }
+  45%       { transform: translateX(-5px) rotate(-0.8deg); }
+  60%       { transform: translateX(5px) rotate(0.8deg); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+@keyframes fxRedPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.8); }
+  50%  { box-shadow: 0 0 0 14px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
 }
 
 .editorToolbar {
@@ -331,7 +573,7 @@
   margin-bottom: var(--space-6);
 }
 
-/* ── Animations ── */
+/* -- Animations -- */
 @keyframes popIn {
   0%   { opacity: 0; transform: scale(0.7) translateY(4px); }
   60%  { transform: scale(1.08) translateY(-1px); }

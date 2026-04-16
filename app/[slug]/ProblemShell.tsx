@@ -7,7 +7,7 @@ import NotesPanel from '@/app/components/NotesPanel';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// -- Types ------------------------------------------------------------------
 interface ProblemMeta {
   title: string;
   difficulty?: string;
@@ -30,7 +30,7 @@ interface ProblemShellProps {
   starterCode?: string;
 }
 
-// ── Language registry ──────────────────────────────────────────────────────
+// -- Language registry ------------------------------------------------------
 const LANGS: Record<string, { label: string; ext: string; monacoId: string }> = {
   python:     { label: 'Python',     ext: '.py', monacoId: 'python'     },
   javascript: { label: 'JavaScript', ext: '.js', monacoId: 'javascript' },

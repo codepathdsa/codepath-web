@@ -1,5 +1,5 @@
 export * from './types';
-import { dsaChallenges } from './dsa';
+import { dsaChallenges } from './dsa/index';
 import { prChallenges } from './pr';
 import { warChallenges } from './war';
 import { sysChallenges } from './sys';

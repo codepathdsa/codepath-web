@@ -1,0 +1,345 @@
+/* ── CaptureOverlay ──────────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  transition: background 0.35s ease, backdrop-filter 0.35s ease;
+}
+.backdropVisible {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+}
+
+/* ── Confetti ── */
+.confettiWrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.confettiPiece {
+  position: absolute;
+  top: -16px;
+  border-radius: 2px;
+  opacity: 0;
+  transform: rotate(0deg);
+}
+.confettiActive {
+  animation: confettiFall var(--dur, 1.4s) ease-in forwards;
+}
+@keyframes confettiFall {
+  0%   { opacity: 1; top: -10px; transform: rotate(0deg) translateX(0); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; top: 100vh;  transform: rotate(480deg) translateX(40px); }
+}
+
+/* ── Card ── */
+.card {
+  position: relative;
+  width: min(480px, 92vw);
+  background: var(--bg-surface, #111);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 30px 60px rgba(0,0,0,0.6),
+    0 0 60px color-mix(in srgb, var(--creature-color, #62de61) 15%, transparent);
+  transform: scale(0.88) translateY(24px);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+}
+.cardVisible {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* ── Close ── */
+.closeBtn {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary, #666);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.closeBtn:hover { color: var(--text-primary, #fff); }
+
+/* ── Capture headline ── */
+.captureHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.captureTitle {
+  font-family: var(--font-mono, monospace);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--creature-color, #62de61);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--creature-color, #62de61) 60%, transparent);
+  margin: 0;
+  animation: glitchIn 0.5s ease 0.2s both;
+}
+@keyframes glitchIn {
+  0%   { clip-path: inset(50% 0 50% 0); opacity: 0; }
+  40%  { clip-path: inset(20% 0 20% 0); opacity: 1; }
+  60%  { clip-path: inset(5% 0 5% 0); }
+  100% { clip-path: inset(0% 0 0% 0); opacity: 1; }
+}
+.perfectBadge {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* ── Creature display ── */
+.creatureWrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.glowRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--creature-color, #62de61) 25%, transparent) 0%, transparent 70%);
+  animation: pulseRing 2s ease-in-out infinite;
+}
+.glowRing2 {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--creature-color, #62de61) 40%, transparent);
+  animation: pulseRing 2s ease-in-out 0.5s infinite;
+}
+.shinyRing {
+  position: absolute;
+  inset: -24px;
+  border-radius: 50%;
+  border: 1px solid rgba(245,158,11,0.5);
+  animation: shinyRotate 4s linear infinite;
+}
+@keyframes pulseRing {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
+@keyframes shinyRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.creatureIcon {
+  font-size: 60px;
+  line-height: 1;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--creature-color, #62de61) 70%, transparent));
+  animation: iconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+  position: relative;
+  z-index: 1;
+}
+@keyframes iconBounce {
+  from { transform: scale(0.3); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.shinyBadge {
+  position: absolute;
+  top: -4px; right: -8px;
+  font-size: 11px; font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.4);
+  border-radius: 8px;
+  padding: 2px 6px;
+  z-index: 2;
+}
+
+/* ── Creature info ── */
+.creatureInfo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.creatureName {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  margin-bottom: 8px;
+}
+.creatureMeta {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.rarityPill {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  border: 1px solid;
+  border-radius: 12px;
+  padding: 2px 8px;
+  text-transform: capitalize;
+}
+.stagePill, .domainPill {
+  font-size: 11px;
+  color: var(--text-tertiary, #666);
+  background: var(--bg-raised, #1a1a1a);
+  border: 1px solid var(--border-subtle, #222);
+  border-radius: 12px;
+  padding: 2px 8px;
+  text-transform: capitalize;
+}
+.creatureDesc {
+  font-size: 13px;
+  color: var(--text-secondary, #999);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 340px;
+}
+
+/* ── Stats row ── */
+.statsRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-raised, #1a1a1a);
+  border: 1px solid var(--border-subtle, #222);
+  border-radius: 12px;
+  padding: 14px 20px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.statBox {
+  flex: 1;
+  text-align: center;
+}
+.statVal {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-primary, #fff);
+  line-height: 1;
+}
+.statTot {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-tertiary, #555);
+}
+.statLbl {
+  font-size: 11px;
+  color: var(--text-tertiary, #666);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.statDivider {
+  width: 1px;
+  height: 32px;
+  background: var(--border-subtle, #222);
+  margin: 0 8px;
+}
+
+/* ── Evolution row ── */
+.evolutionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-tertiary, #666);
+  background: var(--bg-raised, #1a1a1a);
+  border: 1px solid var(--border-subtle, #222);
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.evoLabel { color: var(--text-tertiary, #666); }
+.evoIcon  { font-size: 18px; }
+.evoName  { font-weight: 600; color: var(--text-primary, #fff); }
+.evoHint  { color: var(--text-tertiary, #555); font-style: italic; }
+
+/* ── CTAs ── */
+.ctaRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+.ctaPrimary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: var(--accent, #62de61);
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.ctaPrimary:hover { opacity: 0.9; transform: translateY(-1px); }
+.ctaSecondary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: var(--bg-raised, #1a1a1a);
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid var(--border-subtle, #333);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ctaSecondary:hover { border-color: var(--accent, #62de61); background: var(--bg-raised, #1a1a1a); }
+
+/* ── Codex progress bar ── */
+.codexBar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-raised, #1a1a1a);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.codexBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent, #62de61), color-mix(in srgb, var(--accent, #62de61) 60%, #8b5cf6));
+  border-radius: 2px;
+  transition: width 0.8s ease 0.3s;
+}
+.codexBarLabel {
+  font-size: 11px;
+  color: var(--text-tertiary, #666);
+  font-family: var(--font-mono, monospace);
+  text-align: center;
+}

@@ -39,7 +39,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const { data: { user } } = await supabase.auth.getUser();
   const isAuthenticated = !!user;
 
-  // ── Split MDX: separate "editorial" from "VisualTree" section ─────────
+  // -- Split MDX: separate "editorial" from "VisualTree" section ---------
   // Everything before the first <VisualTree is the editorial content.
   // Everything after the last </VisualTree> /> is excluded (CodeEditor is now built-in).
   // We render VisualTree separately as a React node for the left-panel Visual tab.
@@ -68,7 +68,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
 
   const visualTreeContent = visualTreeMatch ? visualTreeMatch[0] : null;
 
-  // ── Build MDX component maps ──────────────────────────────────────────
+  // -- Build MDX component maps ------------------------------------------
   const premiumComponent = {
     Premium: ({ children }: { children: React.ReactNode }) => (
       <PremiumGate isAuthenticated={isAuthenticated}>{children}</PremiumGate>
@@ -77,7 +77,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
 
   const mdxComponents = buildMdxComponents(premiumComponent);
 
-  // ── Render MDX parts as RSC ───────────────────────────────────────────
+  // -- Render MDX parts as RSC -------------------------------------------
   const questionNode = (
     <MDXRemote
       source={questionContent}
@@ -102,7 +102,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
     />
   ) : null;
 
-  // ── Render visual tree if present ─────────────────────────────────────
+  // -- Render visual tree if present -------------------------------------
   const visualTree = visualTreeContent ? (
     <MDXRemote
       source={visualTreeContent}

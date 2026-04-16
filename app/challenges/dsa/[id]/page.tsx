@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 import { useParams } from 'next/navigation';
 import styles from './page.module.css';
 import { CHALLENGES, TestCase } from '@/lib/challenges';
+import CaptureOverlay from '@/app/components/CaptureOverlay';
+import { useCodeExecution } from '@/hooks/useCodeExecution';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// --- Types -------------------------------------------------------------------
 interface TestResult {
   tc: TestCase;
   passed: boolean;
@@ -16,7 +18,7 @@ interface TestResult {
   hidden: boolean;
 }
 
-// ─── Heuristic evaluator (browser-side, no execution sandbox needed) ─────────
+// --- Heuristic evaluator (browser-side, no execution sandbox needed) ---------
 function evaluateCode(
   code: string,
   challengeId: string,
@@ -55,7 +57,53 @@ function evaluateCode(
   };
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// --- Code-rune particle burst (client-only, DOM manipulation) ---------------
+const CODE_GLYPHS = ['{  }', '[ ]', '=>', 'fn()', 'λ', '01', '//', '!=', '**', 'O(n)', 'null', 'if', '++', 'for', '&&', '[]'];
+
+function spawnCodeParticles(el: HTMLElement, count: number, color: string, spread = 90) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < count; i++) {
+    const node = document.createElement('span');
+    node.textContent = CODE_GLYPHS[Math.floor(Math.random() * CODE_GLYPHS.length)];
+    const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * (Math.PI / count) * 3;
+    const dist = spread * (0.55 + Math.random() * 0.65);
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const rot = (Math.random() - 0.5) * 720;
+    const size = 9 + Math.random() * 8;
+    const delay = Math.random() * 55;
+    Object.assign(node.style, {
+      position: 'fixed',
+      left: `${cx}px`,
+      top: `${cy}px`,
+      transform: 'translate(-50%,-50%) scale(1.2) rotate(0deg)',
+      color,
+      fontFamily: 'ui-monospace, "Cascadia Code", monospace',
+      fontSize: `${size}px`,
+      fontWeight: '800',
+      pointerEvents: 'none',
+      zIndex: '99999',
+      textShadow: `0 0 10px ${color}, 0 0 22px ${color}80`,
+      willChange: 'transform, opacity',
+      opacity: '1',
+      whiteSpace: 'nowrap',
+      userSelect: 'none',
+      transition: `transform 700ms cubic-bezier(0.23,1,0.32,1) ${delay}ms, opacity 700ms ease ${delay}ms`,
+    });
+    document.body.appendChild(node);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      Object.assign(node.style, {
+        transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0) rotate(${rot}deg)`,
+        opacity: '0',
+      });
+    }));
+    setTimeout(() => { if (document.body.contains(node)) document.body.removeChild(node); }, 820 + delay);
+  }
+}
+
+// --- Component ---------------------------------------------------------------
 export default function DSAWorkspace() {
   const params = useParams();
   const challengeId = params.id as string;
@@ -74,6 +122,13 @@ export default function DSAWorkspace() {
   const [hintsUnlocked, setHintsUnlocked] = useState<number[]>([]);
   const [timer, setTimer] = useState(0);
   const [cliMode, setCliMode] = useState(false);
+  const { engineStatus, runPython } = useCodeExecution();
+  const isPyodideReady = engineStatus === 'ready';
+
+  // Button FX refs & state
+  const submitBtnRef = useRef<HTMLButtonElement>(null);
+  const runBtnRef = useRef<HTMLButtonElement>(null);
+  const [submitFxClass, setSubmitFxClass] = useState('');
 
   // Run state
   const [runResults, setRunResults] = useState<TestResult[]>([]);   // example results after "Run Code"
@@ -82,6 +137,7 @@ export default function DSAWorkspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingStarted, setIsSubmittingStarted] = useState(false); // cards revealed immediately
   const [submitted, setSubmitted] = useState(false);
+  const [showCapture, setShowCapture] = useState(false);
 
   // Reset when challenge changes
   useEffect(() => {
@@ -121,43 +177,97 @@ export default function DSAWorkspace() {
   const allPassed = submitted && submitResults.length > 0 && submitResults.every(r => r.passed);
   const submitPassCount = submitResults.filter(r => r.passed).length;
 
-  // ── Run Code (examples only) ──
-  const handleRunCode = () => {
+  // Show capture overlay exactly once when all tests pass
+  useEffect(() => {
+    if (allPassed) {
+      const t = setTimeout(() => setShowCapture(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [allPassed]);
+
+  // Button result FX — fires once after each full submission
+  useEffect(() => {
+    if (!submitted || !submitBtnRef.current) return;
+    if (allPassed) {
+      spawnCodeParticles(submitBtnRef.current, 12, '#22c55e', 130);
+      const t = setTimeout(() => {
+        if (submitBtnRef.current) spawnCodeParticles(submitBtnRef.current, 10, '#62de61', 170);
+      }, 160);
+      setSubmitFxClass(styles.accepted);
+      const clear = setTimeout(() => setSubmitFxClass(''), 1400);
+      return () => { clearTimeout(t); clearTimeout(clear); };
+    } else {
+      spawnCodeParticles(submitBtnRef.current, 8, '#ef4444', 70);
+      setSubmitFxClass(styles.rejected);
+      const clear = setTimeout(() => setSubmitFxClass(''), 700);
+      return () => clearTimeout(clear);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted]);
+
+  // -- Run Code (examples only) --
+  const handleRunCode = async () => {
     if (!examples.length) return;
+    if (runBtnRef.current) spawnCodeParticles(runBtnRef.current, 8, '#62de61', 55);
     setIsRunning(true);
     setRunResults([]);
     setSubmitted(false);
 
-    examples.forEach((tc, i) => {
-      setTimeout(() => {
+    for (let i = 0; i < examples.length; i++) {
+      const tc = examples[i];
+      let result: TestResult;
+
+      if (isPyodideReady && language === 'python') {
+        const { passed, actual, ms } = await runPython(code, tc.input, tc.expected);
+        result = { tc, passed, actual, ms, hidden: false };
+      } else {
+        await new Promise(r => setTimeout(r, 280 + i * 280));
         const ms = Math.floor(Math.random() * 80 + 15);
         const { passed, actual } = evaluateCode(code, challenge.id, tc, i);
-        setRunResults(prev => [...prev, { tc, passed, actual, ms, hidden: false }]);
-        if (i === examples.length - 1) setIsRunning(false);
-      }, i * 300 + 250);
-    });
+        result = { tc, passed, actual, ms, hidden: false };
+      }
+
+      setRunResults(prev => [...prev, result]);
+    }
+    setIsRunning(false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!tcs.length) return;
+    setSubmitFxClass(styles.submitting);
+    if (submitBtnRef.current) spawnCodeParticles(submitBtnRef.current, 14, 'rgba(99,102,241,0.9)', 90);
     // Phase 1: reveal all cards immediately
     setIsSubmittingStarted(true);
     setIsSubmitting(true);
     setSubmitResults([]);
     setSubmitted(false);
 
-    // Phase 2: stream results in with stagger
-    tcs.forEach((tc, i) => {
-      setTimeout(() => {
+    // Phase 2: run each test case, stream results
+    for (let i = 0; i < tcs.length; i++) {
+      const tc = tcs[i];
+      let result: TestResult;
+
+      if (isPyodideReady && language === 'python') {
+        // Real execution via Pyodide
+        const { passed, actual, ms } = await runPython(code, tc.input, tc.expected);
+        // Small UI stagger so results animate in one by one
+        await new Promise(r => setTimeout(r, 120));
+        result = { tc, passed, actual, ms, hidden: i >= 2 };
+      } else {
+        // Heuristic fallback
+        await new Promise(r => setTimeout(r, i === 0 ? 600 : 350));
         const ms = Math.floor(Math.random() * 130 + 20);
         const { passed, actual } = evaluateCode(code, challenge.id, tc, i);
-        setSubmitResults(prev => [...prev, { tc, passed, actual, ms, hidden: i >= 2 }]);
-        if (i === tcs.length - 1) {
-          setIsSubmitting(false);
-          setSubmitted(true);
-        }
-      }, i * 350 + 600); // cards shown first (600ms head-start), then badges pop in
-    });
+        result = { tc, passed, actual, ms, hidden: i >= 2 };
+      }
+
+      setSubmitResults(prev => [...prev, result]);
+
+      if (i === tcs.length - 1) {
+        setIsSubmitting(false);
+        setSubmitted(true);
+      }
+    }
   };
 
   const toggleHint = (idx: number) => {
@@ -168,7 +278,18 @@ export default function DSAWorkspace() {
 
   return (
     <div className={styles.layout}>
-      {/* ── Top Bar ── */}
+      {/* Creature capture overlay */}
+      {showCapture && (
+        <CaptureOverlay
+          challengeId={challenge.id}
+          isPerfectRun={submitPassCount === submitResults.length && timer < 600}
+          timeTakenSeconds={timer}
+          nextChallengeHref={nextChallenge ? `/challenges/dsa/${nextChallenge.id}` : undefined}
+          onClose={() => setShowCapture(false)}
+        />
+      )}
+
+      {/* -- Top Bar -- */}
       <div className={styles.topBar}>
         <div className={styles.topLeft}>
           <Link href="/challenges" style={{ color: 'var(--text-tertiary)' }}>←</Link>
@@ -181,6 +302,38 @@ export default function DSAWorkspace() {
         <div className={styles.topCenter}>{formatTime(timer)}</div>
 
         <div className={styles.topRight}>
+          {/* Python engine status pill */}
+          {language === 'python' && (
+            <div
+              className={styles.enginePill}
+              style={{
+                background: engineStatus === 'ready'   ? 'rgba(98,222,97,0.12)'  :
+                            engineStatus === 'loading' ? 'rgba(251,191,36,0.12)' :
+                            engineStatus === 'error'   ? 'rgba(239,68,68,0.12)'  :
+                                                         'rgba(255,255,255,0.05)',
+                borderColor: engineStatus === 'ready'   ? 'rgba(98,222,97,0.35)'  :
+                             engineStatus === 'loading' ? 'rgba(251,191,36,0.35)' :
+                             engineStatus === 'error'   ? 'rgba(239,68,68,0.35)'  :
+                                                          'var(--border-subtle)',
+                color: engineStatus === 'ready'   ? '#62de61' :
+                       engineStatus === 'loading' ? '#fbbf24' :
+                       engineStatus === 'error'   ? '#f87171' :
+                                                    'var(--text-tertiary)',
+              }}
+              title={
+                engineStatus === 'ready'   ? 'Python 3.11 (Pyodide) — real execution active' :
+                engineStatus === 'loading' ? 'Loading Python engine...' :
+                engineStatus === 'error'   ? 'Python engine failed — using heuristic mode' :
+                                              'Python engine idle'
+              }
+            >
+              🐍&nbsp;
+              {engineStatus === 'ready'   ? 'Python Ready' :
+               engineStatus === 'loading' ? 'Loading…' :
+               engineStatus === 'error'   ? 'Heuristic Mode' :
+                                            'Python Idle'}
+            </div>
+          )}
           <div className={styles.modeIndicator}>
             <span>Mode:</span>
             <span style={{ color: cliMode ? 'var(--accent)' : 'var(--text-primary)' }}>
@@ -191,26 +344,30 @@ export default function DSAWorkspace() {
             {cliMode ? 'Web Mode' : 'CLI Mode'}
           </button>
           <button
-            className="btn-ghost"
+            ref={runBtnRef}
+            className={`btn-ghost ${styles.fxBtn}`}
             onClick={handleRunCode}
             disabled={isRunning || isSubmitting}
             style={{ minWidth: '110px' }}
           >
+            <span className={`${styles.scanBeam} ${isRunning ? styles.scanActive : ''}`} aria-hidden="true" />
             {isRunning ? '⏳ Running…' : '▶ Run Code'}
           </button>
           <button
-            className="btn-primary"
+            ref={submitBtnRef}
+            className={`btn-primary ${styles.fxBtn} ${submitFxClass}`}
             onClick={handleSubmit}
             disabled={isRunning || isSubmitting}
             style={{ minWidth: '90px' }}
           >
-            {isSubmitting ? '⏳…' : 'Submit →'}
+            <span className={`${styles.scanBeam} ${isSubmitting ? styles.scanActive : ''}`} aria-hidden="true" />
+            {isSubmitting ? '[ Compiling… ]' : 'Submit →'}
           </button>
         </div>
       </div>
 
       <div className={styles.mainArea}>
-        {/* ── Left Panel ── */}
+        {/* -- Left Panel -- */}
         <div className={styles.leftPanel}>
           <div className={styles.tabHeader}>
             <button
@@ -229,7 +386,7 @@ export default function DSAWorkspace() {
               className={`${styles.tabBtn} ${activeTab === 'solution' ? styles.active : ''}`}
               onClick={() => setActiveTab('solution')}
             >
-              Solution
+              Solution {!submitted && <span style={{ marginLeft: '4px', opacity: 0.5 }}>🔒</span>}
             </button>
           </div>
 
@@ -273,13 +430,43 @@ export default function DSAWorkspace() {
                 </div>
               )}
 
-              {/* Description */}
-              <div className={styles.sectionTitle}>Description</div>
-              <div className={styles.desc}>
-                <p>{challenge.desc}</p>
+              {/* Incident scenario banner */}
+              {challenge.realWorldContext && (
+                <div className={styles.incidentBanner}>
+                  <div className={styles.incidentHeader}>
+                    <span className={styles.incidentBadge}>🚨 P0 Incident</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {challenge.companies.map(c => (
+                        <span key={c} className={styles.incidentCompany}>{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className={styles.incidentText}>{challenge.realWorldContext}</p>
+                  <div className={styles.incidentAssignee}>
+                    <span style={{ color: 'var(--text-tertiary)' }}>📥 Assigned to:</span>
+                    <span className={styles.incidentAssigneeYou}>You — {challenge.level} Engineer</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Task */}
+              <div className={styles.sectionTitle}>Your Task</div>
+              <div className={styles.taskBox}>
+                <p style={{ margin: 0 }}>{challenge.desc}</p>
+                {challenge.complexity && typeof challenge.complexity === 'object' && (
+                  <div className={styles.complexityRow}>
+                    <span className={styles.complexityChip}>⏱ Time: {challenge.complexity.time}</span>
+                    <span className={styles.complexityChip}>💾 Space: {challenge.complexity.space}</span>
+                  </div>
+                )}
+                {challenge.complexity && typeof challenge.complexity === 'string' && (
+                  <div className={styles.complexityRow}>
+                    <span className={styles.complexityChip}>{challenge.complexity}</span>
+                  </div>
+                )}
               </div>
 
-              {/* ── Examples (always visible, first 2 test cases) ── */}
+              {/* -- Examples (always visible, first 2 test cases) -- */}
               {examples.length > 0 && (
                 <>
                   {examples.map((tc, i) => {
@@ -428,7 +615,7 @@ export default function DSAWorkspace() {
               )}
 
 
-              {/* ── Hints ── */}
+              {/* -- Hints -- */}
               {challenge.hints && challenge.hints.length > 0 && (
                 <>
                   <div className={styles.sectionTitle}>Hints</div>
@@ -489,30 +676,58 @@ export default function DSAWorkspace() {
 
           {activeTab === 'solution' && (
             <div className={styles.jiraContent} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div className={styles.sectionTitle} style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Reference Solution</span>
-                <span className="badge" style={{ fontSize: '10px' }}>Python 3</span>
-              </div>
-              <div style={{ flex: 1, minHeight: '300px', border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
-                <Editor
-                  height="100%"
-                  language="python"
-                  theme="vs-dark"
-                  value={challenge.starterCode ?? '# Solution not provided'}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 13,
-                    fontFamily: 'var(--font-mono)',
-                    padding: { top: 16 },
-                    scrollBeyondLastLine: false,
-                    readOnly: true,
-                    lineNumbersMinChars: 3,
-                  }}
-                />
-              </div>
-              <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                💡 Right now, the reference solution is only provided in Python. Multi-language solutions are coming soon.
-              </p>
+              {!submitted ? (
+                <div className={styles.solutionLock}>
+                  <div className={styles.lockGlyph}>🔒</div>
+                  <div className={styles.lockTitle}>Reference Solution Locked</div>
+                  <p className={styles.lockBody}>
+                    Submit your solution first — pass or fail, one attempt unlocks the reference code.
+                    <br />No peeking before you try! That&apos;s how you actually get good.
+                  </p>
+                  <button
+                    className="btn-primary"
+                    onClick={() => setActiveTab('ticket')}
+                    style={{ marginTop: '16px' }}
+                  >
+                    ← Back to Problem
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.sectionTitle} style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Reference Solution</span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {allPassed && <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 700 }}>✓ Solved!</span>}
+                      <span className="badge" style={{ fontSize: '10px' }}>Python 3</span>
+                    </div>
+                  </div>
+                  {!allPassed && (
+                    <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '8px', fontSize: '12px', color: '#fbbf24' }}>
+                      💡 Review the approach below and try again — you can submit as many times as you like.
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minHeight: '300px', border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <Editor
+                      height="100%"
+                      language="python"
+                      theme="vs-dark"
+                      value={challenge.starterCode ?? '# Solution not provided'}
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        fontFamily: 'var(--font-mono)',
+                        padding: { top: 16 },
+                        scrollBeyondLastLine: false,
+                        readOnly: true,
+                        lineNumbersMinChars: 3,
+                      }}
+                    />
+                  </div>
+                  <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                    💡 Reference solution is in Python. Multi-language solutions coming soon.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -521,9 +736,9 @@ export default function DSAWorkspace() {
           <div className={styles.editorToolbar}>
             <select className={styles.langSelect} value={language} onChange={e => setLanguage(e.target.value)}>
               <option value="python">Python 3</option>
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="go">Go</option>
+              <option value="javascript" disabled>JavaScript (coming soon)</option>
+              <option value="typescript" disabled>TypeScript (coming soon)</option>
+              <option value="go" disabled>Go (coming soon)</option>
             </select>
             {submitted && (
               <span
@@ -581,7 +796,7 @@ export default function DSAWorkspace() {
             )}
           </div>
 
-          {/* ── Test Output Panel ── */}
+          {/* -- Test Output Panel -- */}
           <div className={styles.testPanel}>
             <div className={styles.testHeader}>
               <span className={styles.testTitle}>
@@ -656,7 +871,7 @@ export default function DSAWorkspace() {
             </pre>
           </div>
 
-          {/* ── Accepted Panel ── */}
+          {/* -- Accepted Panel -- */}
           {submitted && allPassed && (
             <div className={`${styles.resultPanel} ${styles.open}`}>
               <div className={styles.resultHeader}>
@@ -716,7 +931,7 @@ export default function DSAWorkspace() {
             </div>
           )}
 
-          {/* ── Wrong Answer Panel ── */}
+          {/* -- Wrong Answer Panel -- */}
           {submitted && !allPassed && (
             <div
               className={`${styles.resultPanel} ${styles.open}`}

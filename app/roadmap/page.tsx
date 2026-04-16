@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
 
 const ROADMAP_DATA = {
@@ -94,20 +95,7 @@ export default function RoadmapPage() {
   return (
     <div className={styles.layout}>
       {/* Universal Top Nav */}
-      <nav style={{ height: '60px', background: 'var(--bg-base)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-6)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link href="/" style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none' }}>
-          engprep<span style={{ display: 'inline-block', width: '8px', height: '16px', background: 'var(--accent)', marginLeft: '2px', animation: 'cursor-blink 1.2s infinite' }}></span>
-        </Link>
-        <div style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center' }}>
-          <Link href="/dashboard" style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none', transition: 'color 150ms' }}>Dashboard</Link>
-          <Link href="/challenges" style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none', transition: 'color 150ms' }}>Challenges</Link>
-          <Link href="/roadmap" style={{ color: 'var(--text-primary)', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}>Roadmap</Link>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-          <div className="badge badge-pro">PRO ACTIVE</div>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border-strong)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--text-tertiary)', fontSize: '14px', fontWeight: 600 }}>VP</div>
-        </div>
-      </nav>
+      <AppNav />
 
       <main className={styles.mainContainer}>
         <div className={styles.header}>

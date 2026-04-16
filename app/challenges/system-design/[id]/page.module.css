@@ -41,8 +41,69 @@
   flex-direction: column;
   flex-shrink: 0;
   z-index: 10;
-  overflow-y: auto;
+  overflow: hidden;
 }
+
+/* Scrollable component list — sits between constraints and pinned hint */
+.leftPanelScroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.leftPanelScroll::-webkit-scrollbar { width: 4px; }
+.leftPanelScroll::-webkit-scrollbar-track { background: transparent; }
+.leftPanelScroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+
+/* Pinned hint bar at the bottom of the left panel */
+.leftPanelHint {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 10px;
+  color: #3f3f46;
+  line-height: 1.5;
+  border-top: 1px solid #18181b;
+  background: rgba(0,0,0,0.3);
+}
+
+/* Component search box */
+.compSearchWrap {
+  flex-shrink: 0;
+  position: relative;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid #27272a;
+}
+
+.compSearch {
+  width: 100%;
+  box-sizing: border-box;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  padding: 6px 28px 6px 10px;
+  font-size: 12px;
+  color: #e4e4e7;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.compSearch::placeholder { color: #3f3f46; }
+.compSearch:focus { border-color: #52525b; }
+
+.compSearchClear {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #52525b;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+  margin-top: 1px;
+}
+.compSearchClear:hover { color: #a1a1aa; }
 
 .panelHeader {
   font-size: 10px;
@@ -159,6 +220,36 @@
   transition: all 0.3s;
 }
 
+/* Delete button — hidden by default, appears on node hover */
+.nodeDeleteBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 20;
+  padding: 0;
+}
+.customNode:hover .nodeDeleteBtn {
+  opacity: 1;
+}
+.nodeDeleteBtn:hover {
+  transform: scale(1.2);
+  background: #dc2626;
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
@@ -209,3 +300,328 @@
   content: ''; position: absolute; left: -5px; top: 50%; transform: translateY(-50%);
   border-width: 5px 5px 5px 0; border-style: solid; border-color: transparent #ef4444 transparent transparent;
 }
+
+/* ── Level Toast ────────────────────────────────────────────── */
+.levelToast {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #18181b;
+  border: 1px solid #62de61;
+  color: #62de61;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: 8px 20px;
+  border-radius: 20px;
+  z-index: 9999;
+  box-shadow: 0 4px 24px rgba(98, 222, 97, 0.25);
+  animation: toastIn 0.3s ease-out;
+  white-space: nowrap;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Level Dots ─────────────────────────────────────────────── */
+.levelDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  transition: all 0.3s;
+}
+.levelDotActive {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+  animation: pulseDot 1s ease-in-out infinite;
+}
+.levelDotDone {
+  background: #62de61;
+  border-color: #62de61;
+}
+.levelDotFail {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 12px rgba(251, 191, 36, 0.9); }
+}
+
+/* ── Component Palette Group ────────────────────────────────── */
+.panelGroupLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #3f3f46;
+  padding: 10px 12px 4px;
+  text-transform: uppercase;
+}
+
+/* ── Canvas Hint Overlay ────────────────────────────────────── */
+.canvasHint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ── Right Panel ────────────────────────────────────────────── */
+.rightPanel {
+  width: 300px;
+  flex-shrink: 0;
+  border-left: 1px solid #27272a;
+  background: #0d0d0f;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rightTabBar {
+  display: flex;
+  border-bottom: 1px solid #27272a;
+  background: #0a0a0c;
+  flex-shrink: 0;
+}
+
+.rightTabBtn {
+  flex: 1;
+  padding: 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #52525b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: var(--font-sans);
+}
+.rightTabBtn:hover { color: #a1a1aa; }
+.rightTabActive {
+  color: #f4f4f5 !important;
+  border-bottom-color: #62de61 !important;
+}
+
+.rightTabContent {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+/* ── Brief tab pieces ───────────────────────────────────────── */
+.incidentBanner {
+  margin: 12px;
+  padding: 12px;
+  background: #1a0a0a;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+}
+.incidentTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.incidentBadge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  background: #7f1d1d;
+  color: #fca5a5;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.incidentCo {
+  font-size: 10px;
+  color: #71717a;
+  padding: 2px 8px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 4px;
+}
+.incidentBody {
+  font-size: 12px;
+  color: #d4d4d8;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.incidentAssign {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding-top: 8px;
+  border-top: 1px solid #27272a;
+}
+
+.rightSectionLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #3f3f46;
+  padding: 12px 12px 4px;
+  text-transform: uppercase;
+}
+
+.taskBox {
+  margin: 0 12px 4px;
+  padding: 12px;
+  background: #111113;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+}
+
+/* ── Traffic levels in Brief tab ────────────────────────────── */
+.levelRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #18181b;
+  transition: background 0.2s;
+}
+.levelRow:last-child { border-bottom: none; }
+.levelRowActive { background: rgba(251, 191, 36, 0.04); }
+.levelRowFail { background: rgba(239, 68, 68, 0.04); }
+.levelRowDone { background: rgba(98, 222, 97, 0.03); }
+.levelRowNum {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+/* ── Q&A tab ────────────────────────────────────────────────── */
+.questionsIntro {
+  padding: 12px;
+  font-size: 11px;
+  color: #52525b;
+  line-height: 1.6;
+  border-bottom: 1px solid #18181b;
+}
+
+.questionBlock {
+  border-bottom: 1px solid #18181b;
+}
+
+.questionToggle {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  color: #a1a1aa;
+  text-align: left;
+  transition: background 0.15s;
+}
+.questionToggle:hover { background: #111113; }
+
+.questionBody {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hintBox {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-left: 3px solid #fbbf24;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #a1a1aa;
+  line-height: 1.5;
+  border-radius: 0 6px 6px 0;
+}
+
+.revealBtn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid #27272a;
+  color: #62de61;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: background 0.15s;
+}
+.revealBtn:hover { background: #18181b; }
+
+.answerBox {
+  background: #0d1f0d;
+  border: 1px solid #166534;
+  padding: 10px;
+  font-size: 11px;
+  color: #86efac;
+  line-height: 1.65;
+  border-radius: 6px;
+}
+
+/* ── Solution tab ───────────────────────────────────────────── */
+.solutionLock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.solvedBanner {
+  margin: 12px;
+  padding: 10px;
+  background: #0d1f0d;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #62de61;
+  text-align: center;
+}
+
+.solutionText {
+  margin: 0 12px 4px;
+  font-size: 12px;
+  color: #a1a1aa;
+  line-height: 1.7;
+}
+
+/* ── Constraint table (reuse for right panel) ───────────────── */
+.constraintTable {
+  margin: 0 12px;
+}
+.constraintTableRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 11px;
+  border-bottom: 1px solid #18181b;
+  color: #71717a;
+}
+.constraintTableRow span:last-child { color: #a1a1aa; font-family: var(--font-mono); }

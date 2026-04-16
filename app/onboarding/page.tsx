@@ -8,9 +8,57 @@ import styles from './page.module.css';
 type Role = 'SDE1' | 'SDE2' | 'SDE3' | null;
 
 const COMPANIES = [
-  'Google', 'Meta', 'Amazon', 'Apple', 'Microsoft', 
-  'Stripe', 'Airbnb', 'Notion', 'Linear', 'Vercel', 
+  'Google', 'Meta', 'Amazon', 'Apple', 'Microsoft',
+  'Stripe', 'Airbnb', 'Notion', 'Linear', 'Vercel',
   'Other', 'Not sure yet'
+];
+
+interface StarterCreature {
+  id: string;
+  name: string;
+  emoji: string;
+  tagline: string;
+  specialty: string;
+  type: string;
+  typeClass: string;
+  accentColor: string;
+  description: string;
+}
+
+const STARTER_CREATURES: StarterCreature[] = [
+  {
+    id: 'cache-miss',
+    name: 'Cache Miss',
+    emoji: '⚡',
+    tagline: 'Speed-obsessed. Systems first.',
+    specialty: 'System Design + Performance',
+    type: 'System Design',
+    typeClass: 'badge-design',
+    accentColor: '#3b82f6',
+    description: 'Born from the chaos of a cache stampede. Thrives in distributed systems, latency wars, and database tradeoffs. Engineers who choose Cache Miss think in data flows and failure modes.',
+  },
+  {
+    id: 'null-gremlin',
+    name: 'Null Pointer Gremlin',
+    emoji: '🐛',
+    tagline: 'Chaotic. Precise. Finds bugs others miss.',
+    specialty: 'Contextual DSA + Debugging',
+    type: 'Contextual DSA',
+    typeClass: 'badge-dsa',
+    accentColor: '#62de61',
+    description: 'The most feared creature in any codebase. Lives in edge cases, off-by-one errors, and null reference exceptions. Engineers who choose the Gremlin love diving deep into the algorithm.',
+  },
+  {
+    id: 'spaghetti-hatchling',
+    name: 'Spaghetti Hatchling',
+    emoji: '🍝',
+    tagline: 'Master of legacy code. Embraces the mess.',
+    specialty: 'PR Review + Code Quality',
+    type: 'PR Review',
+    typeClass: 'badge-pr',
+    accentColor: '#f97316',
+    description: 'Hatched inside a 12,000-line God class with no tests. Evolved by reading 10,000 pull requests. Engineers who choose the Hatchling see through bad abstractions and improve every codebase they touch.',
+  },
 ];
 
 export default function OnboardingPage() {
@@ -18,11 +66,12 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<Role>(null);
   const [targetCompanies, setTargetCompanies] = useState<string[]>([]);
+  const [selectedCreature, setSelectedCreature] = useState<StarterCreature | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleRoleSelect = (selectedRole: Role) => {
     setRole(selectedRole);
-    setStep(2); // Auto-advance
+    setStep(2);
   };
 
   const toggleCompany = (company: string) => {
@@ -30,7 +79,6 @@ export default function OnboardingPage() {
       setStep(3);
       return;
     }
-    
     if (targetCompanies.includes(company)) {
       setTargetCompanies(targetCompanies.filter(c => c !== company));
     } else {
@@ -44,14 +92,18 @@ export default function OnboardingPage() {
     setStep(4);
   };
 
+  const handleCreatureSelect = (creature: StarterCreature) => {
+    setSelectedCreature(creature);
+    setStep(5);
+  };
+
   const completeChallenge = () => {
     setShowSuccess(true);
     setTimeout(() => {
       router.push('/dashboard');
-    }, 2500);
+    }, 2800);
   };
 
-  // Skip functionality skips to dashboard
   const handleSkip = () => {
     router.push('/dashboard');
   };
@@ -60,7 +112,7 @@ export default function OnboardingPage() {
     <div className={styles.container}>
       <header className={styles.header}>
         <Link href="/" className={styles.logo}>engprep</Link>
-        <div className={styles.progress}>STEP 0{step} / 04</div>
+        <div className={styles.progress}>STEP 0{step} / 05</div>
       </header>
 
       <main className={styles.main}>
@@ -135,6 +187,36 @@ export default function OnboardingPage() {
 
           {step === 4 && (
             <>
+              <h1 className={styles.title}>Choose your first companion.</h1>
+              <p className="t-body" style={{ textAlign: 'center', marginBottom: 'var(--space-8)', color: 'var(--text-secondary)' }}>
+                Every engineer starts with one creature. It shapes your daily encounter pool and signals your primary engineering identity.
+              </p>
+              <div className={styles.creatureGrid}>
+                {STARTER_CREATURES.map(creature => (
+                  <div
+                    key={creature.id}
+                    className={styles.creatureCard}
+                    style={{ '--creature-accent': creature.accentColor } as React.CSSProperties}
+                    onClick={() => handleCreatureSelect(creature)}
+                  >
+                    <div className={styles.creatureEmoji}>{creature.emoji}</div>
+                    <div className={styles.creatureName}>{creature.name}</div>
+                    <div className={styles.creatureTagline}>{creature.tagline}</div>
+                    <span className={`badge ${creature.typeClass}`} style={{ marginBottom: 'var(--space-3)' }}>{creature.type}</span>
+                    <p className={styles.creatureDesc}>{creature.description}</p>
+                    <div className={styles.creatureSpecialty}>
+                      <span>Specialty:</span> {creature.specialty}
+                    </div>
+                    <button className={styles.chooseBtn}>Choose {creature.name} →</button>
+                  </div>
+                ))}
+              </div>
+              <button className={styles.skipLink} onClick={() => setStep(5)}>Skip — choose later →</button>
+            </>
+          )}
+
+          {step === 5 && (
+            <>
               <h1 className={styles.title}>Let's start. This takes 8 minutes.</h1>
               
               <div className={styles.challengePreview}>
@@ -165,11 +247,24 @@ export default function OnboardingPage() {
       {showSuccess && (
         <div className={styles.successOverlay}>
           <div className={styles.successCard}>
-            <div className={styles.successIcon}>✓</div>
-            <h2 className="t-heading" style={{ marginBottom: 'var(--space-2)'}}>First Win!</h2>
-            <p className="t-body" style={{ marginBottom: 'var(--space-6)'}}>You successfully simulated a real incident fix.</p>
-            <div className="badge badge-active" style={{ fontSize: 'var(--text-lg)', padding: '6px 12px' }}>+50 XP</div>
-            <p className="t-body" style={{ marginTop: 'var(--space-6)', fontSize: 'var(--text-sm)' }}>Loading your dashboard...</p>
+            {selectedCreature ? (
+              <>
+                <div className={styles.successCreatureEmoji}>{selectedCreature.emoji}</div>
+                <div className={styles.captureLabel}>✦ CAPTURED</div>
+                <h2 className="t-heading" style={{ marginBottom: 'var(--space-2)' }}>{selectedCreature.name}</h2>
+                <p className="t-body" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-secondary)' }}>{selectedCreature.tagline}</p>
+                <div className="badge badge-dsa" style={{ fontSize: 'var(--text-lg)', padding: '6px 12px', marginBottom: 'var(--space-3)' }}>+50 XP</div>
+                <p className="t-body" style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>1 / 120 in your Codex. 119 to go.</p>
+              </>
+            ) : (
+              <>
+                <div className={styles.successIcon}>✓</div>
+                <h2 className="t-heading" style={{ marginBottom: 'var(--space-2)' }}>First Win!</h2>
+                <p className="t-body" style={{ marginBottom: 'var(--space-6)' }}>You successfully simulated a real incident fix.</p>
+                <div className="badge badge-active" style={{ fontSize: 'var(--text-lg)', padding: '6px 12px' }}>+50 XP</div>
+              </>
+            )}
+            <p className="t-body" style={{ marginTop: 'var(--space-6)', fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>Loading your dashboard...</p>
           </div>
         </div>
       )}

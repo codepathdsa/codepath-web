@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import styles from './page.module.css';
+import AppNav from '@/app/components/AppNav';
+import DailyEncounter from '@/app/components/DailyEncounter';
+import StreakWidget from '@/app/components/StreakWidget';
 
 import { ACTIVITY_EVENTS } from '@/lib/activity';
 
@@ -66,21 +69,7 @@ export default function Dashboard() {
   return (
     <div className={styles.layout}>
       {/* 9.1 Top Web Navigation */}
-      <nav className={styles.topNav}>
-        <Link href="/" className={styles.navLogo}>
-          engprep<span></span>
-        </Link>
-        <div className={styles.navLinks}>
-          <Link href="/dashboard" className={styles.active}>Dashboard</Link>
-          <Link href="/challenges">Challenges</Link>
-          <Link href="/roadmap">Roadmap</Link>
-          <Link href="/discussions">Discussions</Link>
-        </div>
-        <div className={styles.navActions}>
-          <div className="badge badge-pro">PRO ACTIVE</div>
-          <div className={styles.navProfile}>VP</div>
-        </div>
-      </nav>
+      <AppNav />
 
       <main className={styles.mainContainer}>
         {/* Header Section */}
@@ -98,6 +87,9 @@ export default function Dashboard() {
             <span className={styles.lvlBadge}>Lvl 14</span>
           </div>
         </div>
+
+        {/* Daily Encounter — must be first thing user sees */}
+        <DailyEncounter />
 
         {/* 9.2 Quick Resume */}
         <div className={styles.resumeCard}>
@@ -137,12 +129,10 @@ export default function Dashboard() {
             <div className={styles.metricValue}>3</div>
             <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: '20%', background: '#f59e0b' }}></div></div>
           </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricLabel}>Current Streak</div>
-            <div className={styles.metricValue}>5 Days</div>
-            <span style={{ fontSize: '13px', color: 'var(--color-warning)', fontWeight: 500 }}>🔥 Keep it up!</span>
-          </div>
         </div>
+
+        {/* Streak Engine Widget */}
+        <StreakWidget />
 
         {/* 9.4 Activity Heatmap */}
         <div className={styles.heatmapSection}>

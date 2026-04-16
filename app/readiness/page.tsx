@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
 
 export default function ReadinessReport() {
@@ -31,16 +32,7 @@ export default function ReadinessReport() {
 
   return (
     <div className={styles.layout}>
-      <nav className={styles.topNav}>
-        <Link href="/" className={styles.navLogo}>engprep<span></span></Link>
-        <div className={styles.navLinks}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/challenges">Challenges</Link>
-          <Link href="/readiness" className={styles.active}>Readiness Report</Link>
-          <Link href="/discussions">Discussions</Link>
-        </div>
-        <div className={styles.navProfile}>VP</div>
-      </nav>
+      <AppNav />
 
       <main className={styles.mainContainer}>
         <div>

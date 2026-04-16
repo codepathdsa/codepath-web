@@ -251,3 +251,122 @@
   margin: 0 auto var(--space-6);
   font-size: 32px;
 }
+
+/* --- Starter Creature Selection (Step 4) ----------------------------------- */
+
+.creatureGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+@media (min-width: 700px) {
+  .creatureGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.creatureCard {
+  position: relative;
+  padding: var(--space-6);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  transition: all 200ms ease;
+  overflow: hidden;
+}
+.creatureCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--creature-accent) 10%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+.creatureCard:hover {
+  border-color: var(--creature-accent, var(--border-default));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+.creatureCard:hover::before {
+  opacity: 1;
+}
+
+.creatureEmoji {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  filter: drop-shadow(0 0 12px var(--creature-accent, var(--accent)));
+}
+.creatureName {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+.creatureTagline {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: var(--space-1);
+}
+.creatureDesc {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-2);
+}
+.creatureSpecialty {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  background: var(--bg-raised);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+}
+.creatureSpecialty span {
+  color: var(--text-tertiary);
+}
+.chooseBtn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--creature-accent, var(--border-default));
+  border-radius: var(--radius-md);
+  color: var(--creature-accent, var(--text-primary));
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: var(--font-mono);
+}
+.chooseBtn:hover {
+  background: var(--creature-accent, var(--accent));
+  color: var(--bg-base);
+}
+
+/* --- Capture success overlay ----------------------------------------------- */
+
+.successCreatureEmoji {
+  font-size: 80px;
+  line-height: 1;
+  margin-bottom: var(--space-4);
+  animation: captureFloat 2s ease-in-out infinite;
+}
+@keyframes captureFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.captureLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: var(--space-3);
+}

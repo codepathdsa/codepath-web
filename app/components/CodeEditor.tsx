@@ -17,7 +17,7 @@ interface CodeEditorProps {
   height?: number;
 }
 
-// ── Built-in starter templates ─────────────────────────────────────────────
+// -- Built-in starter templates ---------------------------------------------
 const TEMPLATES: Record<string, string> = {
   python: `# Write your solution here
 def solution(nums):

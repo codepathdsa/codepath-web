@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
 
 import { ACTIVITY_EVENTS } from '@/lib/activity';
@@ -15,12 +16,7 @@ export default function ActivityLog() {
 
   return (
     <div className={styles.layout}>
-      <nav className={styles.nav}>
-        <Link href="/" className={styles.navLogo}>
-          engprep<span></span>
-        </Link>
-        <Link href="/dashboard" className="btn-ghost" style={{ padding: '6px 12px' }}>← Back to Dashboard</Link>
-      </nav>
+      <AppNav />
 
       <main className={styles.container}>
         <div className={styles.header}>

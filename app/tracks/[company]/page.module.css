@@ -1,0 +1,447 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-12);
+  min-height: calc(100vh - 60px);
+}
+
+/* ── Breadcrumb ───────────────────────────────────────── */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  font-size: var(--text-sm);
+}
+
+.breadLink {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.breadLink:hover { color: var(--text-primary); }
+
+.breadSep { color: var(--text-tertiary); }
+
+.breadCurrent {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-7);
+  margin-bottom: var(--space-8);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heroStrip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  background: var(--track-color, var(--accent));
+  border-radius: 4px 0 0 4px;
+}
+
+.heroContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.heroLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.logoBox {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.companyName {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.diffTag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.heroStats {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.hStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.hStatNum {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.hStatLbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.tagline {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Progress bar ─────────────────────────────────────── */
+
+.progressWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 800ms ease;
+}
+
+.progressPct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Interview rounds ─────────────────────────────────── */
+
+.rounds {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.roundsLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-right: var(--space-1);
+  white-space: nowrap;
+}
+
+.round {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* ── Main: challenge sections ─────────────────────────── */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.section {}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.sectionCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+/* ── Challenge rows ───────────────────────────────────── */
+
+.challengeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.challengeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: border-color 150ms, background 150ms;
+}
+.challengeRow:hover {
+  border-color: var(--border-default);
+  background: var(--bg-raised);
+}
+
+.chLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chDesc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.chLevel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+.chTime {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.chSeverity {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.chXp {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: 76px;
+}
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3);
+}
+
+.tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tip {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding-left: var(--space-4);
+  position: relative;
+}
+
+.tip::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── CTA card ─────────────────────────────────────────── */
+
+.ctaCard {
+  background: color-mix(in srgb, var(--track-color, var(--accent)) 8%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--track-color, var(--accent)) 25%, transparent);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ctaTitle {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ctaBody {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--track-color, var(--accent));
+  color: #000;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms;
+  width: fit-content;
+}
+.ctaBtn:hover { opacity: 0.85; }
+
+/* ── Responsive ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .hero {
+    padding: var(--space-5) var(--space-5);
+  }
+
+  .heroContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heroStats {
+    gap: var(--space-4);
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// -- Types ------------------------------------------------------------------
 export interface TreeNode {
   id: string;
   label: string;
@@ -30,7 +30,7 @@ interface VisualTreeProps {
   complexityJson?: string;
 }
 
-// ── Icons per node type ───────────────────────────────────────────────────
+// -- Icons per node type ---------------------------------------------------
 const TYPE_META: Record<string, { icon: string; cls: string; label: string }> = {
   start:    { icon: '🚀', cls: 'vt-node--start',    label: 'START'    },
   end:      { icon: '🏁', cls: 'vt-node--end',      label: 'END'      },
@@ -40,7 +40,7 @@ const TYPE_META: Record<string, { icon: string; cls: string; label: string }> = 
   return:   { icon: '↩',  cls: 'vt-node--return',   label: 'RETURN'   },
 };
 
-// ── Single node renderer ──────────────────────────────────────────────────
+// -- Single node renderer --------------------------------------------------
 function Node({
   node,
   depth = 0,
@@ -118,7 +118,7 @@ function Node({
 }
 
 
-// ── Main component ────────────────────────────────────────────────────────
+// -- Main component --------------------------------------------------------
 export default function VisualTree({ title = 'Algorithm Walkthrough', tree, treeJson, complexity, complexityJson }: VisualTreeProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 

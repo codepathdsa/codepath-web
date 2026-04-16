@@ -24,11 +24,11 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/practice?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?upgraded=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing`,
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ url: session.url });
   } catch (err: any) {
     return new NextResponse(err.message || 'Internal Error', { status: 500 });
   }
