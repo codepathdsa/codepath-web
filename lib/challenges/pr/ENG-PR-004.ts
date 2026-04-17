@@ -1,20 +1,54 @@
 import type { Challenge } from '../types';
-
 // ─── ENG-PR-004 ─────────────────────────────────────────────────────────────────
-// Edit the object below to update this challenge.
-// Run `npx next build` after saving to confirm no TypeScript errors.
 
 const challenge: Challenge = {
-    id: 'ENG-PR-004',
-    type: 'PR Review',
-    badgeClass: 'badge-pr',
-    title: 'Goroutine Race Condition',
-    companies: ['Uber', 'Twitch'],
-    timeEst: '~20 min',
-    level: 'Mid',
-    status: 'Not Started',
-    desc: 'This Go PR processes payments concurrently using goroutines. However, the total order value sometimes computes incorrectly under load. Spot the concurrency bug.',
-    solution: 'Multiple goroutines are incrementing a shared `total_sales` integer without a Mutex lock or atomic operation. Flag the race condition and suggest `sync.Mutex` or `atomic.AddInt64`.'
-  };
-
-export default challenge;
+  id: 'ENG-PR-004',
+  type: 'PR Review',
+  badgeClass: 'badge-pr',
+  title: 'Missing useEffect Cleanup — Memory Leak on Unmount',
+  companies: ['Notion', 'Linear'],
+  timeEst: '~10 min',
+  level: 'Junior',
+  status: 'Not Started',
+  desc: 'A junior dev added a live-poll feature to the notifications panel. After navigating away, the browser console starts throwing "Can\'t perform a React state update on an unmounted component" and memory usage climbs. Spot the issue.',
+  solution: 'The setInterval is started in useEffect but there is no cleanup function returned. When the component unmounts (user navigates away), the interval keeps firing and calls setNotifications on the now-unmounted component. Fix: return a cleanup function from useEffect that calls clearInterval(intervalId).',
+  prReview: {
+    prNumber: 519,
+    prBranch: 'feature/notification-live-poll',
+    prBase: 'main',
+    prAuthor: 'junior-dev-99',
+    prFile: 'src/components/NotificationsPanel.tsx',
+    prAge: '4 hours ago',
+    background: 'Notifications were previously loaded once on mount. This PR adds a polling mechanism so they refresh every 5 seconds without a full page reload.',
+    changes: 'Added a setInterval inside useEffect to poll the notifications API every 5 seconds and update state.',
+    testing: 'Panel refreshes correctly while open. No console errors on the page while the component is mounted.',
+    hints: [
+      'What happens to setInterval when a React component unmounts if you never cancel it?',
+      'How does useEffect\'s return value relate to cleanup?',
+      'What function cancels a setInterval in JavaScript?',
+    ],
+    diff: [
+      { lineNumL: 8, lineNumR: 8, type: 'normal', text: '  const [notifications, setNotifications] = useState([]);' },
+      { lineNumL: 9, lineNumR: 9, type: 'normal', text: '' },
+      { lineNumL: 10, lineNumR: 10, type: 'normal', text: '  useEffect(() => {' },
+      { lineNumL: 11, lineNumR: 11, type: 'normal', text: '    fetchNotifications().then(setNotifications);' },
+      { lineNumL: null, lineNumR: 12, type: 'addition', text: '    setInterval(() => {' },
+      { lineNumL: null, lineNumR: 13, type: 'addition', text: '      fetchNotifications().then(setNotifications);' },
+      { lineNumL: null, lineNumR: 14, type: 'addition', text: '    }, 5000);' },
+      { lineNumL: 12, lineNumR: 15, type: 'normal', text: '  }, []);' },
+      { lineNumL: 13, lineNumR: 16, type: 'normal', text: '' },
+      { lineNumL: 14, lineNumR: 17, type: 'normal', text: '  return <NotificationList items={notifications} />;' },
+    ],
+    bugOptions: [
+      { value: 'missing_cleanup', label: 'Missing cleanup', sub: 'Interval not cancelled on unmount' },
+      { value: 'missing_deps', label: 'Missing deps', sub: 'Effect should re-run on dep change' },
+      { value: 'race_condition', label: 'Async race condition', sub: 'Responses arrive out of order' },
+      { value: 'infinite_loop', label: 'Infinite re-render', sub: 'State update triggers re-mount' },
+      { value: 'no_error_handle', label: 'No error handling', sub: 'Failed fetches crash silently' },
+      { value: 'wrong_interval', label: 'Wrong interval value', sub: 'Polling too fast / too slow' },
+    ],
+    correctBugType: 'missing_cleanup',
+    successExplanation: "Exactly right. The interval is set on mount but never cancelled. When the user navigates away and React unmounts the component, the interval is still alive in memory — it fires every 5 seconds, resolves the Promise, and calls setNotifications on a component that no longer exists. React warns with 'state update on unmounted component' and you get a slow memory leak. Fix: capture the return value of setInterval and return a cleanup function: return () => clearInterval(id).",
+    failExplanation: "The bug is the missing cleanup. setInterval is registered inside useEffect but the effect returns nothing — so React has no way to cancel the interval when the component unmounts. The fix is a one-liner: const id = setInterval(...); return () => clearInterval(id);. Without it, every visit to this page adds a new persistent interval that outlives the component.",
+  },
+};
