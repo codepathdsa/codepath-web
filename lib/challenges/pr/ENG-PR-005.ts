@@ -52,3 +52,4 @@ const challenge: Challenge = {
     failExplanation: "The critical issue is that .env itself was committed. It contains sk_live_... (a live Stripe secret key), the production DATABASE_URL with a plaintext password, and the JWT_SECRET. These are now in Git history permanently. Steps: (1) Rotate all exposed credentials immediately. (2) Add .env to .gitignore. (3) Commit .env.example with placeholder values instead. Git history rewrites (git filter-branch / BFG) can help but rotating keys is non-negotiable.",
   },
 };
+export default challenge;

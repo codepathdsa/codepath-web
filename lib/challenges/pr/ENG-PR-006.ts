@@ -53,3 +53,5 @@ const challenge: Challenge = {
     failExplanation: "The performance bug is the three sequential awaits on lines 4–6. Each blocks the next, so the endpoint's minimum latency is the sum of all three calls. Since none of the queries depends on another's result, they can run concurrently with Promise.all — dropping total time from ~3s to ~1s. This is the most common async performance mistake for junior devs.",
   },
 };
+
+export default challenge;

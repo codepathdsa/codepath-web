@@ -52,3 +52,4 @@ const challenge: Challenge = {
     failExplanation: "The bug is the missing cleanup. setInterval is registered inside useEffect but the effect returns nothing — so React has no way to cancel the interval when the component unmounts. The fix is a one-liner: const id = setInterval(...); return () => clearInterval(id);. Without it, every visit to this page adds a new persistent interval that outlives the component.",
   },
 };
+export default challenge;

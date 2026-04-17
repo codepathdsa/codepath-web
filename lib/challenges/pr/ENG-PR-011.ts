@@ -51,3 +51,4 @@ const challenge: Challenge = {
         failExplanation: "The bug is a classic search race condition. Multiple fetches can be in-flight simultaneously with no ordering guarantee. A response for an earlier query that resolves late will call setResults and overwrite whatever the latest query returned. The fix: AbortController. const controller = new AbortController(); fetch(url, { signal: controller.signal }) and return () => controller.abort(); in the cleanup. This ensures only the response to the current query ever updates state.",
     },
 };
+export default challenge;

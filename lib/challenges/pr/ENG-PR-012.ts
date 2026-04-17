@@ -53,3 +53,4 @@ const challenge: Challenge = {
         failExplanation: "The bug is a TOCTOU race on lines 9–16. SELECT then INSERT is not atomic. Under load, two requests both pass the SELECT check before either commits the INSERT, resulting in duplicate rows. The fix is a DB-level UNIQUE constraint on users.email. In the catch block, test if (err.code === '23505') and return 409. Application-level checks are a UX convenience, not a data integrity guarantee — the database is the last line of defence.",
     },
 };
+export default challenge;

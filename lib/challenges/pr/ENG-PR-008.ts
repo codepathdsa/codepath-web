@@ -51,3 +51,5 @@ const challenge: Challenge = {
     failExplanation: "Two bugs: (1) Line 5 — the callback isn't async, but await is used on line 6. This is a SyntaxError. (2) Even if async is added, there's no try/catch — when db.getUserById throws NotFoundError, the unhandled rejection crashes Node.js (v15+). Correct form: router.get('/users/:id', async (req, res, next) => { try { const user = await db.getUserById(req.params.id); res.json(user); } catch (err) { next(err); } });",
   },
 };
+
+export default challenge;

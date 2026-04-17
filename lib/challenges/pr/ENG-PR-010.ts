@@ -55,3 +55,5 @@ const challenge: Challenge = {
     failExplanation: "The vulnerability is IDOR on line 6. The query fetches by id alone — any authenticated user who guesses or increments an invoice ID can access another customer's billing data. The fix is a one-word SQL change: add AND user_id = $2 to the query and pass req.user.id as the second parameter. This is one of the OWASP Top 10 (Broken Access Control) and a common junior mistake when auth middleware gives a false sense of security.",
   },
 };
+
+export default challenge;

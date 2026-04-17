@@ -57,3 +57,5 @@ const challenge: Challenge = {
     failExplanation: "The bug is on lines 12–13: forEach mutates the items array in-place, then setItems is called with the same reference. React compares state using Object.is — same reference means no change detected, so no re-render. The underlying data is correct (hence the correct console output) but the UI is frozen. Fix: replace forEach+setItems with setItems(items.map(item => ({ ...item, done: true }))) to produce a new array.",
   },
 };
+
+export default challenge;

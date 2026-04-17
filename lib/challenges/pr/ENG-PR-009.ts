@@ -52,3 +52,5 @@ const challenge: Challenge = {
     failExplanation: "The bug is the as any cast on line 8 combined with the removal of the null check. as any is a TypeScript-only construct — it has zero effect at runtime. The database can still return null, and accessing .email on null throws a TypeError that crashes the handler. The deleted if (!user) return res.status(404)... was the correct fix. When TypeScript complains about possible null, the answer is to handle null — not to hide the error.",
   },
 };
+
+export default challenge;

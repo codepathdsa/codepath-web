@@ -51,3 +51,4 @@ const challenge: Challenge = {
     failExplanation: "The bug is on line 14: forEach does not await async callbacks. It calls sendConfirmationEmail for each order, receives a Promise, and immediately discards it. Execution continues without waiting, so emails either never send or fail silently. Swap forEach for for...of and await inside it, or use await Promise.all(orders.map(sendConfirmationEmail)) to run them concurrently.",
   },
 };
+export default challenge;
