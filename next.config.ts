@@ -21,16 +21,16 @@ const securityHeaders = [
       "default-src 'self'",
       // Scripts: same-origin + Monaco/Pyodide CDNs + unsafe-eval required by Monaco editor
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
-      // Styles: same-origin + inline (Monaco editor injects styles)
-      "style-src 'self' 'unsafe-inline'",
+      // Styles: same-origin + inline + Monaco CDN (Monaco editor injects styles & loads CSS from CDN)
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       // Images: same-origin, data URIs, and HTTPS sources (avatars, etc.)
       "img-src 'self' data: https:",
       // Web workers (Pyodide uses them) and API connections
       "worker-src 'self' blob:",
       // Allowed connection targets
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.github.com https://go.dev https://cdn.jsdelivr.net",
-      // Fonts from same origin only
-      "font-src 'self'",
+      // Fonts from same origin + Monaco CDN
+      "font-src 'self' https://cdn.jsdelivr.net",
       // No plugins, no base tag hijacking, no object embeds
       "base-uri 'self'",
       "object-src 'none'",
