@@ -1119,10 +1119,14 @@ export default function DSAWorkspace() {
           <div className={styles.editorArea}>
             <Editor
               height="100%"
+              width="100%"
               language={language}
               theme="vs-dark"
               value={code}
               onChange={val => setCode(val ?? '')}
+              wrapperProps={{
+                style: { height: '100%', width: '100%', display: 'flex', flexDirection: 'column' },
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -1131,6 +1135,7 @@ export default function DSAWorkspace() {
                 scrollBeyondLastLine: false,
                 lineNumbersMinChars: 3,
                 readOnly: cliMode,
+                automaticLayout: true,
               }}
             />
             {cliMode && (

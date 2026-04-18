@@ -345,6 +345,8 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
+  overflow: hidden;  /* required for child flex heights to compute correctly */
+  min-width: 0;
 }
 
 /* ── Button FX ──────────────────────────────────────────────────────────── */
@@ -473,6 +475,8 @@
 
 .editorArea {
   flex: 1;
+  min-height: 0;       /* critical: lets flex child shrink below its content size */
+  overflow: hidden;    /* Monaco needs a bounded container with a real pixel height */
   position: relative;
 }
 
