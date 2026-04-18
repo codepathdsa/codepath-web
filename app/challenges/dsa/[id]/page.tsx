@@ -1124,13 +1124,17 @@ export default function DSAWorkspace() {
               theme="vs-dark"
               value={code}
               onChange={val => setCode(val ?? '')}
-              wrapperProps={{
-                style: { height: '100%', width: '100%', display: 'flex', flexDirection: 'column' },
-              }}
+              loading={
+                <div style={{ height: '100%', background: '#1e1e1e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#4a4a4a' }}>Loading editor…</span>
+                </div>
+              }
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
-                fontFamily: 'var(--font-mono)',
+                /* Monaco cannot resolve CSS variables — use a concrete font stack */
+                fontFamily: '"JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", "Courier New", monospace',
+                fontLigatures: true,
                 padding: { top: 20 },
                 scrollBeyondLastLine: false,
                 lineNumbersMinChars: 3,

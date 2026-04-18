@@ -455,6 +455,7 @@
 
 .editorToolbar {
   height: 48px;
+  flex-shrink: 0;   /* never let the toolbar collapse */
   background: var(--bg-raised);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -475,9 +476,10 @@
 
 .editorArea {
   flex: 1;
-  min-height: 0;       /* critical: lets flex child shrink below its content size */
-  overflow: hidden;    /* Monaco needs a bounded container with a real pixel height */
+  min-height: 0;        /* critical: lets flex child shrink below its content size */
+  overflow: hidden;     /* Monaco needs a bounded container with a real pixel height */
   position: relative;
+  background: #1e1e1e;  /* match Monaco vs-dark before editor loads, prevents white flash */
 }
 
 .cliModeOverlay {

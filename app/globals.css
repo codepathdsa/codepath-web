@@ -688,3 +688,32 @@ a:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── Monaco Editor overrides ────────────────────────────────────────────────
+   Our global `* { margin:0; padding:0; box-sizing:border-box }` and the
+   browser's default textarea styles can leak into Monaco's shadow DOM and
+   make the cursor textarea or background areas appear as a white box.
+   These rules restore the correct appearance without breaking Monaco's logic.
+────────────────────────────────────────────────────────────────────────────── */
+
+/* Match the vs-dark theme background before Monaco fully mounts */
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .margin {
+  background-color: #1e1e1e !important;
+}
+
+/* The hidden textarea Monaco uses for keyboard input must stay invisible */
+.monaco-editor .inputarea {
+  background: transparent !important;
+  color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  resize: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent the global scroll-bar override from breaking Monaco's scrollable areas */
+.monaco-scrollable-element > .scrollbar > .slider {
+  background: rgba(255,255,255,0.12) !important;
+}
