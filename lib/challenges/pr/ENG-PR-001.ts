@@ -1,6 +1,6 @@
-import type { Challenge } from '../types';
+﻿import type { Challenge } from '../types';
 
-// ─── ENG-PR-001 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-001 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-001',
@@ -12,7 +12,7 @@ const challenge: Challenge = {
   level: 'Junior',
   status: 'Not Started',
   desc: 'A junior dev reorganised the data-fetch logic inside a React component. QA reports the browser freezes instantly when loading the profile page. Spot the bug in the PR diff.',
-  solution: 'userQuery is declared inside the component body, producing a new object reference on every render. React dep comparison uses Object.is() (reference equality), so the effect re-fires unconditionally, calling setLoading(true) each time, triggering another render — infinite loop. Fix: use [userId] directly, or memoize with useMemo.',
+  solution: 'userQuery is declared inside the component body, producing a new object reference on every render. React dep comparison uses Object.is() (reference equality), so the effect re-fires unconditionally, calling setLoading(true) each time, triggering another render â€” infinite loop. Fix: use [userId] directly, or memoize with useMemo.',
   prReview: {
     prNumber: 847,
     prBranch: 'feature/profile-eager-load',
@@ -20,13 +20,13 @@ const challenge: Challenge = {
     prAuthor: 'junior-dev-99',
     prFile: 'src/components/UserProfile.tsx',
     prAge: '3 hours ago',
-    background: "ProfilePage wasn't reflecting account switches — users had to hard-reload to see the correct profile. The useEffect had an empty dependency array, so it only ran once regardless of which userId was in the URL.",
+    background: "ProfilePage wasn't reflecting account switches â€” users had to hard-reload to see the correct profile. The useEffect had an empty dependency array, so it only ran once regardless of which userId was in the URL.",
     changes: "I introduced a `userQuery` config object to organise the fetch params and added it to the useEffect dependency array so the effect re-runs when the query changes.",
     testing: 'Tested locally: profile now updates correctly when switching accounts. CI is green.',
     hints: [
-      'Where exactly is `userQuery` declared — inside or outside the component function body?',
+      'Where exactly is `userQuery` declared â€” inside or outside the component function body?',
       'JavaScript compares objects by reference, not value. `{ id: "a" } === { id: "a" }` is `false`. What comparison does React use for dependency checks?',
-      'Every render creates a new `userQuery` → new reference → effect fires → `setLoading(true)` → re-render → repeat. What is the minimal fix?',
+      'Every render creates a new `userQuery` â†’ new reference â†’ effect fires â†’ `setLoading(true)` â†’ re-render â†’ repeat. What is the minimal fix?',
     ],
     diff: [
       { lineNumL: 5,    lineNumR: 5,    type: 'normal',   text: 'export function UserProfile({ userId }: Props) {' },
@@ -56,8 +56,8 @@ const challenge: Challenge = {
       { value: 'async_race',       label: 'Async race',          sub: 'Response arrives out of order' },
     ],
     correctBugType: 'unstable_ref_dep',
-    successExplanation: "Nailed it. userQuery is declared inside the component body, so every render produces a brand-new object reference. React's dep check uses Object.is() (reference equality) — {} !== {} even when the contents are identical. The effect fires after every render, calling setLoading(true), which schedules a re-render, which creates another new userQuery reference. Infinite loop. Fix: put userId directly in the array, or wrap userQuery in useMemo(() => ({ userId, includeActivity: true }), [userId]).",
-    failExplanation: "The bug is line 16: [userQuery] in the dependency array. userQuery is declared inside the component, so it's a new object reference on every single render. React's useEffect compares deps using Object.is() — it checks references, not values — so the effect fires unconditionally after every render. This triggers setLoading(true) -> re-render -> new userQuery reference -> effect fires again. The fix: use [userId] directly, or memoize with useMemo.",
+    successExplanation: "Nailed it. userQuery is declared inside the component body, so every render produces a brand-new object reference. React's dep check uses Object.is() (reference equality) â€” {} !== {} even when the contents are identical. The effect fires after every render, calling setLoading(true), which schedules a re-render, which creates another new userQuery reference. Infinite loop. Fix: put userId directly in the array, or wrap userQuery in useMemo(() => ({ userId, includeActivity: true }), [userId]).",
+    failExplanation: "The bug is line 16: [userQuery] in the dependency array. userQuery is declared inside the component, so it's a new object reference on every single render. React's useEffect compares deps using Object.is() â€” it checks references, not values â€” so the effect fires unconditionally after every render. This triggers setLoading(true) -> re-render -> new userQuery reference -> effect fires again. The fix: use [userId] directly, or memoize with useMemo.",
   },
 };
 

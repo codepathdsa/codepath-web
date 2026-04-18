@@ -27,18 +27,18 @@ interface Participant {
 // --- Raid scenario data -------------------------------------------------------
 
 const RAID = {
-  id: 'RAID-2026-W15',
-  title: 'Global Payment Rail Meltdown',
-  subtitle: 'Stripe webhook fan-out collapsed the DB connection pool across 6 regions. $2.4M in revenue blocked.',
+  id: 'RAID-2026-W16',
+  title: 'Checkout Meltdown: Redis Cache at 31%',
+  subtitle: 'Redis maxmemory-policy set to noeviction — cache writes failing with OOM. Checkout sessions bypass Redis, hammering Postgres. DB CPU at 98%. $181k/min in blocked revenue.',
   severity: 'P0',
-  companies: ['Stripe', 'Shopify', 'Brex'],
+  companies: ['Shopify', 'Stripe', 'Amazon'],
   startDate: 'Friday, Apr 18, 2026 · 18:00 UTC',
   endDate: 'Sunday, Apr 20, 2026 · 18:00 UTC',
   xpReward: 1500,
-  rareDrop: '💳 Webhook Phantom',   // creature unlocked for solvers
-  participants: 847,
-  solved: 312,
-  timeLeft: { days: 2, hours: 23, mins: 41, secs: 17 },
+  rareDrop: '🔑 Cache Phantom',
+  participants: 1203,
+  solved: 447,
+  timeLeft: { days: 1, hours: 23, mins: 41, secs: 17 },
   solved_pct: 37,
 };
 
@@ -47,28 +47,28 @@ const PHASES: RaidPhase[] = [
     id: 1,
     title: 'Alert Triage',
     subtitle: 'Identify the failing service from PagerDuty alerts',
-    log: '[PAGERDUTY] P0 — payment-processor latency > 30s · 6 regions affected',
+    log: '[PAGERDUTY] P0 — checkout-service latency > 12s · region: us-east-1, eu-west-1',
     duration: 180,
   },
   {
     id: 2,
-    title: 'Log Investigation',
-    subtitle: 'Trace the root cause through distributed logs',
-    log: '[FATAL] pgbouncer: pool exhausted — 14,500 / 14,500 connections held',
+    title: 'Cache Analysis',
+    subtitle: 'Investigate why Redis cache hit rate dropped from 95% to 31%',
+    log: '[WARN] redis-proxy: hit_rate=31.2% (was 95.4% 2h ago) · OOM errors=1,204/s',
     duration: 300,
   },
   {
     id: 3,
-    title: 'Hypothesis',
-    subtitle: 'Form a theory and pick the correct fix',
-    log: '[INFO] webhook-dispatcher: fan-out goroutine spawning 1 conn per event (unbounded)',
+    title: 'Root Cause',
+    subtitle: 'Identify the Redis maxmemory misconfiguration',
+    log: '[INFO] redis-config: maxmemory=8GB maxmemory_policy=noeviction · used_memory=8192MB (100%)',
     duration: 240,
   },
   {
     id: 4,
     title: 'Remediation',
-    subtitle: 'Apply the fix and verify recovery',
-    log: '[ACTION] Apply semaphore-bounded dispatcher + emergency pgbouncer config reload',
+    subtitle: 'Apply the fix and verify cache recovery',
+    log: '[ACTION] Set maxmemory-policy allkeys-lru + reduce session TTL 86400s → 7200s',
     duration: 120,
   },
 ];
@@ -76,30 +76,30 @@ const PHASES: RaidPhase[] = [
 const OPTIONS = [
   {
     id: 'A',
-    title: 'Restart pgbouncer across all regions',
-    sub: 'systemctl restart pgbouncer',
-    why: 'Symptom treatment — connections are immediately re-exhausted. Buys 30s, not a fix.',
+    title: 'FLUSHALL — clear all Redis keys immediately',
+    sub: 'redis-cli FLUSHALL',
+    why: 'Catastrophic — clears every cached object. Cache hit rate drops to 0% for the next 20-30 minutes, making the Postgres overload far worse.',
     isCorrect: false,
   },
   {
     id: 'B',
-    title: 'Increase max_connections in postgres.conf',
-    sub: 'ALTER SYSTEM SET max_connections = 50000;',
-    why: 'Wrong layer — this increases DB-side connections, not the pool limit. Crashes Postgres memory.',
+    title: 'Scale Postgres to 32 CPUs + add 2 read replicas',
+    sub: 'aws rds modify-db-instance --db-instance-class db.r6g.8xlarge',
+    why: 'Treats the symptom, not the cause. Takes 15 min to apply. Redis still returns OOM — checkout still bypasses cache and hammers DB.',
     isCorrect: false,
   },
   {
     id: 'C',
-    title: 'Rate-limit Stripe webhook ingestion to 50 RPS',
-    sub: 'nginx rate_limit_zone webhook 50r/s',
-    why: 'Reduces fan-out pressure but drops legitimate webhooks. Revenue impact continues.',
+    title: 'Increase Redis maxmemory from 8 GB to 64 GB',
+    sub: 'redis-cli CONFIG SET maxmemory 64gb',
+    why: 'Buys temporary relief, but 42M session keys at 24h TTL will refill 64 GB in ~8 hours. The underlying policy is unchanged — OOM recurs.',
     isCorrect: false,
   },
   {
     id: 'D',
-    title: 'Apply semaphore-bounded dispatcher + pgbouncer reload',
-    sub: 'patch: semaphore(maxConcurrent=200) + pgbouncer pool_size=200',
-    why: 'Correct — caps goroutine fan-out at 200, matches pgbouncer pool size. Recovery in <2 min.',
+    title: 'allkeys-lru policy + reduce session TTL to 2h',
+    sub: 'CONFIG SET maxmemory-policy allkeys-lru; UPDATE sessions SET ttl=7200',
+    why: 'Correct — allkeys-lru evicts the least recently used keys instead of returning OOM. TTL reduction shrinks 42M keys → ~3.5M. Cache hit rate recovers to 94% within 4 min.',
     isCorrect: true,
   },
 ];
@@ -143,20 +143,19 @@ function useCountdown(initial: { days: number; hours: number; mins: number; secs
 // --- Terminal log stream ------------------------------------------------------
 
 const STREAM_LOGS = [
-  { text: '[PAGERDUTY] P0 FIRING — payment-processor · region: us-east-1, eu-west-1, ap-southeast-1', type: 'error' },
-  { text: '[DATADOG] latency p99 = 34,212ms (threshold: 500ms)', type: 'warning' },
-  { text: '[FATAL] pgbouncer[us-east]: pool exhausted 14500/14500', type: 'error' },
-  { text: '[FATAL] pgbouncer[eu-west]: pool exhausted 14500/14500', type: 'error' },
-  { text: '[ERROR] webhook-dispatcher: context deadline exceeded after 30000ms', type: 'error' },
-  { text: '[ERROR] order-service: failed to acquire db connection (attempt 1/3)', type: 'error' },
-  { text: '[ERROR] order-service: failed to acquire db connection (attempt 2/3)', type: 'error' },
-  { text: '[ERROR] order-service: failed to acquire db connection (attempt 3/3) — giving up', type: 'error' },
-  { text: '[WARN]  stripe-ingest: received 14,832 webhook events in 60s window (normal: ~200)', type: 'warning' },
-  { text: '[INFO]  webhook-dispatcher: spawning goroutine per event — no concurrency limit configured', type: 'normal' },
-  { text: '[DEBUG] goroutine count: 14,201 (threshold: 1,000)', type: 'warning' },
-  { text: '[ERROR] prometheus-scrape: target payment-processor unhealthy', type: 'error' },
-  { text: '[WARN]  load-balancer: removing unhealthy backend payment-processor-3', type: 'warning' },
-  { text: '[FATAL] payment-processor-3: OOM killed — goroutine stack overflow', type: 'error' },
+  { text: '[PAGERDUTY] P0 FIRING — checkout-service · region: us-east-1, eu-west-1', type: 'error' },
+  { text: '[DATADOG] checkout p99_latency = 12,440ms (SLA: 200ms)', type: 'warning' },
+  { text: '[DATADOG] checkout_error_rate = 61.3% (last 5 min)', type: 'error' },
+  { text: '[ERROR] checkout-service: redis.SET failed — OOM command not allowed when used memory > maxmemory', type: 'error' },
+  { text: '[ERROR] checkout-service: redis.GET miss — falling through to postgres (cache bypass)', type: 'warning' },
+  { text: '[WARN]  redis-proxy: cache hit_rate = 31.2% (was 95.4% 2h ago)', type: 'warning' },
+  { text: '[FATAL] postgres-main: connection pool exhausted 500/500', type: 'error' },
+  { text: '[FATAL] postgres-main: CPU at 98% — I/O saturation on checkout_sessions table', type: 'error' },
+  { text: '[ERROR] checkout-service: DB query timed out after 10,000ms', type: 'error' },
+  { text: '[INFO]  redis INFO memory: used_memory=8192MB maxmemory=8192MB maxmemory_policy=noeviction', type: 'normal' },
+  { text: '[INFO]  redis INFO stats: evicted_keys=0 — noeviction policy refuses to evict, returns OOM', type: 'warning' },
+  { text: '[WARN]  redis-keyspace: checkout:session:* = 42,017,334 keys · avg TTL=86,340s (24h)', type: 'warning' },
+  { text: '[ALERT] revenue-impact: $181,200/min blocked · 47,220 failed checkouts in last 60s', type: 'error' },
   { text: 'Type "help" for investigation commands — or jump straight to hypotheses below.', type: 'system' },
 ];
 
@@ -216,28 +215,34 @@ export default function RaidPage() {
     const responses: Record<string, LogLine[]> = {
       help: [
         { text: 'Available commands:', type: 'system' },
-        { text: '  db status     — check pgbouncer connection pool', type: 'normal' },
-        { text: '  metrics       — show live p99 latency and error rate', type: 'normal' },
-        { text: '  goroutines    — inspect goroutine count', type: 'normal' },
-        { text: '  webhook stats — show recent webhook volume', type: 'normal' },
+        { text: '  redis info    — memory usage and maxmemory policy', type: 'normal' },
+        { text: '  cache stats   — cache hit/miss rate over time', type: 'normal' },
+        { text: '  db status     — postgres CPU, connections, wait events', type: 'normal' },
+        { text: '  redis keys    — key count, TTL distribution, memory size', type: 'normal' },
         { text: '  clear         — clear terminal', type: 'normal' },
       ],
+      'redis info': [
+        { text: '$ redis-cli INFO memory', type: 'normal' },
+        { text: '  used_memory_human: 8.00G', type: 'error' },
+        { text: '  maxmemory_human: 8.00G', type: 'error' },
+        { text: '  maxmemory_policy: noeviction', type: 'error' },
+        { text: '  mem_fragmentation_ratio: 1.02', type: 'normal' },
+      ],
+      'cache stats': [
+        { text: '$ redis-cli INFO stats | grep hit', type: 'normal' },
+        { text: '  keyspace_hits: 1,204,441   keyspace_misses: 2,802,109', type: 'warning' },
+        { text: '  hit_rate: 30.0h ago=95.4% · 1h ago=72.1% · now=31.2%', type: 'error' },
+        { text: '  evicted_keys: 0  (noeviction — no evictions, OOM errors instead)', type: 'error' },
+      ],
       'db status': [
-        { text: '$ pgbouncer-console -c "show pools"', type: 'normal' },
-        { text: '  database=payment-processor pool_size=14500 used=14500 free=0 waiting=8432', type: 'error' },
+        { text: '$ psql -c "SELECT count(*), wait_event FROM pg_stat_activity GROUP BY wait_event"', type: 'normal' },
+        { text: '  count=500  wait_event=Client (connection pool exhausted)', type: 'error' },
+        { text: '  postgres CPU: 98.1%  I/O util: 99.7%  (checkout_sessions table full scan)', type: 'error' },
       ],
-      metrics: [
-        { text: '$ curl https://metrics.internal/payment-processor/summary', type: 'normal' },
-        { text: '  p50_ms=28440  p99_ms=34212  error_rate=62.4%  rps=3201', type: 'error' },
-      ],
-      goroutines: [
-        { text: '$ dlv attach $(pgrep webhook-dispatcher) — goroutines', type: 'normal' },
-        { text: '  active goroutines: 14,201  (limit: none configured)', type: 'error' },
-        { text: '  top offender: db.(*Pool).Acquire blocked for avg 28s', type: 'warning' },
-      ],
-      'webhook stats': [
-        { text: '$ kafka-consumer-groups.sh --describe --group stripe-ingest', type: 'normal' },
-        { text: '  topic=webhooks  partition=0  offset=1,441,932  lag=14,832', type: 'warning' },
+      'redis keys': [
+        { text: '$ redis-cli --scan --pattern "checkout:session:*" | wc -l', type: 'normal' },
+        { text: '  42,017,334 keys  avg_ttl=86,340s (23h 59m)  avg_size=190 bytes', type: 'warning' },
+        { text: '  total_size: ~7.6 GB (95% of maxmemory)', type: 'error' },
       ],
       clear: 'CLEAR' as unknown as LogLine[],
     };
@@ -274,10 +279,11 @@ export default function RaidPage() {
       setResult('correct');
       setLogs(prev => [
         ...prev,
-        { text: '[ACTION] Semaphore patch deployed. Goroutine count: 14,201 → 198', type: 'success' },
-        { text: '[ACTION] pgbouncer config reloaded. Pool: 200/200 free', type: 'success' },
-        { text: '[RECOVERY] p99 latency: 34,212ms → 312ms', type: 'success' },
-        { text: '[RESOLVED] Incident closed. MTTR: 3m 42s. Revenue unblocked.', type: 'success' },
+        { text: '[ACTION] maxmemory-policy changed: noeviction → allkeys-lru', type: 'success' },
+        { text: '[ACTION] Session TTL updated: 86400s → 7200s. LRU eviction starting...', type: 'success' },
+        { text: '[RECOVERY] Redis evicting stale sessions... used_memory: 8192MB → 4,104MB', type: 'success' },
+        { text: '[RECOVERY] cache hit_rate: 31.2% → 94.1% · Postgres CPU: 98% → 22%', type: 'success' },
+        { text: '[RESOLVED] Checkout nominal. MTTR: 4m 17s. Revenue unblocked.', type: 'success' },
       ]);
       setRaidSolved(true);
     } else {
@@ -303,7 +309,7 @@ export default function RaidPage() {
       <div className={styles.alertBanner}>
         <span className={styles.alertDot} />
         <span className={styles.alertText}>
-          <strong>P0 ACTIVE</strong> — Global Payment Rail Meltdown · {RAID.participants.toLocaleString()} engineers responding
+          <strong>P0 ACTIVE</strong> — {RAID.title} · {RAID.participants.toLocaleString()} engineers responding
         </span>
         <div className={styles.alertCountdown}>
           Raid ends in: <strong>{countdown.days}d {pad(countdown.hours)}h {pad(countdown.mins)}m {pad(countdown.secs)}s</strong>
@@ -472,7 +478,7 @@ export default function RaidPage() {
                 <div className={styles.solvedGlow} />
                 <div className={styles.solvedIcon}>⚔</div>
                 <div className={styles.solvedTitle}>Raid Survived</div>
-                <div className={styles.solvedSub}>MTTR: 3m 42s · You responded to a global P0 payment outage.</div>
+                <div className={styles.solvedSub}>MTTR: 4m 17s · You diagnosed a Redis cache meltdown and restored checkout.</div>
                 <div className={styles.solvedRewards}>
                   <div className={styles.solvedRewardRow}>
                     <span className={styles.solvedXP}>+{RAID.xpReward.toLocaleString()} XP</span>
@@ -519,9 +525,9 @@ export default function RaidPage() {
             {/* Upcoming raid */}
             <div className={styles.upcomingCard}>
               <div className={styles.upcomingLabel}>Next Raid</div>
-              <div className={styles.upcomingTitle}>CDN Cache Stampede · Cloudflare Global</div>
+              <div className={styles.upcomingTitle}>Database Hot Shard · Snowflake User Analytics</div>
               <div className={styles.upcomingDate}>Friday, Apr 25, 2026 · 18:00 UTC</div>
-              <div className={styles.upcomingReward}>+1,200 XP · 🌩 Thunder Cache creature</div>
+              <div className={styles.upcomingReward}>+1,400 XP · 🧊 Shard Specter creature</div>
             </div>
           </div>
         </div>

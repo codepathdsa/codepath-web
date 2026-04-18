@@ -1,16 +1,16 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-011 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-011 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-011',
     type: 'PR Review',
     badgeClass: 'badge-pr',
-    title: 'Race Condition in Search Input — Stale Results Override Fresh',
+    title: 'Race Condition in Search Input â€” Stale Results Override Fresh',
     companies: ['Algolia', 'Figma'],
     timeEst: '~12 min',
     level: 'Junior',
     status: 'Not Started',
-    desc: 'The new search bar occasionally shows wrong results — typing "react" quickly sometimes displays results for "re" or "rea" instead. It\'s intermittent and hard to reproduce slowly. Spot the structural issue.',
+    desc: 'The new search bar occasionally shows wrong results â€” typing "react" quickly sometimes displays results for "re" or "rea" instead. It\'s intermittent and hard to reproduce slowly. Spot the structural issue.',
     solution: 'There is no cancellation or ordering guard. Each keystroke fires a fetch. A slow network response for an earlier query (e.g. "re") can resolve after a faster response for the latest query ("react"), overwriting the correct results with stale ones. Fix: use an AbortController per request and abort the previous one on each new keystroke, or track a request ID and discard responses that don\'t match the latest.',
     prReview: {
         prNumber: 774,
@@ -19,7 +19,7 @@ const challenge: Challenge = {
         prAuthor: 'junior-dev-99',
         prFile: 'src/components/SearchBar.tsx',
         prAge: '1 day ago',
-        background: 'The product catalogue previously required a form submit to search. This PR makes search reactive — results update on every keystroke for a live search UX.',
+        background: 'The product catalogue previously required a form submit to search. This PR makes search reactive â€” results update on every keystroke for a live search UX.',
         changes: 'Added a useEffect that fires a fetch to /api/search?q= on every change to the query state. Results are written to state and rendered.',
         testing: 'Works well on fast connection. Search feels snappy locally.',
         hints: [
@@ -47,7 +47,7 @@ const challenge: Challenge = {
             { value: 'missing_loading', label: 'No loading state', sub: 'UI shows stale results during fetch' },
         ],
         correctBugType: 'race_condition',
-        successExplanation: "Right. Each query change fires a new fetch with no guarantee of resolution order. A slow response for 're' can arrive after a fast response for 'react', calling setResults with outdated data. Fix: create an AbortController at the start of the effect, pass signal to fetch, and return () => controller.abort() as cleanup. This cancels the in-flight request whenever the effect re-runs, ensuring only the latest query's response updates state. Note: missing debounce is also worth flagging — but that's a performance issue, not a correctness bug.",
+        successExplanation: "Right. Each query change fires a new fetch with no guarantee of resolution order. A slow response for 're' can arrive after a fast response for 'react', calling setResults with outdated data. Fix: create an AbortController at the start of the effect, pass signal to fetch, and return () => controller.abort() as cleanup. This cancels the in-flight request whenever the effect re-runs, ensuring only the latest query's response updates state. Note: missing debounce is also worth flagging â€” but that's a performance issue, not a correctness bug.",
         failExplanation: "The bug is a classic search race condition. Multiple fetches can be in-flight simultaneously with no ordering guarantee. A response for an earlier query that resolves late will call setResults and overwrite whatever the latest query returned. The fix: AbortController. const controller = new AbortController(); fetch(url, { signal: controller.signal }) and return () => controller.abort(); in the cleanup. This ensures only the response to the current query ever updates state.",
     },
 };

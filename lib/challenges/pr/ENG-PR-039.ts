@@ -1,4 +1,4 @@
-// ─── ENG-PR-039 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-039 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-039',
@@ -17,7 +17,11 @@ const challenge: Challenge = {
         prBase: 'main',
         prAuthor: 'senior-dev-11',
         prFile: 'src/utils/validators.ts',
+        prAge: '1 hour ago',
         background: 'Validating that a username is alphanumeric and can contain single spaces between words.',
+        changes: 'Adds a regex-based validation function for usernames. Intended to block special characters while allowing spaces between words.',
+        testing: 'Manual testing with valid usernames passed. No fuzz testing or adversarial input was applied against the regex.',
+
         hints: [
             'Look at the nested plus signs: `([a-z]+)+`. What happens if the string is "aaaa" but ends in a forbidden character?',
             'How many ways can the regex engine group "aaaa" to try and find a match? (a)(a)(a)(a), (aa)(aa), (aaa)(a)...',

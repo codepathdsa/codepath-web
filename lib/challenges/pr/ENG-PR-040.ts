@@ -1,4 +1,4 @@
-// ─── ENG-PR-040 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-040 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-040',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/controllers/download.ts',
         background: 'Piping data straight from AWS to the client to save memory.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'If `s3Stream` throws an error, does `.pipe()` catch it?',
             'What happens in Node.js when an EventEmitter emits an "error" event with no listeners?',

@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-018 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-018 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-018',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'Stale Closure in useCallback',
     companies: ['Airbnb', 'Palantir'],
     timeEst: '~12 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A dev is using a debounced "Auto-Save" feature in a text editor. Users report that when they type "Hello World", the database often only saves "H" or nothing at all, despite the UI showing the full text.',
     solution: 'This is a stale closure. The `useCallback` hook has an empty dependency array `[]`. This means the function inside it only ever "sees" the value of `text` from the very first render (likely an empty string). When the debounced function finally runs, it uses that stale variable. Fix: Add `text` to the dependency array, or use a `ref` for the latest value.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/components/Editor.tsx',
         background: 'Debouncing API calls to save user input without hitting the server on every keystroke.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What value of `text` does the function on line 12 have access to?',
             'How often is the `saveToServer` function recreated?',

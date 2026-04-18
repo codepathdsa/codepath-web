@@ -1,22 +1,22 @@
-import type { Challenge } from '../types';
+﻿import type { Challenge } from '../types';
 
-// ─── ENG-PR-006 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-006 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Edit the object below to update this challenge.
 // Run `npx next build` after saving to confirm no TypeScript errors.
 
-// ─── ENG-PR-006 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-006 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-006',
   type: 'PR Review',
   badgeClass: 'badge-pr',
-  title: 'Sequential Awaits — N×1 Second Dashboard Load',
+  title: 'Sequential Awaits â€” NÃ—1 Second Dashboard Load',
   companies: ['Datadog', 'Vercel'],
   timeEst: '~10 min',
   level: 'Junior',
   status: 'Not Started',
   desc: 'The dashboard API endpoint takes ~3 seconds to respond after a junior dev added two additional data sources. Each individual query runs in ~1 second. Prod monitoring confirms no slow queries. Find the structural bug.',
-  solution: 'The three await calls are sequential: each one blocks until the previous resolves. Total time = 1s + 1s + 1s = 3s. The three queries are independent — none depends on the result of another — so they can run concurrently with Promise.all. Fix: const [user, posts, analytics] = await Promise.all([fetchUser(id), fetchPosts(id), fetchAnalytics(id)]); — bringing load time to ~1s.',
+  solution: 'The three await calls are sequential: each one blocks until the previous resolves. Total time = 1s + 1s + 1s = 3s. The three queries are independent â€” none depends on the result of another â€” so they can run concurrently with Promise.all. Fix: const [user, posts, analytics] = await Promise.all([fetchUser(id), fetchPosts(id), fetchAnalytics(id)]); â€” bringing load time to ~1s.',
   prReview: {
     prNumber: 631,
     prBranch: 'feature/dashboard-analytics-widget',
@@ -49,8 +49,8 @@ const challenge: Challenge = {
       { value: 'no_pagination', label: 'Missing pagination', sub: 'Returning unbounded data set' },
     ],
     correctBugType: 'sequential_await',
-    successExplanation: "Exactly. fetchUser, fetchPosts, and fetchAnalytics are fully independent — none of them uses the result of another. Sequential await means they run one after the other: 1s + 1s + 1s = 3s. Using Promise.all fires all three simultaneously, so total time drops to ~1s (the slowest single call). Fix: const [user, posts, analytics] = await Promise.all([fetchUser(userId), fetchPosts(userId), fetchAnalytics(userId)]);",
-    failExplanation: "The performance bug is the three sequential awaits on lines 4–6. Each blocks the next, so the endpoint's minimum latency is the sum of all three calls. Since none of the queries depends on another's result, they can run concurrently with Promise.all — dropping total time from ~3s to ~1s. This is the most common async performance mistake for junior devs.",
+    successExplanation: "Exactly. fetchUser, fetchPosts, and fetchAnalytics are fully independent â€” none of them uses the result of another. Sequential await means they run one after the other: 1s + 1s + 1s = 3s. Using Promise.all fires all three simultaneously, so total time drops to ~1s (the slowest single call). Fix: const [user, posts, analytics] = await Promise.all([fetchUser(userId), fetchPosts(userId), fetchAnalytics(userId)]);",
+    failExplanation: "The performance bug is the three sequential awaits on lines 4â€“6. Each blocks the next, so the endpoint's minimum latency is the sum of all three calls. Since none of the queries depends on another's result, they can run concurrently with Promise.all â€” dropping total time from ~3s to ~1s. This is the most common async performance mistake for junior devs.",
   },
 };
 

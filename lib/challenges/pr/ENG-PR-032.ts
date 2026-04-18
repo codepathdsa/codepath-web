@@ -1,5 +1,5 @@
-import { Challenge } from "../types";
-// ─── ENG-PR-032 ─────────────────────────────────────────────────────────────────
+﻿import { Challenge } from "../types";
+// â”€â”€â”€ ENG-PR-032 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-032',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/middleware/webhooks.ts',
         background: 'Verifying HMAC-SHA256 signatures from incoming third-party webhooks.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'How does the `===` operator evaluate strings under the hood?',
             'If string A is "abcdef" and string B is "abczzz", does JS check the "d" or exit immediately at "c"?',

@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-020 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-020 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-020',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'The "Double-Click" Race Condition',
     companies: ['Stripe', 'Doordash'],
     timeEst: '~12 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'Users with slow internet connections occasionally report being charged twice for the same order. A mid-level dev added a `loading` state to disable the button while the API request is in flight, but duplicates are still happening.',
     solution: 'React state updates are asynchronous and batched. If a user double-clicks rapidly, the second click event fires *before* React has re-rendered the button to be `disabled` or updated the `loading` variable. Both clicks pass the `if (loading) return` check. Fix: Use an idempotency key on the backend, or use a `useRef` (e.g., `isSubmittingRef.current = true`) which updates synchronously without waiting for a re-render.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/components/Checkout.tsx',
         background: 'Preventing users from submitting the checkout form multiple times.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'When `setLoading(true)` is called, does the `loading` variable change immediately on the next line?',
             'If two clicks happen 10 milliseconds apart, has React re-rendered the component yet?',

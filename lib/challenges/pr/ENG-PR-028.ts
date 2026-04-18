@@ -1,5 +1,5 @@
-
-// ─── ENG-PR-028 ─────────────────────────────────────────────────────────────────
+﻿
+// â”€â”€â”€ ENG-PR-028 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 import { Challenge } from "../types";
 
@@ -10,7 +10,7 @@ const challenge: Challenge = {
     title: 'The Hidden O(N) Pagination Death',
     companies: ['Twitter', 'Discord'],
     timeEst: '~12 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A classic "Page 1 of X" pagination works perfectly for most users. However, when power users try to load Page 5,000 of their audit logs, the database CPU spikes and the request times out.',
     solution: 'Using large `OFFSET` values in SQL is secretly an O(N) operation. To satisfy `OFFSET 100000 LIMIT 50`, the database must fetch, sort, and discard 100,000 rows before returning the final 50. Fix: Use "Cursor-based" pagination (e.g., `WHERE id < ? LIMIT 50`) which can instantly jump to the correct row using indexes.',
@@ -21,6 +21,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/repositories/auditLog.ts',
         background: 'Paginating millions of audit logs to display in an admin data grid.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'How does PostgreSQL execute an `OFFSET` command?',
             'If the user requests page 10,000, how many rows does the database process to return the 50 results?',

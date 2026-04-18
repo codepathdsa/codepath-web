@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-021 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-021 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-021',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'Prototype Pollution via Recursive Merge',
     companies: ['Snyk', 'GitHub'],
     timeEst: '~15 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A custom `deepMerge` utility was added to combine default user settings with incoming JSON payloads. A security researcher demonstrated they could elevate their privileges to `admin` simply by saving their user profile.',
     solution: 'This is Prototype Pollution. If an attacker sends a JSON payload with `{"__proto__": {"isAdmin": true}}`, the recursive merge function applies it to `Object.prototype`. Suddenly, *every* object in the Node.js process inherits `isAdmin: true` if it doesn\'t explicitly define it. Fix: Block the keys `__proto__`, `constructor`, and `prototype` during merges.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/utils/object.ts',
         background: 'Merging parsed JSON configurations.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if `sourceKey` is the string `"__proto__"`?',
             'If you modify `target["__proto__"]`, what are you actually modifying?',

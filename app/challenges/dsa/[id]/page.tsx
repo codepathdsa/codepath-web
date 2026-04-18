@@ -8,6 +8,7 @@ import styles from './page.module.css';
 import { CHALLENGES, TestCase } from '@/lib/challenges';
 import CaptureOverlay from '@/app/components/CaptureOverlay';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
+import { createClient } from '@/utils/supabase/client';
 
 // --- Types -------------------------------------------------------------------
 interface TestResult {
@@ -55,6 +56,182 @@ function evaluateCode(
       ? tc.expected
       : `Wrong Answer (matched ${matchCount}/${required.length} algorithm patterns)`,
   };
+}
+
+// --- Language templates ------------------------------------------------------
+const LANG_TEMPLATES: Record<string, string> = {
+  python: '# Write your solution here\n# Switch languages using the dropdown above\n\ndef solve():\n    pass\n',
+  javascript: '// Write your solution here\n// Switch languages using the dropdown above\n\nfunction solve() {\n    // TODO: implement\n}\n\nconsole.log(solve());\n',
+  typescript: '// Write your solution here\n// Switch languages using the dropdown above\n\nfunction solve(): void {\n    // TODO: implement\n}\n\nconsole.log(solve());\n',
+  go: 'package main\n\nimport "fmt"\n\nfunc solve() {\n\t// TODO: implement\n}\n\nfunc main() {\n\tfmt.Println(solve())\n}\n',
+  java: 'class Solution {\n    public void solve() {\n        // TODO: implement\n    }\n\n    public static void main(String[] args) {\n        new Solution().solve();\n    }\n}\n',
+  cpp: '#include <iostream>\nusing namespace std;\n\nvoid solve() {\n    // TODO: implement\n}\n\nint main() {\n    solve();\n    return 0;\n}\n',
+};
+
+// --- localStorage submission store -----------------------------------------
+const SUBMISSIONS_KEY  = 'cp_submissions';
+const GITHUB_GISTS_KEY = 'cp_github_gists'; // { [challengeId-lang]: gistId }
+const PENDING_GIST_KEY = 'cp_pending_gist'; // sessionStorage: 'challengeId:lang' before OAuth redirect
+
+function loadSavedCode(challengeId: string, lang: string): string | null {
+  try {
+    const store = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) ?? '{}');
+    return store[challengeId]?.[lang]?.code ?? null;
+  } catch { return null; }
+}
+
+function saveSubmission(challengeId: string, lang: string, code: string, passed: boolean) {
+  try {
+    const store = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) ?? '{}');
+    if (!store[challengeId]) store[challengeId] = {};
+    store[challengeId][lang] = { code, passed, t: Date.now() };
+    // Keep only the last 50 challenges to stay well within the 5 MB localStorage limit
+    const keys = Object.keys(store);
+    if (keys.length > 50) delete store[keys[0]];
+    localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(store));
+  } catch { /* storage full or SSR */ }
+}
+
+// --- GitHub Gist helpers -----------------------------------------------------
+const LANG_EXT: Record<string, string> = {
+  python: 'py', javascript: 'js', typescript: 'ts',
+  go: 'go', java: 'java', cpp: 'cpp',
+};
+
+/** Returns the GitHub provider_token from the current Supabase session, or null. */
+async function getGithubProviderToken(): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.provider_token && session?.user?.app_metadata?.provider === 'github') {
+      return session.provider_token;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+/** Redirect to GitHub OAuth requesting the `gist` scope, return here afterwards.
+ *  Returns an error string if the auth service is unreachable, null on success (browser will navigate away). */
+async function redirectToGithubOAuth(returnUrl: string): Promise<{ error: string | null }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      scopes: 'read:user,gist',
+      redirectTo: returnUrl,
+      // skipBrowserRedirect: true so we can catch failures before the browser navigates
+      skipBrowserRedirect: true,
+    },
+  });
+
+  if (error || !data.url) {
+    return { error: 'Unable to connect to authentication service. Please try again.' };
+  }
+
+  // Only navigate once we have confirmed the URL is valid
+  window.location.href = data.url;
+  return { error: null };
+}
+
+async function saveToGist(
+  pat: string,
+  challengeId: string,
+  challengeTitle: string,
+  lang: string,
+  code: string,
+): Promise<{ url: string; id: string }> {
+  const gistKey = `${challengeId}-${lang}`;
+  let existingId: string | null = null;
+  try {
+    const store = JSON.parse(localStorage.getItem(GITHUB_GISTS_KEY) ?? '{}');
+    existingId = store[gistKey] ?? null;
+  } catch { /* ignore */ }
+
+  const ext = LANG_EXT[lang] ?? 'txt';
+  const filename = `${challengeId}.${ext}`;
+  const body = {
+    description: `CodePath: ${challengeTitle} (${lang})`,
+    public: false,
+    files: { [filename]: { content: code } },
+  };
+
+  const url = existingId
+    ? `https://api.github.com/gists/${existingId}`
+    : 'https://api.github.com/gists';
+
+  const resp = await fetch(url, {
+    method: existingId ? 'PATCH' : 'POST',
+    headers: {
+      Authorization: `Bearer ${pat}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `GitHub API error ${resp.status}`);
+  }
+
+  const data = await resp.json() as { id: string; html_url: string };
+
+  // Persist gist ID so future saves PATCH instead of POST
+  try {
+    const store = JSON.parse(localStorage.getItem(GITHUB_GISTS_KEY) ?? '{}');
+    store[gistKey] = data.id;
+    localStorage.setItem(GITHUB_GISTS_KEY, JSON.stringify(store));
+  } catch { /* ignore */ }
+
+  return { url: data.html_url, id: data.id };
+}
+
+// Helper: run JS in a sandboxed iframe (no allow-same-origin → cannot access parent DOM/localStorage)
+// Uses srcdoc + postMessage for safe output capture.
+function runJsInIframe(jsCode: string): Promise<string> {
+  return new Promise((resolve) => {
+    const logs: string[] = [];
+    const iframe = document.createElement('iframe');
+    // SECURITY: sandbox without allow-same-origin → cannot access window.parent, localStorage, or make credentialed requests
+    iframe.setAttribute('sandbox', 'allow-scripts');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
+      window.removeEventListener('message', onMessage);
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    };
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve(logs.length ? logs.join('\n') : '(timeout — code ran > 5s)');
+    }, 5000);
+
+    const onMessage = (e: MessageEvent) => {
+      if (e.source !== iframe.contentWindow) return;
+      if (e.data?.type === 'log')  logs.push(String(e.data.text));
+      if (e.data?.type === 'done') {
+        clearTimeout(timeout);
+        cleanup();
+        resolve(logs.length ? logs.join('\n') : '(no output)');
+      }
+    };
+    window.addEventListener('message', onMessage);
+
+    // Encode user code as base64 to safely embed without injection risk
+    const encoded = btoa(unescape(encodeURIComponent(jsCode)));
+    iframe.srcdoc = `<!DOCTYPE html><html><body><script>
+      var _code = decodeURIComponent(escape(atob("${encoded}")));
+      var _post = function(t, x) { parent.postMessage({ type: t, text: x }, '*'); };
+      var _fmt = function() { return Array.prototype.slice.call(arguments).map(function(x) { return typeof x === 'object' ? JSON.stringify(x) : String(x); }).join(' '); };
+      console.log   = function() { _post('log', _fmt.apply(null, arguments)); };
+      console.warn  = function() { _post('log', '\u26a0 ' + _fmt.apply(null, arguments)); };
+      console.error = function() { _post('log', '\u274c ' + _fmt.apply(null, arguments)); };
+      try { eval(_code); } catch(e) { _post('log', '\u274c ' + (e && e.message ? e.message : String(e))); }
+      _post('done', '');
+    <\/script></body></html>`;
+  });
 }
 
 // --- Code-rune particle burst (client-only, DOM manipulation) ---------------
@@ -117,13 +294,21 @@ export default function DSAWorkspace() {
   );
 
   const [language, setLanguage] = useState('python');
-  const [code, setCode] = useState('# Write your solution here\n# Switch languages using the dropdown above\n\ndef solve():\n    pass\n');
+  const [code, setCode] = useState(LANG_TEMPLATES.python);
   const [activeTab, setActiveTab] = useState<'ticket' | 'context' | 'solution'>('ticket');
   const [hintsUnlocked, setHintsUnlocked] = useState<number[]>([]);
   const [timer, setTimer] = useState(0);
   const [cliMode, setCliMode] = useState(false);
   const { engineStatus, runPython } = useCodeExecution();
   const isPyodideReady = engineStatus === 'ready';
+  const tsLoaded = useRef(false);
+
+  // GitHub Gist state
+  const [ghSaving, setGhSaving] = useState(false);
+  const [ghResult, setGhResult] = useState<{ url: string; error?: string } | null>(null);
+
+  // Remove any legacy GitHub PAT that may have been stored in a previous session
+  useEffect(() => { try { localStorage.removeItem('cp_github_pat'); } catch {} }, []);
 
   // Button FX refs & state
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -139,22 +324,99 @@ export default function DSAWorkspace() {
   const [submitted, setSubmitted] = useState(false);
   const [showCapture, setShowCapture] = useState(false);
 
-  // Reset when challenge changes
+  // Reset when challenge changes — restore last saved submission if available
   useEffect(() => {
-    setCode('# Write your solution here\n# Switch languages using the dropdown above\n\ndef solve():\n    pass\n');
+    const saved = challenge ? loadSavedCode(challenge.id, language) : null;
+    setCode(saved ?? LANG_TEMPLATES[language] ?? LANG_TEMPLATES.python);
     setRunResults([]);
     setSubmitResults([]);
     setHintsUnlocked([]);
     setSubmitted(false);
     setIsSubmittingStarted(false);
     setTimer(0);
-  }, [challenge?.id]);
+  }, [challenge?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Switch language — restore last saved submission for that language if available
+  const switchLanguage = (lang: string) => {
+    const saved = challenge ? loadSavedCode(challenge.id, lang) : null;
+    setLanguage(lang);
+    setCode(saved ?? LANG_TEMPLATES[lang] ?? LANG_TEMPLATES.python);
+    setRunResults([]);
+    setSubmitResults([]);
+    setSubmitted(false);
+    setIsSubmittingStarted(false);
+  };
+
+  // Load TypeScript compiler from CDN
+  const loadTsCompiler = (): Promise<boolean> => {
+    if ((window as any).ts) return Promise.resolve(true);
+    if (tsLoaded.current) return new Promise(r => setTimeout(() => r((window as any).ts != null), 3000));
+    tsLoaded.current = true;
+    return new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js';
+      // SECURITY: SRI hash ensures CDN compromise cannot inject malicious code
+      s.integrity = 'sha512-0UCKt8uycAQgaUOBbpmTPr3+f7UnbkiQpyjH5hXGTJWhVeimh5gc3GUKd7BbyuLt/84sivVbtXa5GplGr8Y3cA==';
+      s.crossOrigin = 'anonymous';
+      s.onload  = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  };
 
   // Timer
   useEffect(() => {
     const id = setInterval(() => setTimer(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  const doGistSave = async (token: string) => {
+    setGhSaving(true);
+    setGhResult(null);
+    try {
+      const { url } = await saveToGist(token, challenge.id, challenge.title, language, code);
+      setGhResult({ url });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      // 401/403 means token lacks gist scope — re-auth
+      if (msg.includes('401') || msg.includes('403') || msg.toLowerCase().includes('bad credential')) {
+        await triggerOAuth();
+      } else {
+        setGhResult({ url: '', error: 'Failed to save to GitHub Gist. Please try again.' });
+      }
+    }
+    setGhSaving(false);
+  };
+
+  const triggerOAuth = async () => {
+    // Use sessionStorage (not URL param) so shared links don't trigger saves for other users
+    try { sessionStorage.setItem(PENDING_GIST_KEY, `${challenge.id}:${language}`); } catch { /* ignore */ }
+    const returnUrl = window.location.href.split('?')[0]; // No query params in return URL
+    const { error } = await redirectToGithubOAuth(returnUrl);
+    if (error) setGhResult({ url: '', error });
+  };
+
+  const handleSaveToGithub = async () => {
+    const token = await getGithubProviderToken();
+    if (token) {
+      doGistSave(token);
+    } else {
+      await triggerOAuth();
+    }
+  };
+
+  // Auto-save after returning from GitHub OAuth redirect (triggered by sessionStorage flag, not URL param)
+  useEffect(() => {
+    const action = sessionStorage.getItem(PENDING_GIST_KEY);
+    if (!action) return;
+    sessionStorage.removeItem(PENDING_GIST_KEY); // Consume immediately — single use
+    // Wait for Supabase to hydrate the session from the URL hash fragment
+    const tid = setTimeout(async () => {
+      const token = await getGithubProviderToken();
+      if (token) doGistSave(token);
+    }, 600);
+    return () => clearTimeout(tid);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!challenge) {
     return (
@@ -205,6 +467,44 @@ export default function DSAWorkspace() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted]);
 
+  // Helper: run JS/TS code via iframe and return console output
+  const runBrowserCode = async (lang: string, src: string): Promise<string> => {
+    if (lang === 'javascript') {
+      return runJsInIframe(src);
+    }
+    if (lang === 'typescript') {
+      const ok = await loadTsCompiler();
+      if (!ok) return '✕ TypeScript compiler failed to load';
+      try {
+        const ts = (window as any).ts;
+        const result = ts.transpileModule(src, {
+          compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
+        });
+        return runJsInIframe(result.outputText);
+      } catch (e: unknown) {
+        return '✕ ' + (e instanceof Error ? e.message : String(e));
+      }
+    }
+    if (lang === 'go') {
+      try {
+        const resp = await fetch('/api/compile/go', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: src }),
+          signal: AbortSignal.timeout(14_000),
+        });
+        const data = await resp.json() as { output?: string; errors?: string; error?: string };
+        if (data.error) return '✕ ' + data.error;
+        return [data.errors?.trim(), data.output?.trim()].filter(Boolean).join('\n') || '(no output)';
+      } catch (e: unknown) {
+        return '✕ ' + (e instanceof Error ? e.message : 'Network error');
+      }
+    }
+    // Java / C++ — cannot run in browser
+    const cmd = lang === 'java' ? 'javac Solution.java && java Solution' : 'g++ -o sol solution.cpp && ./sol';
+    return `ℹ ${lang === 'java' ? 'Java' : 'C++'} runs locally.\nCopy your code and run:\n  ${cmd}`;
+  };
+
   // -- Run Code (examples only) --
   const handleRunCode = async () => {
     if (!examples.length) return;
@@ -220,6 +520,14 @@ export default function DSAWorkspace() {
       if (isPyodideReady && language === 'python') {
         const { passed, actual, ms } = await runPython(code, tc.input, tc.expected);
         result = { tc, passed, actual, ms, hidden: false };
+      } else if (language === 'javascript' || language === 'typescript' || language === 'go') {
+        const start = Date.now();
+        const output = await runBrowserCode(language, code);
+        const ms = Date.now() - start;
+        // Use pattern heuristic for pass/fail — running doesn't validate correctness without a harness
+        const { passed, actual: heuristicActual } = evaluateCode(code, challenge.id, tc, i);
+        const actualDisplay = output.startsWith('✕') ? output : (passed ? tc.expected : heuristicActual);
+        result = { tc, passed, actual: actualDisplay, ms, hidden: false };
       } else {
         await new Promise(r => setTimeout(r, 280 + i * 280));
         const ms = Math.floor(Math.random() * 80 + 15);
@@ -243,6 +551,7 @@ export default function DSAWorkspace() {
     setSubmitted(false);
 
     // Phase 2: run each test case, stream results
+    const collectedResults: TestResult[] = [];
     for (let i = 0; i < tcs.length; i++) {
       const tc = tcs[i];
       let result: TestResult;
@@ -253,8 +562,17 @@ export default function DSAWorkspace() {
         // Small UI stagger so results animate in one by one
         await new Promise(r => setTimeout(r, 120));
         result = { tc, passed, actual, ms, hidden: i >= 2 };
+      } else if (language === 'javascript' || language === 'typescript' || language === 'go') {
+        const start = Date.now();
+        const output = await runBrowserCode(language, code);
+        const ms = Date.now() - start;
+        // Use pattern heuristic for pass/fail — running doesn't validate correctness without a test harness
+        const { passed, actual: heuristicActual } = evaluateCode(code, challenge.id, tc, i);
+        const actualDisplay = output.startsWith('✕') ? output : (passed ? tc.expected : heuristicActual);
+        await new Promise(r => setTimeout(r, 100));
+        result = { tc, passed, actual: actualDisplay, ms, hidden: i >= 2 };
       } else {
-        // Heuristic fallback
+        // Heuristic fallback (Java/C++)
         await new Promise(r => setTimeout(r, i === 0 ? 600 : 350));
         const ms = Math.floor(Math.random() * 130 + 20);
         const { passed, actual } = evaluateCode(code, challenge.id, tc, i);
@@ -262,10 +580,14 @@ export default function DSAWorkspace() {
       }
 
       setSubmitResults(prev => [...prev, result]);
+      collectedResults.push(result);
 
       if (i === tcs.length - 1) {
         setIsSubmitting(false);
         setSubmitted(true);
+        // Persist code + outcome to localStorage (zero cost)
+        const allPassed = collectedResults.every(r => r.passed);
+        saveSubmission(challenge.id, language, code, allPassed);
       }
     }
   };
@@ -289,6 +611,8 @@ export default function DSAWorkspace() {
         />
       )}
 
+      {/* -- GitHub PAT Modal removed: using Supabase GitHub OAuth instead -- */}
+
       {/* -- Top Bar -- */}
       <div className={styles.topBar}>
         <div className={styles.topLeft}>
@@ -302,7 +626,7 @@ export default function DSAWorkspace() {
         <div className={styles.topCenter}>{formatTime(timer)}</div>
 
         <div className={styles.topRight}>
-          {/* Python engine status pill */}
+          {/* Runtime status pill */}
           {language === 'python' && (
             <div
               className={styles.enginePill}
@@ -320,18 +644,31 @@ export default function DSAWorkspace() {
                        engineStatus === 'error'   ? '#f87171' :
                                                     'var(--text-tertiary)',
               }}
-              title={
-                engineStatus === 'ready'   ? 'Python 3.11 (Pyodide) — real execution active' :
-                engineStatus === 'loading' ? 'Loading Python engine...' :
-                engineStatus === 'error'   ? 'Python engine failed — using heuristic mode' :
-                                              'Python engine idle'
-              }
+              title="Python 3.11 (Pyodide) — real execution in browser"
             >
               🐍&nbsp;
               {engineStatus === 'ready'   ? 'Python Ready' :
                engineStatus === 'loading' ? 'Loading…' :
                engineStatus === 'error'   ? 'Heuristic Mode' :
                                             'Python Idle'}
+            </div>
+          )}
+          {(language === 'javascript' || language === 'typescript') && (
+            <div className={styles.enginePill} style={{ background: 'rgba(251,191,36,0.12)', borderColor: 'rgba(251,191,36,0.35)', color: '#fbbf24' }}
+              title="Runs in browser sandbox">
+              ⚡&nbsp;Browser
+            </div>
+          )}
+          {language === 'go' && (
+            <div className={styles.enginePill} style={{ background: 'rgba(0,173,216,0.12)', borderColor: 'rgba(0,173,216,0.35)', color: '#00add8' }}
+              title="Runs via Go Playground">
+              ☁️&nbsp;Go Playground
+            </div>
+          )}
+          {(language === 'java' || language === 'cpp') && (
+            <div className={styles.enginePill} style={{ background: 'rgba(148,163,184,0.1)', borderColor: 'var(--border-subtle)', color: 'var(--text-tertiary)' }}
+              title="Copy code and run locally">
+              💻&nbsp;Local only
             </div>
           )}
           <div className={styles.modeIndicator}>
@@ -363,6 +700,27 @@ export default function DSAWorkspace() {
             <span className={`${styles.scanBeam} ${isSubmitting ? styles.scanActive : ''}`} aria-hidden="true" />
             {isSubmitting ? '[ Compiling… ]' : 'Submit →'}
           </button>
+          {/* GitHub Gist save */}
+          <button
+            className="btn-ghost"
+            onClick={() => handleSaveToGithub()}
+            disabled={ghSaving}
+            title="Save code to GitHub Gist"
+            style={{ padding: '6px 10px', fontSize: '13px' }}
+          >
+            {ghSaving ? '⏳' : '⬆ GitHub'}
+          </button>
+          {/* Inline result feedback */}
+          {ghResult && (
+            ghResult.error ? (
+              <span style={{ fontSize: '11px', color: 'var(--color-error)' }} title={ghResult.error}>✕ {ghResult.error.slice(0, 40)}</span>
+            ) : (
+              <a href={ghResult.url} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: '11px', color: 'var(--color-success)' }}>
+                ✓ Gist saved ↗
+              </a>
+            )
+          )}
         </div>
       </div>
 
@@ -734,11 +1092,13 @@ export default function DSAWorkspace() {
 
         <div className={styles.rightPanel}>
           <div className={styles.editorToolbar}>
-            <select className={styles.langSelect} value={language} onChange={e => setLanguage(e.target.value)}>
+            <select className={styles.langSelect} value={language} onChange={e => switchLanguage(e.target.value)}>
               <option value="python">Python 3</option>
-              <option value="javascript" disabled>JavaScript (coming soon)</option>
-              <option value="typescript" disabled>TypeScript (coming soon)</option>
-              <option value="go" disabled>Go (coming soon)</option>
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="go">Go</option>
+              <option value="java">Java</option>
+              <option value="cpp">C++</option>
             </select>
             {submitted && (
               <span

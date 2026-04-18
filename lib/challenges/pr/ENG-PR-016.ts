@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-016 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-016 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-016',
@@ -8,10 +8,10 @@ const challenge: Challenge = {
     title: 'SSRF via URL Preview',
     companies: ['Slack', 'Discord'],
     timeEst: '~15 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A dev built a "Link Preview" feature. Users can post a URL, and our server fetches the page title and favicon to display. A security audit shows that an attacker can use this to scan our internal network and steal AWS metadata.',
-    solution: 'This is a Server-Side Request Forgery (SSRF) vulnerability. By passing an internal IP (like 169.254.169.254 or localhost), the attacker forces our server to fetch data from our own internal infrastructure that isn’t exposed to the internet. Fix: Implement an allow-list for protocols (HTTP/HTTPS only) and validate that the resolved IP address of the URL is not a private/internal range.',
+    solution: 'This is a Server-Side Request Forgery (SSRF) vulnerability. By passing an internal IP (like 169.254.169.254 or localhost), the attacker forces our server to fetch data from our own internal infrastructure that isnâ€™t exposed to the internet. Fix: Implement an allow-list for protocols (HTTP/HTTPS only) and validate that the resolved IP address of the URL is not a private/internal range.',
     prReview: {
         prNumber: 99,
         prBranch: 'feat/link-previews',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/utils/scraper.ts',
         background: 'Scraping metadata from user-provided links.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if a user submits a URL like "http://localhost:5432" or "http://169.254.169.254/latest/meta-data/"?',
             'Does our server have access to internal services that the public internet doesn\'t?',

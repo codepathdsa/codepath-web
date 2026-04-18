@@ -1,48 +1,38 @@
-'use client';
-
 import Link from 'next/link';
 import styles from './page.module.css';
 import AppNav from '@/app/components/AppNav';
 import DailyEncounter from '@/app/components/DailyEncounter';
 import StreakWidget from '@/app/components/StreakWidget';
+import { getMyProfile } from '@/lib/db/profile';
+import { getMyActivities } from '@/lib/db/activity';
 
-import { ACTIVITY_EVENTS } from '@/lib/activity';
-
-// Convert telemetry feed into actionable density bounds for the Github-style graph
-const generateHeatmapData = () => {
-  const cols = [];
+// Convert real activity events into heatmap density data
+const buildHeatmapData = (events: { timestamp: string }[]) => {
   const now = new Date();
-  
-  // Build a O(N) lookup dictionary mapping YYYY-MM-DD -> Activity Array
-  const activityMap: Record<string, typeof ACTIVITY_EVENTS> = {};
-  for (const ev of ACTIVITY_EVENTS) {
+  const activityMap: Record<string, { title: string }[]> = {};
+  for (const ev of events) {
     const dStr = new Date(ev.timestamp).toISOString().split('T')[0];
     if (!activityMap[dStr]) activityMap[dStr] = [];
-    activityMap[dStr].push(ev);
+    activityMap[dStr].push({ title: (ev as { title?: string }).title ?? '' });
   }
 
-  // Iterate backwards 364 days representing a 52x7 matrix trailing today
+  const cols = [];
   for (let i = 0; i < 52; i++) {
     const col = [];
     for (let j = 0; j < 7; j++) {
       const daysAgo = (51 - i) * 7 + (6 - j);
       const targetDate = new Date(now.getTime() - daysAgo * 86400000);
       const dStr = targetDate.toISOString().split('T')[0];
-      
       const eventsOnDay = activityMap[dStr] || [];
       const count = eventsOnDay.length;
-      
-      // Map arbitrary activity volume onto explicit levels 0-4
       let level = 0;
       if (count === 1) level = 1;
       else if (count === 2) level = 2;
       else if (count === 3) level = 3;
       else if (count >= 4) level = 4;
-
-      const title = count === 0 
-        ? `No activity on ${dStr}` 
+      const title = count === 0
+        ? `No activity on ${dStr}`
         : `${count} activities on ${dStr}\n- ${eventsOnDay.map(e => e.title).join('\n- ')}`;
-
       col.push({ level, title });
     }
     cols.push(col);
@@ -50,21 +40,23 @@ const generateHeatmapData = () => {
   return cols;
 };
 
-import { useState, useEffect } from 'react';
+export default async function Dashboard() {
+  const [{ profile, stats }, activities] = await Promise.all([
+    getMyProfile(),
+    getMyActivities(200),
+  ]);
 
-export default function Dashboard() {
-  const [heatmapData, setHeatmapData] = useState<{level: number, title: string}[][]>([]);
+  const displayName = profile?.display_name ?? profile?.username ?? 'Engineer';
+  const track = profile?.track ?? 'SDE II';
+  const companies = (profile?.target_companies ?? []).join(', ') || 'Not set';
+  const totalXp = stats?.total_xp ?? 0;
+  const challengesDone = stats?.challenges_done ?? 0;
+  const prReviewsDone = stats?.pr_reviews_done ?? 0;
+  const warRoomsDone = stats?.war_rooms_done ?? 0;
 
-  useEffect(() => {
-    setHeatmapData(generateHeatmapData());
-  }, []);
-
-  // Pre-fill an empty grid layout pattern for SSR to prevent layout shift
-  const emptyGrid = Array.from({ length: 52 }, () => 
-    Array.from({ length: 7 }, () => ({ level: 0, title: 'Loading...' }))
-  );
-
-  const displayData = heatmapData.length > 0 ? heatmapData : emptyGrid;
+  const heatmapData = buildHeatmapData(activities);
+  const displayData = heatmapData.length > 0 ? heatmapData :
+    Array.from({ length: 52 }, () => Array.from({ length: 7 }, () => ({ level: 0, title: '' })));
 
   return (
     <div className={styles.layout}>
@@ -75,15 +67,15 @@ export default function Dashboard() {
         {/* Header Section */}
         <div className={styles.headerSection}>
           <div>
-            <h1 className={styles.greeting}>Welcome back, Venkateshwaran.</h1>
+            <h1 className={styles.greeting}>Welcome back, {displayName}.</h1>
             <div className={styles.roleBadge}>
-              <span className="badge badge-active">SDE II Track</span>
-              <span>Targeting: Meta, Stripe, Notion</span>
+              <span className="badge badge-active">{track} Track</span>
+              <span>Targeting: {companies}</span>
             </div>
           </div>
           <div className={styles.xpWidget}>
             <span className={styles.xpText}>Total XP</span>
-            <span className={styles.xpVal}>12,450</span>
+            <span className={styles.xpVal}>{totalXp.toLocaleString()}</span>
             <span className={styles.lvlBadge}>Lvl 14</span>
           </div>
         </div>
@@ -116,17 +108,17 @@ export default function Dashboard() {
         <div className={styles.metricsGrid}>
           <div className={styles.metricCard}>
             <div className={styles.metricLabel}>Challenges Completed</div>
-            <div className={styles.metricValue}>42 <span style={{fontSize: '14px', color:'var(--text-tertiary)', fontWeight: 'normal'}}>/ 150</span></div>
-            <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: '28%' }}></div></div>
+            <div className={styles.metricValue}>{challengesDone} <span style={{fontSize: '14px', color:'var(--text-tertiary)', fontWeight: 'normal'}}>/ 150</span></div>
+            <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: `${Math.min(100, (challengesDone / 150) * 100)}%` }}></div></div>
           </div>
           <div className={styles.metricCard}>
             <div className={styles.metricLabel}>Code Reviews Done</div>
-            <div className={styles.metricValue}>14</div>
-            <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: '60%', background: 'var(--color-success)' }}></div></div>
+            <div className={styles.metricValue}>{prReviewsDone}</div>
+            <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: `${Math.min(100, prReviewsDone * 5)}%`, background: 'var(--color-success)' }}></div></div>
           </div>
           <div className={styles.metricCard}>
             <div className={styles.metricLabel}>War Rooms Survived</div>
-            <div className={styles.metricValue}>3</div>
+            <div className={styles.metricValue}>{warRoomsDone}</div>
             <div className={styles.metricBar}><div className={styles.metricBarFill} style={{ width: '20%', background: '#f59e0b' }}></div></div>
           </div>
         </div>

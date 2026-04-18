@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-017 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-017 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-017',
@@ -8,9 +8,9 @@ const challenge: Challenge = {
     title: 'Optimistic Locking Failure',
     companies: ['Amazon', 'eBay'],
     timeEst: '~15 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
-    desc: 'In a high-traffic "Edit Product" screen, users are complaining that their changes are "vanishing." If two admins edit the same product at once, the one who clicks save last wins, completely overwriting the first admin’s work without warning.',
+    desc: 'In a high-traffic "Edit Product" screen, users are complaining that their changes are "vanishing." If two admins edit the same product at once, the one who clicks save last wins, completely overwriting the first adminâ€™s work without warning.',
     solution: 'The code lacks concurrency control. It uses a blind UPDATE. Fix: Implement Optimistic Locking. Add a `version` or `updated_at` column to the WHERE clause. If the version in the DB has changed since the user loaded the page, the update will affect 0 rows, allowing us to throw a "Conflict" error.',
     prReview: {
         prNumber: 420,
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/db/product.repo.ts',
         background: 'Updating product details like price and stock.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if User A and User B both load the same record, but User A saves first?',
             'How does the current SQL query know if the data has changed since it was last read?',

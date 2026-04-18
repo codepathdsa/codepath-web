@@ -1,58 +1,74 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
-const PROGRESS_KEY = 'cp_progress';
-const STREAK_KEY = 'cp_streak';
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 export function useProgress() {
-  const [solvedState, setSolvedState] = useState<Record<string, {status: string, ts: number}>>({});
+  const [solvedState, setSolvedState] = useState<Record<string, { status: string; ts: number }>>({});
   const [streak, setStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Load on mount
+  // Load from Supabase on mount
   useEffect(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
-      setSolvedState(data);
-      setStreak(bumpStreak());
-    } catch {}
+    const supabase = createClient();
+    let cancelled = false;
+
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) { setLoading(false); return; }
+
+      const [{ data: challenges }, { data: stats }] = await Promise.all([
+        supabase.from('user_challenges').select('challenge_id, status, solved_at').eq('user_id', user.id),
+        supabase.from('user_stats').select('current_streak').eq('id', user.id).single(),
+      ]);
+
+      if (cancelled) return;
+
+      const map: Record<string, { status: string; ts: number }> = {};
+      for (const row of (challenges ?? [])) {
+        map[row.challenge_id] = { status: row.status, ts: new Date(row.solved_at).getTime() };
+      }
+      setSolvedState(map);
+      setStreak(stats?.current_streak ?? 0);
+      setLoading(false);
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, []);
 
-  const today = () => new Date().toISOString().slice(0, 10);
+  const toggleSolve = useCallback(async (slug: string, xp = 100, type: 'dsa' | 'war' | 'pr' | 'design' | 'tribunal' = 'dsa') => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-  function bumpStreak() {
-    const data = JSON.parse(localStorage.getItem(STREAK_KEY) || '{"count":0,"last":""}');
-    const t = today();
-    if (data.last === t) return data.count;
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = yesterday.toISOString().slice(0, 10);
-
-    if (data.last === yStr) {
-      data.count++;
-    } else if (data.last !== t) {
-      data.count = 1;
-    }
-    data.last = t;
-    localStorage.setItem(STREAK_KEY, JSON.stringify(data));
-    return data.count;
-  }
-
-  function toggleSolve(slug: string) {
+    // Optimistic update
     setSolvedState(prev => {
       const next = { ...prev };
       if (next[slug]?.status === 'solved') {
         delete next[slug];
       } else {
         next[slug] = { status: 'solved', ts: Date.now() };
-        // Bumping streak on solve
-        setStreak(bumpStreak());
       }
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(next));
       return next;
     });
-  }
 
-  return { solvedState, toggleSolve, streak };
+    // Persist to Supabase via RPC
+    await supabase.rpc('award_xp', {
+      p_user_id: user.id,
+      p_xp: xp,
+      p_challenge_id: slug,
+      p_challenge_type: type,
+    });
+
+    // Refresh streak from DB
+    const { data: stats } = await supabase
+      .from('user_stats')
+      .select('current_streak')
+      .eq('id', user.id)
+      .single();
+    if (stats) setStreak(stats.current_streak);
+  }, []);
+
+  return { solvedState, toggleSolve, streak, loading };
 }

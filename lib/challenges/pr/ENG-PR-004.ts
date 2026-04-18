@@ -1,11 +1,11 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-004 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-004 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-004',
   type: 'PR Review',
   badgeClass: 'badge-pr',
-  title: 'Missing useEffect Cleanup — Memory Leak on Unmount',
+  title: 'Missing useEffect Cleanup â€” Memory Leak on Unmount',
   companies: ['Notion', 'Linear'],
   timeEst: '~10 min',
   level: 'Junior',
@@ -48,8 +48,8 @@ const challenge: Challenge = {
       { value: 'wrong_interval', label: 'Wrong interval value', sub: 'Polling too fast / too slow' },
     ],
     correctBugType: 'missing_cleanup',
-    successExplanation: "Exactly right. The interval is set on mount but never cancelled. When the user navigates away and React unmounts the component, the interval is still alive in memory — it fires every 5 seconds, resolves the Promise, and calls setNotifications on a component that no longer exists. React warns with 'state update on unmounted component' and you get a slow memory leak. Fix: capture the return value of setInterval and return a cleanup function: return () => clearInterval(id).",
-    failExplanation: "The bug is the missing cleanup. setInterval is registered inside useEffect but the effect returns nothing — so React has no way to cancel the interval when the component unmounts. The fix is a one-liner: const id = setInterval(...); return () => clearInterval(id);. Without it, every visit to this page adds a new persistent interval that outlives the component.",
+    successExplanation: "Exactly right. The interval is set on mount but never cancelled. When the user navigates away and React unmounts the component, the interval is still alive in memory â€” it fires every 5 seconds, resolves the Promise, and calls setNotifications on a component that no longer exists. React warns with 'state update on unmounted component' and you get a slow memory leak. Fix: capture the return value of setInterval and return a cleanup function: return () => clearInterval(id).",
+    failExplanation: "The bug is the missing cleanup. setInterval is registered inside useEffect but the effect returns nothing â€” so React has no way to cancel the interval when the component unmounts. The fix is a one-liner: const id = setInterval(...); return () => clearInterval(id);. Without it, every visit to this page adds a new persistent interval that outlives the component.",
   },
 };
 export default challenge;

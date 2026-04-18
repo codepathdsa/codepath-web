@@ -1,4 +1,4 @@
-// ─── ENG-PR-036 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-036 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-036',
@@ -10,7 +10,7 @@ const challenge: Challenge = {
     level: 'Senior',
     status: 'Not Started',
     desc: 'A background cron job processes an S3 bucket with 50,000 images, resizing them and uploading them. Every night at 2 AM, the container crashes with `EMFILE: too many open files` or an Out Of Memory (OOM) error.',
-    solution: 'The dev used `Promise.all(files.map(processImage))`. This fires 50,000 asynchronous network and file-system operations simultaneously. The OS runs out of socket descriptors or RAM trying to handle them all at once. Fix: Implement a concurrency limit (using libraries like `p-limit` or a batching chunk array loop) to process max 50–100 at a time.',
+    solution: 'The dev used `Promise.all(files.map(processImage))`. This fires 50,000 asynchronous network and file-system operations simultaneously. The OS runs out of socket descriptors or RAM trying to handle them all at once. Fix: Implement a concurrency limit (using libraries like `p-limit` or a batching chunk array loop) to process max 50â€“100 at a time.',
     prReview: {
         prNumber: 521,
         prBranch: 'chore/s3-image-resizer',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/jobs/resize.ts',
         background: 'Batch processing tens of thousands of objects in cloud storage.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'Does `Promise.all` process items one by one, or all at exactly the same time?',
             'If you initiate 50,000 HTTP requests simultaneously, what happens to the OS network sockets?',

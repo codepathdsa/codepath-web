@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-014 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-014 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-014',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'The Hidden N+1 (ORM Edition)',
     companies: ['Shopify', 'Instacart'],
     timeEst: '~12 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A dev added a "Recent Activity" feed. In staging (5 users), it is instant. In production (100k users), the database CPU spikes to 100% and the API times out. Logs show 50+ SQL queries per single API request.',
     solution: 'This is a classic N+1 query problem. The ORM (TypeORM/Sequelize) is fetching the "Posts", but the "Author" relationship is lazily loaded. When the code loops through posts to return JSON, the ORM triggers a separate SELECT for every single author. Fix: Use Eager Loading (e.g., `.find({ relations: ["author"] })`).',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/services/post.service.ts',
         background: 'Fetching the latest 50 posts for the global discovery feed.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'Look at how the author data is accessed in the return statement.',
             'How many queries are executed if `posts` contains 50 items?',

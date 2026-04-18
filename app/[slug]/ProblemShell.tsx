@@ -32,11 +32,12 @@ interface ProblemShellProps {
 
 // -- Language registry ------------------------------------------------------
 const LANGS: Record<string, { label: string; ext: string; monacoId: string }> = {
-  python:     { label: 'Python',     ext: '.py', monacoId: 'python'     },
-  javascript: { label: 'JavaScript', ext: '.js', monacoId: 'javascript' },
-  typescript: { label: 'TypeScript', ext: '.ts', monacoId: 'typescript' },
-  java:       { label: 'Java',       ext: '.java', monacoId: 'java'     },
-  cpp:        { label: 'C++',        ext: '.cpp', monacoId: 'cpp'       },
+  python:     { label: 'Python',     ext: '.py',   monacoId: 'python'     },
+  javascript: { label: 'JavaScript', ext: '.js',   monacoId: 'javascript' },
+  typescript: { label: 'TypeScript', ext: '.ts',   monacoId: 'typescript' },
+  go:         { label: 'Go',         ext: '.go',   monacoId: 'go'         },
+  java:       { label: 'Java',       ext: '.java', monacoId: 'java'       },
+  cpp:        { label: 'C++',        ext: '.cpp',  monacoId: 'cpp'        },
 };
 
 const TEMPLATES: Record<string, string> = {
@@ -48,16 +49,31 @@ const TEMPLATES: Record<string, string> = {
  * @param {number[]} nums
  * @return {number}
  */
-class Solution {
-    solve(nums) {
-        
-    }
+function solve(nums) {
+    // TODO: implement
+    return 0;
 }
+
+console.log(solve([1, 2, 3]));
 `,
-  typescript: `class Solution {
-    solve(nums: number[]): number {
-        return 0;
-    }
+  typescript: `function solve(nums: number[]): number {
+    // TODO: implement
+    return 0;
+}
+
+console.log(solve([1, 2, 3]));
+`,
+  go: `package main
+
+import "fmt"
+
+func solve(nums []int) int {
+	// TODO: implement
+	return 0
+}
+
+func main() {
+	fmt.Println(solve([]int{1, 2, 3}))
 }
 `,
   java: `class Solution {
@@ -108,6 +124,7 @@ export default function ProblemShell({
   const [running, setRunning] = useState(false);
   const [solved, setSolved] = useState(false);
   const pyLoaded = useRef(false);
+  const tsLoaded = useRef(false);
 
   useEffect(() => {
     try {
@@ -146,9 +163,75 @@ export default function ProblemShell({
     }
   }, [lang]);
 
+  // Helper: run JS string in a sandboxed iframe, capture console output.
+  // SECURITY: sandbox='allow-scripts' (no allow-same-origin) prevents user code from
+  // accessing window.parent, localStorage, or making credentialed requests.
+  const runInIframe = useCallback((jsCode: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const logs: string[] = [];
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const cleanup = () => {
+        window.removeEventListener('message', onMessage);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      };
+
+      const timeout = setTimeout(() => {
+        cleanup();
+        resolve(logs.length ? logs.join('\n') : '(timeout — code ran > 5s)');
+      }, 5000);
+
+      const onMessage = (e: MessageEvent) => {
+        if (e.source !== iframe.contentWindow) return;
+        if (e.data?.type === 'log')  logs.push(String(e.data.text));
+        if (e.data?.type === 'done') {
+          clearTimeout(timeout);
+          cleanup();
+          resolve(logs.length ? logs.join('\n') : '(no output)');
+        }
+      };
+      window.addEventListener('message', onMessage);
+
+      // Base64-encode user code to safely embed without injection risk in srcdoc.
+      const encoded = btoa(unescape(encodeURIComponent(jsCode)));
+      iframe.srcdoc = `<!DOCTYPE html><html><body><script>
+        var _code = decodeURIComponent(escape(atob("${encoded}")));
+        var _post = function(t, x) { parent.postMessage({ type: t, text: x }, '*'); };
+        var _fmt = function() { return Array.prototype.slice.call(arguments).map(function(x) { return typeof x === 'object' ? JSON.stringify(x) : String(x); }).join(' '); };
+        console.log   = function() { _post('log', _fmt.apply(null, arguments)); };
+        console.warn  = function() { _post('log', '\u26a0 ' + _fmt.apply(null, arguments)); };
+        console.error = function() { _post('log', '\u274c ' + _fmt.apply(null, arguments)); };
+        try { eval(_code); } catch(e) { _post('log', '\u274c ' + (e && e.message ? e.message : String(e))); }
+        _post('done', '');
+      <\/script></body></html>`;
+    });
+  }, []);
+
+  // Helper: load TypeScript compiler from CDN once
+  const loadTsCompiler = useCallback((): Promise<boolean> => {
+    if ((window as any).ts) return Promise.resolve(true);
+    if (tsLoaded.current) return Promise.resolve(false);
+    tsLoaded.current = true;
+    return new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js';
+      // SECURITY: SRI hash prevents CDN compromise from injecting malicious code
+      s.integrity = 'sha512-0UCKt8uycAQgaUOBbpmTPr3+f7UnbkiQpyjH5hXGTJWhVeimh5gc3GUKd7BbyuLt/84sivVbtXa5GplGr8Y3cA==';
+      s.crossOrigin = 'anonymous';
+      s.onload  = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  }, []);
+
   const run = useCallback(async () => {
     setRunning(true);
     setOutputOpen(true);
+
+    // ── Python (Pyodide WASM — zero cost) ────────────────────────────────────────
     if (lang === 'python') {
       try {
         // @ts-expect-error global
@@ -165,11 +248,61 @@ export default function ProblemShell({
         await py.runPythonAsync(code);
         setOutput(out.trim() || '(no output)');
       } catch (e: unknown) { setOutput('✕ ' + (e instanceof Error ? e.message : String(e))); }
+
+    // ── JavaScript (iframe sandbox — zero cost) ─────────────────────────
+    } else if (lang === 'javascript') {
+      try {
+        setOutput(await runInIframe(code));
+      } catch (e: unknown) {
+        setOutput('✕ ' + (e instanceof Error ? e.message : String(e)));
+      }
+
+    // ── TypeScript (CDN transpile → iframe — zero cost) ─────────────────
+    } else if (lang === 'typescript') {
+      setOutput('Loading TypeScript compiler…');
+      const ok = await loadTsCompiler();
+      if (!ok) { setOutput('✕ TypeScript compiler failed to load'); setRunning(false); return; }
+      try {
+        const ts = (window as any).ts;
+        const result = ts.transpileModule(code, {
+          compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
+        });
+        setOutput(await runInIframe(result.outputText));
+      } catch (e: unknown) {
+        setOutput('✕ ' + (e instanceof Error ? e.message : String(e)));
+      }
+
+    // ── Go (server proxy → go.dev/_/compile — free, no key) ─────────────
+    } else if (lang === 'go') {
+      setOutput('Sending to Go Playground…');
+      try {
+        const resp = await fetch('/api/compile/go', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+          signal: AbortSignal.timeout(14_000),
+        });
+        const data = await resp.json() as { output?: string; errors?: string; error?: string };
+        if (data.error) { setOutput('✕ ' + data.error); setRunning(false); return; }
+        const out = [data.errors?.trim(), data.output?.trim()].filter(Boolean).join('\n');
+        setOutput(out || '(no output)');
+      } catch (e: unknown) {
+        setOutput('✕ ' + (e instanceof Error ? e.message : 'Network error'));
+      }
+
+    // ── Java / C++ — local only ─────────────────────────────────────
     } else {
-      setOutput(`${LANGS[lang].label} execution not supported in browser yet.`);
+      const cmd = lang === 'java'
+        ? 'javac Solution.java && java Solution'
+        : 'g++ -o solution solution.cpp && ./solution';
+      setOutput(
+        `ℹ️  ${LANGS[lang].label} runs on your machine, not in the browser.\n\n` +
+        `Copy your code, save it as solution${LANGS[lang].ext}, then run:\n  ${cmd}`
+      );
     }
+
     setRunning(false);
-  }, [code, lang]);
+  }, [code, lang, runInIframe, loadTsCompiler]);
 
   const diff = DIFF_MAP[(meta.difficulty ?? '').toLowerCase()] ?? DIFF_MAP.easy;
 
@@ -329,9 +462,18 @@ export default function ProblemShell({
             Console <span>{outputOpen ? '⌃' : '⌄'}</span>
           </button>
           <div className="ide-run-actions">
-            <button className="ide-btn-run" onClick={run} disabled={running}>
-              {running ? 'Running...' : 'Run'}
-            </button>
+            {(lang === 'java' || lang === 'cpp') ? (
+              <button
+                className="ide-btn-run"
+                onClick={() => { navigator.clipboard.writeText(code).catch(() => {}); setOutput(`Copied! Run locally:\n  ${lang === 'java' ? 'javac Solution.java && java Solution' : 'g++ -o sol solution.cpp && ./sol'}`); setOutputOpen(true); }}
+              >
+                📋 Copy code
+              </button>
+            ) : (
+              <button className="ide-btn-run" onClick={run} disabled={running}>
+                {running ? 'Running…' : lang === 'go' ? '▶ Run (Go Playground)' : '▶ Run'}
+              </button>
+            )}
             <button className="ide-btn-submit" onClick={toggleSolved}>
               {solved ? 'Solved ✔' : 'Submit'}
             </button>

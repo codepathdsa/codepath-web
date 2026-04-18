@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-023 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-023 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-023',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'Zombie Event Listeners',
     companies: ['Figma', 'Miro'],
     timeEst: '~10 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'Users report the application slows down progressively and eventually crashes the browser tab after opening and closing the "Interactive Map" modal a dozen times.',
     solution: 'The developer is passing an anonymous arrow function `() => handleResize(mapId)` directly to `addEventListener` and `removeEventListener`. In JavaScript, two identical arrow functions have different memory references. The `removeEventListener` call fails silently, leaving a "zombie" listener attached to `window`. Fix: Extract the function into a variable or `useCallback` so the exact same reference is passed to both.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/components/Map.tsx',
         background: 'Ensuring a WebGL map canvas resizes dynamically when the browser window changes.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'Does `() => {} === () => {}` evaluate to true or false in JavaScript?',
             'How does `removeEventListener` identify which function to remove?',

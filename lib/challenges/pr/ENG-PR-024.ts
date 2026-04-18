@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-024 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-024 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-024',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'Deadlock in Multi-Table Updates',
     companies: ['Uber', 'Datadog'],
     timeEst: '~15 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'During flash sales, the database logs throw `Deadlock found when trying to get lock; try restarting transaction`. The `cancelOrder` service and the `fulfillOrder` service are crashing each other.',
     solution: 'The two services are taking out row locks in opposing orders. `fulfillOrder` updates `Orders` then `Inventory`. `cancelOrder` updates `Inventory` then `Orders`. If both run simultaneously, Service A locks Orders and waits for Inventory, while Service B locks Inventory and waits for Orders. Fix: Always lock tables in the exact same alphabetical or hierarchical order across the entire application.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/services/cancellation.ts',
         background: 'Restoring inventory when a user cancels an unfulfilled order.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'The fulfillment service updates the `Orders` table FIRST, then `Inventory`.',
             'What happens if Transaction A locks `Orders` and Transaction B locks `Inventory` at the exact same millisecond?',

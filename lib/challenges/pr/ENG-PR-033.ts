@@ -1,5 +1,5 @@
-import { Challenge } from "../types";
-// ─── ENG-PR-033 ─────────────────────────────────────────────────────────────────
+﻿import { Challenge } from "../types";
+// â”€â”€â”€ ENG-PR-033 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-033',
@@ -11,7 +11,7 @@ const challenge: Challenge = {
     level: 'Senior',
     status: 'Not Started',
     desc: 'You implemented a distributed lock using Redis to prevent concurrent background jobs. However, logs show that occasionally, two workers are running the critical section at the exact same time, corrupting user balances.',
-    solution: 'When releasing the lock, the code unconditionally calls `redis.del()`. If Worker A acquires the lock but experiences a large GC pause or CPU delay, the lock might expire via TTL. Worker B acquires the lock. Worker A then wakes up, finishes its work, and blindly deletes the lock—which now belongs to Worker B! Worker C then acquires the lock. Fix: When acquiring, store a UUID. When deleting, use a Lua script to check if the value matches the UUID before deleting.',
+    solution: 'When releasing the lock, the code unconditionally calls `redis.del()`. If Worker A acquires the lock but experiences a large GC pause or CPU delay, the lock might expire via TTL. Worker B acquires the lock. Worker A then wakes up, finishes its work, and blindly deletes the lockâ€”which now belongs to Worker B! Worker C then acquires the lock. Fix: When acquiring, store a UUID. When deleting, use a Lua script to check if the value matches the UUID before deleting.',
     prReview: {
         prNumber: 742,
         prBranch: 'feat/redis-distributed-lock',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/utils/redisLock.ts',
         background: 'Acquiring an exclusive lock before processing a financial transaction.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if `doCriticalWork()` takes 15 seconds to run?',
             'If the lock expires after 10s, and a second worker acquires it, what happens when the first worker finally calls `redis.del(lockKey)`?',

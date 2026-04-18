@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-029 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-029 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-029',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/services/analytics.ts',
         background: 'Caching a massive aggregate query that powers the main dashboard.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens when the cache TTL expires at exactly 12:00:00 and 1,000 users are on the dashboard?',
             'How many requests will pass the `if (!cached)` check before the first DB query finishes?',

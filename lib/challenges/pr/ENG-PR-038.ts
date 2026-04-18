@@ -1,4 +1,4 @@
-// ─── ENG-PR-038 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-038 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-038',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'migrations/20260417_add_index.sql',
         background: 'Optimizing a slow query: SELECT * FROM notifications WHERE user_id = X AND is_read = false.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What is the cardinality (number of unique values) of `is_read` vs `user_id`?',
             'If you sort a phonebook by "Has Glasses (Yes/No)" and then "Last Name", how useful is the index to find "Smith"?',

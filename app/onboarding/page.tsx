@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+import { createClient } from '@/utils/supabase/client';
 
 type Role = 'SDE1' | 'SDE2' | 'SDE3' | null;
 
@@ -97,7 +98,38 @@ export default function OnboardingPage() {
     setStep(5);
   };
 
-  const completeChallenge = () => {
+  const completeChallenge = async () => {
+    // Persist onboarding data to Supabase
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('user_profiles').update({
+        track: role ?? 'SDE II',
+        target_companies: targetCompanies,
+        starter_creature: selectedCreature?.id ?? null,
+        onboarding_complete: true,
+      }).eq('id', user.id);
+
+      // Capture the starter creature in the codex
+      if (selectedCreature) {
+        await supabase.from('user_codex').upsert({
+          user_id: user.id,
+          creature_id: selectedCreature.id,
+          is_shiny: false,
+        });
+      }
+
+      // Send a welcome notification
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        category: 'system',
+        icon: '🎉',
+        title: 'Welcome to CodePath!',
+        body: `Your starter creature ${selectedCreature?.name ?? ''} is ready. Start your first challenge.`,
+        action_url: '/challenges',
+      });
+    }
+
     setShowSuccess(true);
     setTimeout(() => {
       router.push('/dashboard');

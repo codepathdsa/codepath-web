@@ -43,6 +43,20 @@ function solution(nums: number[]): number[] {
 
 console.log(solution([1, 2, 3]));
 `,
+  go: `package main
+
+import "fmt"
+
+func solution(nums []int) []int {
+	// TODO: implement
+	return nums
+}
+
+func main() {
+	result := solution([]int{1, 2, 3})
+	fmt.Println(result)
+}
+`,
   java: `// Write your solution here
 public class Solution {
   public int[] solution(int[] nums) {
@@ -63,12 +77,20 @@ vector<int> solution(vector<int>& nums) {
 };
 
 const LANG_LABELS: Record<string, string> = {
-  python: 'Python',
+  python:     'Python',
   javascript: 'JavaScript',
   typescript: 'TypeScript',
-  java: 'Java',
-  cpp: 'C++',
+  go:         'Go',
+  java:       'Java',
+  cpp:        'C++',
 };
+
+// Languages that can run in-browser with no external API
+const BROWSER_LANGS = new Set(['python', 'javascript', 'typescript']);
+// Languages routed through a lightweight server proxy (free, no key)
+const PROXY_LANGS   = new Set(['go']);
+// Languages that require a local runtime
+const LOCAL_LANGS   = new Set(['java', 'cpp']);
 
 export default function CodeEditor({
   language = 'python',
@@ -92,75 +114,129 @@ export default function CodeEditor({
     setHasRun(false);
   }, []);
 
+  // ── JS/TS: run in a sandboxed iframe (zero API cost) ───────────────────────
+  const runInIframe = useCallback((jsCode: string): string => {
+    const logs: string[] = [];
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const win = iframe.contentWindow as Window & {
+      console: { log: (...a: unknown[]) => void; error: (...a: unknown[]) => void; warn: (...a: unknown[]) => void };
+    };
+    win.console.log   = (...args) => logs.push(args.map(a => JSON.stringify(a) ?? String(a)).join(' '));
+    win.console.warn  = (...args) => logs.push('⚠ ' + args.map(String).join(' '));
+    win.console.error = (...args) => logs.push('❌ ' + args.map(String).join(' '));
+
+    try {
+      // eslint-disable-next-line no-new-func
+      new Function(jsCode).call(win);
+    } catch (e: unknown) {
+      logs.push('❌ ' + (e instanceof Error ? e.message : String(e)));
+    }
+
+    document.body.removeChild(iframe);
+    return logs.length ? logs.join('\n') : '(no output)';
+  }, []);
+
+  // ── TypeScript: transpile via CDN compiler, then run in iframe ─────────────
+  const loadTsCompiler = useCallback(async (): Promise<boolean> => {
+    if ((window as any).ts) return true;
+    return new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js';
+      s.onload  = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  }, []);
+
   const handleRun = useCallback(async () => {
     setIsRunning(true);
     setHasRun(true);
     setActiveTab('output');
 
+    // ── Python (Pyodide WASM — zero cost) ────────────────────────────────────
     if (selectedLang === 'python') {
-      // Run Python in the browser via Pyodide (loaded from CDN)
       try {
         // @ts-expect-error – Pyodide is loaded globally
         if (!window.__pyodide) {
-          setOutput('⏳ Loading Python runtime… (first run takes ~3s)');
-          // @ts-expect-error – loadPyodide is a global fn injected by the script tag
+          setOutput('⏳ Loading Python runtime… (first run takes ~3 s)');
+          // @ts-expect-error – loadPyodide is a CDN global
           window.__pyodide = await window.loadPyodide({
             indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.0/full/',
           });
         }
         // @ts-expect-error – pyodide global
         const pyodide = window.__pyodide;
-
-        // Capture stdout
         let captured = '';
-        pyodide.setStdout({
-          batched: (s: string) => { captured += s + '\n'; },
-        });
-        pyodide.setStderr({
-          batched: (s: string) => { captured += '⚠ ' + s + '\n'; },
-        });
-
+        pyodide.setStdout({ batched: (s: string) => { captured += s + '\n'; } });
+        pyodide.setStderr({ batched: (s: string) => { captured += '⚠ ' + s + '\n'; } });
         await pyodide.runPythonAsync(code);
         setOutput(captured.trim() || '(no output)');
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setOutput('❌ ' + msg);
+        setOutput('❌ ' + (err instanceof Error ? err.message : String(err)));
       }
+
+    // ── JavaScript (iframe sandbox — zero cost) ───────────────────────────────
     } else if (selectedLang === 'javascript') {
-      // Run JS safely in an iframe sandbox
       try {
-        const logs: string[] = [];
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-
-        const win = iframe.contentWindow as Window & {
-          console: { log: (...a: unknown[]) => void; error: (...a: unknown[]) => void };
-        };
-        win.console.log = (...args) => logs.push(args.map(String).join(' '));
-        win.console.error = (...args) => logs.push('❌ ' + args.map(String).join(' '));
-
-        try {
-          // eslint-disable-next-line no-new-func
-          new Function(code).call(win);
-        } catch (e: unknown) {
-          logs.push('❌ ' + (e instanceof Error ? e.message : String(e)));
-        }
-
-        document.body.removeChild(iframe);
-        setOutput(logs.length ? logs.join('\n') : '(no output)');
+        setOutput(runInIframe(code));
       } catch (err: unknown) {
         setOutput('❌ ' + (err instanceof Error ? err.message : String(err)));
       }
-    } else {
+
+    // ── TypeScript (CDN transpile → iframe — zero cost) ───────────────────────
+    } else if (selectedLang === 'typescript') {
+      try {
+        setOutput('⏳ Loading TypeScript compiler…');
+        const ok = await loadTsCompiler();
+        if (!ok) { setOutput('❌ TypeScript compiler failed to load'); setIsRunning(false); return; }
+        const ts = (window as any).ts;
+        const result = ts.transpileModule(code, {
+          compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
+        });
+        if (result.diagnostics?.length) {
+          setOutput('❌ TS error: ' + result.diagnostics[0].messageText);
+          setIsRunning(false);
+          return;
+        }
+        setOutput(runInIframe(result.outputText));
+      } catch (err: unknown) {
+        setOutput('❌ ' + (err instanceof Error ? err.message : String(err)));
+      }
+
+    // ── Go (server proxy → go.dev/_/compile — free, no key) ──────────────────
+    } else if (selectedLang === 'go') {
+      setOutput('⏳ Sending to Go Playground…');
+      try {
+        const resp = await fetch('/api/compile/go', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+          signal: AbortSignal.timeout(14_000),
+        });
+        const data = await resp.json() as { output?: string; errors?: string; error?: string };
+        if (data.error) { setOutput('❌ ' + data.error); setIsRunning(false); return; }
+        const out = [data.errors?.trim(), data.output?.trim()].filter(Boolean).join('\n');
+        setOutput(out || '(no output)');
+      } catch (err: unknown) {
+        setOutput('❌ ' + (err instanceof Error ? err.message : 'Network error'));
+      }
+
+    // ── Java / C++ — local only ───────────────────────────────────────────────
+    } else if (LOCAL_LANGS.has(selectedLang)) {
       setOutput(
-        `ℹ️ In-browser execution for ${LANG_LABELS[selectedLang]} is not supported yet.\n\n` +
-        `Copy the code and run it in your local environment.`
+        `ℹ️  ${LANG_LABELS[selectedLang]} runs on your machine, not in the browser.\n\n` +
+        `Save your code below, then run it locally:\n\n` +
+        (selectedLang === 'java'
+          ? `  javac Solution.java && java Solution`
+          : `  g++ -o solution solution.cpp && ./solution`)
       );
     }
 
     setIsRunning(false);
-  }, [code, selectedLang]);
+  }, [code, selectedLang, runInIframe, loadTsCompiler]);
 
   const handleReset = useCallback(() => {
     setCode(TEMPLATES[selectedLang] ?? '');
@@ -184,6 +260,18 @@ export default function CodeEditor({
       }
     }
   }, [selectedLang]);
+
+  const handleCopyCode = useCallback(() => {
+    navigator.clipboard.writeText(code).catch(() => {});
+  }, [code]);
+
+  const runtimeLabel = BROWSER_LANGS.has(selectedLang)
+    ? '⚡ Runs in browser'
+    : PROXY_LANGS.has(selectedLang)
+    ? '☁️ Go Playground'
+    : '💻 Run locally';
+
+  const canRun = !LOCAL_LANGS.has(selectedLang);
 
   return (
     <div className="code-editor-widget">
@@ -266,21 +354,28 @@ export default function CodeEditor({
         <button className="ce-btn ce-btn--ghost" onClick={handleReset}>
           ↺ Reset
         </button>
-        <div style={{ flex: 1 }} />
-        {(selectedLang === 'python' || selectedLang === 'javascript') && (
-          <span className="ce-run-note">Runs in-browser ⚡</span>
-        )}
-        <button
-          className="ce-btn ce-btn--run"
-          onClick={handleRun}
-          disabled={isRunning}
-        >
-          {isRunning ? (
-            <><span className="ce-spinner" /> Running…</>
-          ) : (
-            '▶ Run Code'
-          )}
+        <button className="ce-btn ce-btn--ghost" onClick={handleCopyCode} title="Copy code to clipboard">
+          📋 Copy
         </button>
+        <div style={{ flex: 1 }} />
+        <span className="ce-run-note">{runtimeLabel}</span>
+        {canRun ? (
+          <button
+            className="ce-btn ce-btn--run"
+            onClick={handleRun}
+            disabled={isRunning}
+          >
+            {isRunning ? (
+              <><span className="ce-spinner" /> Running…</>
+            ) : (
+              '▶ Run Code'
+            )}
+          </button>
+        ) : (
+          <button className="ce-btn ce-btn--ghost" onClick={handleCopyCode}>
+            📋 Copy code
+          </button>
+        )}
       </div>
     </div>
   );

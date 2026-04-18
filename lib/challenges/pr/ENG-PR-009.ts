@@ -1,21 +1,21 @@
-import type { Challenge } from '../types';
+﻿import type { Challenge } from '../types';
 
-// ─── ENG-PR-009 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-009 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Edit the object below to update this challenge.
 // Run `npx next build` after saving to confirm no TypeScript errors.
 
-// ─── ENG-PR-009 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-009 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-009',
   type: 'PR Review',
   badgeClass: 'badge-pr',
-  title: 'Broken TypeScript — `any` Cast Hiding a Type Error',
+  title: 'Broken TypeScript â€” `any` Cast Hiding a Type Error',
   companies: ['Palantir', 'Coinbase'],
   timeEst: '~10 min',
   level: 'Junior',
   status: 'Not Started',
-  desc: 'A junior dev silenced a TypeScript error by casting to `any` rather than fixing the underlying mismatch. The code compiles and CI passes — but a runtime crash is now guaranteed in production under a specific, very common condition. Identify the issue.',
+  desc: 'A junior dev silenced a TypeScript error by casting to `any` rather than fixing the underlying mismatch. The code compiles and CI passes â€” but a runtime crash is now guaranteed in production under a specific, very common condition. Identify the issue.',
   solution: 'The API can return null when a user is not found, but the type was cast to `as any` to silence the TS error, then immediately accessed as user.email. At runtime, when the API returns null, this throws "Cannot read properties of null (reading \'email\')". Fix: type the response correctly as User | null, guard with if (!user) return res.status(404).json({ error: \'Not found\' }), and remove the any cast.',
   prReview: {
     prNumber: 556,
@@ -48,8 +48,8 @@ const challenge: Challenge = {
       { value: 'missing_auth', label: 'No auth check', sub: 'Endpoint lacks authentication' },
     ],
     correctBugType: 'any_cast_null',
-    successExplanation: "Exactly. The original code had a correct null guard: if (!user) return res.status(404). This PR deleted that guard and replaced it with as any, which tells TypeScript 'trust me, I know what this is' — but guarantees nothing at runtime. When db.findUserById returns null (any user lookup for an unknown ID), safeUser.email throws TypeError: Cannot read properties of null. Casting to any is almost never the right fix; restoring the null guard is.",
-    failExplanation: "The bug is the as any cast on line 8 combined with the removal of the null check. as any is a TypeScript-only construct — it has zero effect at runtime. The database can still return null, and accessing .email on null throws a TypeError that crashes the handler. The deleted if (!user) return res.status(404)... was the correct fix. When TypeScript complains about possible null, the answer is to handle null — not to hide the error.",
+    successExplanation: "Exactly. The original code had a correct null guard: if (!user) return res.status(404). This PR deleted that guard and replaced it with as any, which tells TypeScript 'trust me, I know what this is' â€” but guarantees nothing at runtime. When db.findUserById returns null (any user lookup for an unknown ID), safeUser.email throws TypeError: Cannot read properties of null. Casting to any is almost never the right fix; restoring the null guard is.",
+    failExplanation: "The bug is the as any cast on line 8 combined with the removal of the null check. as any is a TypeScript-only construct â€” it has zero effect at runtime. The database can still return null, and accessing .email on null throws a TypeError that crashes the handler. The deleted if (!user) return res.status(404)... was the correct fix. When TypeScript complains about possible null, the answer is to handle null â€” not to hide the error.",
   },
 };
 

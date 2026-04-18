@@ -1,10 +1,10 @@
-import type { Challenge } from '../types';
+﻿import type { Challenge } from '../types';
 
-// ─── ENG-PR-008 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-008 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Edit the object below to update this challenge.
 // Run `npx next build` after saving to confirm no TypeScript errors.
 
-// ─── ENG-PR-008 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-008 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-008',
@@ -15,8 +15,8 @@ const challenge: Challenge = {
   timeEst: '~10 min',
   level: 'Junior',
   status: 'Not Started',
-  desc: 'After a junior dev added a new /users/:id endpoint, the Node.js server crashes entirely when the user is not found in the database. Other routes go down with it. No try/catch is failing — something more fundamental is wrong.',
-  solution: 'The route callback is not declared async, but await is used inside it. In older Express (v4), a thrown error or rejected promise inside a non-async handler is an unhandled promise rejection that crashes the process. Additionally, there is no try/catch — an unhandled DB error propagates uncaught. Fix: add async to the handler and wrap in try/catch, calling next(err) on failure so Express\'s error middleware handles it.',
+  desc: 'After a junior dev added a new /users/:id endpoint, the Node.js server crashes entirely when the user is not found in the database. Other routes go down with it. No try/catch is failing â€” something more fundamental is wrong.',
+  solution: 'The route callback is not declared async, but await is used inside it. In older Express (v4), a thrown error or rejected promise inside a non-async handler is an unhandled promise rejection that crashes the process. Additionally, there is no try/catch â€” an unhandled DB error propagates uncaught. Fix: add async to the handler and wrap in try/catch, calling next(err) on failure so Express\'s error middleware handles it.',
   prReview: {
     prNumber: 710,
     prBranch: 'feature/get-user-by-id',
@@ -47,8 +47,8 @@ const challenge: Challenge = {
       { value: 'cors_issue', label: 'Missing CORS header', sub: 'Browser blocks cross-origin request' },
     ],
     correctBugType: 'missing_async',
-    successExplanation: "Right. The handler is a regular arrow function but uses await — that's a SyntaxError at parse time in strict mode, or results in an unhandled rejection at runtime in older environments. In Express v4, async errors that aren't passed to next() become unhandled promise rejections, which crash the process in Node.js 15+. Fixes needed: (1) declare the callback async, (2) wrap in try/catch and call next(err) so Express error middleware handles it gracefully.",
-    failExplanation: "Two bugs: (1) Line 5 — the callback isn't async, but await is used on line 6. This is a SyntaxError. (2) Even if async is added, there's no try/catch — when db.getUserById throws NotFoundError, the unhandled rejection crashes Node.js (v15+). Correct form: router.get('/users/:id', async (req, res, next) => { try { const user = await db.getUserById(req.params.id); res.json(user); } catch (err) { next(err); } });",
+    successExplanation: "Right. The handler is a regular arrow function but uses await â€” that's a SyntaxError at parse time in strict mode, or results in an unhandled rejection at runtime in older environments. In Express v4, async errors that aren't passed to next() become unhandled promise rejections, which crash the process in Node.js 15+. Fixes needed: (1) declare the callback async, (2) wrap in try/catch and call next(err) so Express error middleware handles it gracefully.",
+    failExplanation: "Two bugs: (1) Line 5 â€” the callback isn't async, but await is used on line 6. This is a SyntaxError. (2) Even if async is added, there's no try/catch â€” when db.getUserById throws NotFoundError, the unhandled rejection crashes Node.js (v15+). Correct form: router.get('/users/:id', async (req, res, next) => { try { const user = await db.getUserById(req.params.id); res.json(user); } catch (err) { next(err); } });",
   },
 };
 

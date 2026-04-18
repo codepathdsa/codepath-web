@@ -1,5 +1,5 @@
-
-// ─── ENG-PR-025 ─────────────────────────────────────────────────────────────────
+﻿
+// â”€â”€â”€ ENG-PR-025 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 import { Challenge } from "../types";
 
@@ -10,9 +10,9 @@ const challenge: Challenge = {
     title: 'Heavy Computation Blocking the Event Loop',
     companies: ['Shopify', 'Vercel'],
     timeEst: '~12 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
-    desc: 'A new feature allows admins to download an audit log of 100,000+ records. The file generates successfully, but while it is downloading, the entire Node.js server becomes completely unresponsive to all other users for 3–5 seconds.',
+    desc: 'A new feature allows admins to download an audit log of 100,000+ records. The file generates successfully, but while it is downloading, the entire Node.js server becomes completely unresponsive to all other users for 3â€“5 seconds.',
     solution: 'Node.js is single-threaded. Running a heavy synchronous loop (`.map` and `.join` on an array of 100,000 large objects) hogs the CPU and prevents the event loop from processing incoming HTTP requests. Fix: Use `stream.Transform` to process the data in small chunks, or offload heavy data processing to a Worker Thread.',
     prReview: {
         prNumber: 112,
@@ -21,6 +21,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/routes/admin.ts',
         background: 'Generating a massive CSV export dynamically from the database.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens to other HTTP requests while `logs.map(...)` is running on a massive array?',
             'Does Node.js run JavaScript code in multiple threads or a single thread?',

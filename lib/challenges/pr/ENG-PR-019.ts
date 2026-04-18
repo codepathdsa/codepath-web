@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-019 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-019 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-019',
@@ -8,15 +8,20 @@ const challenge: Challenge = {
     title: 'The Floating Promise Crash',
     companies: ['Netflix', 'Cloudflare'],
     timeEst: '~10 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A dev added a telemetry logger to an Express route. Occasionally, the entire Node.js process crashes with `UnhandledPromiseRejection`. The crash only happens when the external logging service is down.',
     solution: 'The developer is calling an async function (`logger.track`) but not awaiting it or adding a `.catch()`. If that promise rejects (e.g., the logging service is down), it becomes a "floating promise" with no rejection handler. In modern Node.js, an unhandled rejection terminates the process. Fix: either await the call or add a `.catch(err => ...)` to handle logging failures gracefully.',
     prReview: {
         prNumber: 301,
+        prBranch: 'feat/analytics-tracking',
+        prBase: 'main',
         prAuthor: 'mid-dev-44',
         prFile: 'src/routes/user.ts',
         background: 'Adding analytics to track user login frequency.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if `logger.trackLogin` fails?',
             'Is there any code waiting for the result of line 12?',

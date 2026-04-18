@@ -1,6 +1,6 @@
-import type { Challenge } from '../types';
+﻿import type { Challenge } from '../types';
 
-// ─── ENG-PR-002 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-002 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-002',
@@ -11,7 +11,7 @@ const challenge: Challenge = {
   timeEst: '~10 min',
   level: 'Junior',
   status: 'Not Started',
-  desc: 'Security scan flagged this PR. A junior dev added audit logging to the login route — but left a critical vulnerability untouched. Find it before it ships.',
+  desc: 'Security scan flagged this PR. A junior dev added audit logging to the login route â€” but left a critical vulnerability untouched. Find it before it ships.',
   solution: "The db.query call on the added line interpolates req.body.email directly into the SQL string using a template literal. An attacker can send email = \"' OR 1=1; DROP TABLE users; --\" to bypass auth or destroy the database. Use parameterized queries: db.query('SELECT * FROM users WHERE email = $1', [email]).",
   prReview: {
     prNumber: 312,
@@ -52,8 +52,8 @@ const challenge: Challenge = {
       { value: 'n_plus_one',      label: 'N+1 Query',          sub: 'Query executing in a loop' },
     ],
     correctBugType: 'sql_injection',
-    successExplanation: "Correct! Line 10 interpolates email directly into the SQL string using a template literal. An attacker sending email = \"' OR '1'='1\" turns the WHERE clause into WHERE email = '' OR '1'='1' — which matches every row, bypassing auth entirely. The fix: db.query('SELECT * FROM users WHERE email = $1 AND active = true', [email]). Bonus: the console.log on line 7 also leaks PII to your log aggregator — worth flagging separately.",
-    failExplanation: "The critical bug is on line 10: email is interpolated directly into the SQL string using a backtick template literal. An attacker who sends email = \"' OR '1'='1\" bypasses your WHERE clause entirely. Parameterized queries (db.query('... WHERE email = $1', [email])) are the only correct fix — the database driver handles escaping. Note: the console.log on line 7 also leaks PII to logs, a secondary issue worth raising.",
+    successExplanation: "Correct! Line 10 interpolates email directly into the SQL string using a template literal. An attacker sending email = \"' OR '1'='1\" turns the WHERE clause into WHERE email = '' OR '1'='1' â€” which matches every row, bypassing auth entirely. The fix: db.query('SELECT * FROM users WHERE email = $1 AND active = true', [email]). Bonus: the console.log on line 7 also leaks PII to your log aggregator â€” worth flagging separately.",
+    failExplanation: "The critical bug is on line 10: email is interpolated directly into the SQL string using a backtick template literal. An attacker who sends email = \"' OR '1'='1\" bypasses your WHERE clause entirely. Parameterized queries (db.query('... WHERE email = $1', [email])) are the only correct fix â€” the database driver handles escaping. Note: the console.log on line 7 also leaks PII to logs, a secondary issue worth raising.",
   },
 };
 

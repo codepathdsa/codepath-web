@@ -1,4 +1,4 @@
-// ─── ENG-PR-043 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-043 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-043',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/services/schedule.ts',
         background: 'A transaction dropping a shift while ensuring coverage limits.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'If Tx 1 and Tx 2 run `SELECT count(*)` at the exact same time, what do they both see?',
             'Does standard `BEGIN` block other transactions from reading the table?',

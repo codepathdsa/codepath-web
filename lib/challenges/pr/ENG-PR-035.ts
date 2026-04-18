@@ -1,4 +1,4 @@
-// ─── ENG-PR-035 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-035 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import { Challenge } from "../types";
 const challenge: Challenge = {
     id: 'ENG-PR-035',
@@ -9,7 +9,7 @@ const challenge: Challenge = {
     timeEst: '~15 min',
     level: 'Senior',
     status: 'Not Started',
-    desc: 'A team migrated a React SPA to Next.js for Server-Side Rendering (SSR). In production, memory usage grows linearly until the server crashes with OOM. Also, User A sometimes sees User B’s private data on the screen for a split second.',
+    desc: 'A team migrated a React SPA to Next.js for Server-Side Rendering (SSR). In production, memory usage grows linearly until the server crashes with OOM. Also, User A sometimes sees User Bâ€™s private data on the screen for a split second.',
     solution: 'The developer used a module-level variable (`const store = new Store()`) outside the component tree. In a Node.js server environment (SSR), module scope is shared globally across ALL incoming user requests. Data from one user leaks into another, and because the server never unmounts, memory grows infinitely. Fix: Global state in SSR must be initialized inside the React tree (e.g., inside a Provider on a per-request basis).',
     prReview: {
         prNumber: 991,
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/store/index.ts',
         background: 'Setting up a global state store for the Next.js application.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'In a browser, how many users are sharing the memory of the `window` object?',
             'In a Node.js SSR environment, how many users are sharing the memory of a file-level constant?',

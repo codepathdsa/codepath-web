@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-013 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-013 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-013',
@@ -8,9 +8,9 @@ const challenge: Challenge = {
     title: 'Context API Re-render Storm',
     companies: ['Facebook', 'Uber'],
     timeEst: '~15 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
-    desc: 'A mid-level dev refactored the global state to use React Context. In production, typing a single character into a search bar causes the entire 5,000-row dashboard to freeze for 200ms. Profiler shows the Dashboard component re-renders on every keystroke, even though it doesn’t use the search state.',
+    desc: 'A mid-level dev refactored the global state to use React Context. In production, typing a single character into a search bar causes the entire 5,000-row dashboard to freeze for 200ms. Profiler shows the Dashboard component re-renders on every keystroke, even though it doesnâ€™t use the search state.',
     solution: 'The provider value is a new object literal created on every render. Because the object reference changes every time the SearchBar updates the context, every single component wrapped in that Provider (including the heavy Dashboard) must re-render, regardless of which part of the state they actually use. Fix: Wrap the value in useMemo or split the context into separate Providers (e.g., SearchContext, UserContext).',
     prReview: {
         prNumber: 882,
@@ -24,7 +24,7 @@ const challenge: Challenge = {
         testing: 'Functionally correct. State updates correctly across the app.',
         hints: [
             'What happens to referential equality of the "value" prop on line 14 when the component re-renders?',
-            'If a component consumes Context A, and Context A’s value changes, does that component re-render even if it only uses a property that didn’t change?',
+            'If a component consumes Context A, and Context Aâ€™s value changes, does that component re-render even if it only uses a property that didnâ€™t change?',
             'How can we ensure the object passed to the Provider only changes when its internal values change?'
         ],
         diff: [

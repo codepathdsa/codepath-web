@@ -1,4 +1,4 @@
-// ─── ENG-PR-041 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-041 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-041',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/api/webhooks.ts',
         background: 'Receiving signed webhooks confirming successful crypto deposits.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'If I copy the HTTP request headers and body verbatim and run it in Postman tomorrow, will the signature match?',
             'Does verifying the signature prove *when* the request was originally sent?',

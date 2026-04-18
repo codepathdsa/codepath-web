@@ -1,17 +1,17 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-012 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-012 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-012',
     type: 'PR Review',
     badgeClass: 'badge-pr',
-    title: 'Broken Unique Constraint — Race Condition in Registration',
+    title: 'Broken Unique Constraint â€” Race Condition in Registration',
     companies: ['Twitch', 'Discord'],
     timeEst: '~12 min',
     level: 'Junior',
     status: 'Not Started',
-    desc: 'Users report duplicate accounts being created with the same email during load testing of the new registration flow. The code checks for existing emails before inserting — but under load, duplicates slip through. Find the flaw.',
-    solution: 'The check-then-insert pattern is a classic TOCTOU (Time-of-Check-Time-of-Use) race condition. Two requests can both pass the SELECT check before either completes the INSERT. Fix: enforce uniqueness at the database level with a UNIQUE constraint on the email column and catch the unique violation error (PostgreSQL error code 23505) in the application. Application-level checks are for UX feedback only — never the authoritative guard.',
+    desc: 'Users report duplicate accounts being created with the same email during load testing of the new registration flow. The code checks for existing emails before inserting â€” but under load, duplicates slip through. Find the flaw.',
+    solution: 'The check-then-insert pattern is a classic TOCTOU (Time-of-Check-Time-of-Use) race condition. Two requests can both pass the SELECT check before either completes the INSERT. Fix: enforce uniqueness at the database level with a UNIQUE constraint on the email column and catch the unique violation error (PostgreSQL error code 23505) in the application. Application-level checks are for UX feedback only â€” never the authoritative guard.',
     prReview: {
         prNumber: 921,
         prBranch: 'feature/user-registration',
@@ -49,8 +49,8 @@ const challenge: Challenge = {
             { value: 'wrong_status', label: 'Wrong status code', sub: '409 should be a different code' },
         ],
         correctBugType: 'toctou_race',
-        successExplanation: "Correct — this is a TOCTOU (Time-of-Check-Time-of-Use) race. Two concurrent requests both execute the SELECT before either runs the INSERT. Both see zero rows and proceed. Both insert. Duplicate account created. The only correct fix is a UNIQUE constraint at the database level (ALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email)) and catching error code 23505 in the catch block. The application-level check can stay for good UX, but it is never the authoritative guard.",
-        failExplanation: "The bug is a TOCTOU race on lines 9–16. SELECT then INSERT is not atomic. Under load, two requests both pass the SELECT check before either commits the INSERT, resulting in duplicate rows. The fix is a DB-level UNIQUE constraint on users.email. In the catch block, test if (err.code === '23505') and return 409. Application-level checks are a UX convenience, not a data integrity guarantee — the database is the last line of defence.",
+        successExplanation: "Correct â€” this is a TOCTOU (Time-of-Check-Time-of-Use) race. Two concurrent requests both execute the SELECT before either runs the INSERT. Both see zero rows and proceed. Both insert. Duplicate account created. The only correct fix is a UNIQUE constraint at the database level (ALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email)) and catching error code 23505 in the catch block. The application-level check can stay for good UX, but it is never the authoritative guard.",
+        failExplanation: "The bug is a TOCTOU race on lines 9â€“16. SELECT then INSERT is not atomic. Under load, two requests both pass the SELECT check before either commits the INSERT, resulting in duplicate rows. The fix is a DB-level UNIQUE constraint on users.email. In the catch block, test if (err.code === '23505') and return 409. Application-level checks are a UX convenience, not a data integrity guarantee â€” the database is the last line of defence.",
     },
 };
 export default challenge;

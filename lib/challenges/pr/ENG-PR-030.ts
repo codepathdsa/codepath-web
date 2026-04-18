@@ -1,6 +1,6 @@
-import { Challenge } from "../types";
+﻿import { Challenge } from "../types";
 
-// ─── ENG-PR-030 ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ENG-PR-030 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-030',
@@ -20,6 +20,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/services/billing.ts',
         background: 'Processing a refund and updating the ledger atomically.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'While `await stripe.refunds.create(...)` is running, what is happening to the DB connection `client`?',
             'If the Postgres connection pool has a max size of 20, and 20 refunds take 5 seconds each, can the rest of the app query the database?',
@@ -51,7 +54,7 @@ const challenge: Challenge = {
             { value: 'deadlock', label: 'Database Deadlock', sub: 'Transaction ordering mismatch' },
         ],
         correctBugType: 'pool_exhaustion',
-        successExplanation: "Perfect. This is a classic distributed systems anti-pattern. Database transactions must be as fast and localized as possible. Awaiting a 3rd-party HTTP call inside a transaction holds a connection pool slot hostage. If the API degrades, your entire app’s database pool drops to zero available connections, causing a total system outage. Perform the API call outside the transaction.",
+        successExplanation: "Perfect. This is a classic distributed systems anti-pattern. Database transactions must be as fast and localized as possible. Awaiting a 3rd-party HTTP call inside a transaction holds a connection pool slot hostage. If the API degrades, your entire appâ€™s database pool drops to zero available connections, causing a total system outage. Perform the API call outside the transaction.",
         failExplanation: "The bug is connection pool exhaustion. Line 18 awaits an external network call while holding an open database transaction (and thus, a connection from the pool). A small spike in Stripe latency will quickly tie up all available DB connections, bringing down the entire application."
     },
 };

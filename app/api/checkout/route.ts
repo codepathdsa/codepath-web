@@ -13,10 +13,23 @@ export async function POST(req: Request) {
 
     const { priceId } = await req.json();
 
+    // SECURITY: validate priceId against known allowed values.
+    // Prevents an attacker from injecting arbitrary Stripe price IDs to
+    // bypass pricing tiers or trigger unintended charges.
+    const ALLOWED_PRICE_IDS = [
+      process.env.STRIPE_PRICE_PRO,
+      process.env.STRIPE_PRICE_LEGENDARY,
+    ].filter(Boolean) as string[];
+
+    if (!priceId || typeof priceId !== 'string' || !ALLOWED_PRICE_IDS.includes(priceId)) {
+      return new NextResponse('Invalid price', { status: 400 });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       billing_address_collection: 'required',
       customer_email: user.email,
+      metadata: { userId: user.id },
       line_items: [
         {
           price: priceId, // The exact ID of the exact tier in the Stripe Dashboard
@@ -29,7 +42,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    return new NextResponse(err.message || 'Internal Error', { status: 500 });
+  } catch {
+    // Do not expose internal error details to the client
+    return new NextResponse('Internal server error', { status: 500 });
   }
 }

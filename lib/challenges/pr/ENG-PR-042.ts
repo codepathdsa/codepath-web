@@ -1,4 +1,4 @@
-// ─── ENG-PR-042 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-042 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-042',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/services/user.ts',
         background: 'Updating a profile and immediately fetching the updated user via their username (GSI).',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'If you write to a DynamoDB Main Table, is the GSI updated synchronously or asynchronously?',
             'What happens if the `getUserByUsername` query hits the GSI 10 milliseconds after the `update` completes?',

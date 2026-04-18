@@ -1,10 +1,10 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
-import { CREATURES_BY_ID, MOCK_CAPTURED, MOCK_SHINY, TOTAL_CREATURES } from '@/lib/codex';
+import { CREATURES_BY_ID, TOTAL_CREATURES } from '@/lib/codex';
+import { getMyProfile } from '@/lib/db/profile';
+import { getMyCodex } from '@/lib/db/codex';
+import { CopyButton } from '@/app/components/CopyButton';
 
 // --- Rank data ----------------------------------------------------------------
 
@@ -69,26 +69,43 @@ function StatTile({ value, label, accent }: { value: string | number; label: str
   );
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handle = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button className={styles.copyBtn} onClick={handle}>
-      {copied ? '✓ Copied' : '⎘ Copy link'}
-    </button>
-  );
+function ProfileCopyButton({ text, className }: { text: string; className?: string }) {
+  return <CopyButton value={text} />;
 }
 
 // --- Main Page ----------------------------------------------------------------
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const [{ profile, stats }, { captured, shiny }] = await Promise.all([
+    getMyProfile(),
+    getMyCodex(),
+  ]);
+
+  const totalXP = stats?.total_xp ?? 0;
+  const currentStreak = stats?.current_streak ?? 0;
+  const longestStreak = stats?.longest_streak ?? 0;
+  const challengesDone = stats?.challenges_done ?? 0;
+  const warRoomsDone = stats?.war_rooms_done ?? 0;
+  const prReviewsDone = stats?.pr_reviews_done ?? 0;
+  const perfectRuns = stats?.perfect_runs ?? 0;
+
+  const username = profile?.username ?? 'you';
+  const displayName = profile?.display_name ?? username;
+  const avatarInitials = displayName.split(' ').map((w: string) => w[0]?.toUpperCase() ?? '').slice(0, 2).join('');
+  const track = profile?.track ?? 'SDE II';
+  const targetCompanies = profile?.target_companies ?? [];
+  const joinedDate = 'N/A';
+
+  const PROFILE = {
+    username, displayName, avatarInitials, track, targetCompanies, joinedDate,
+    totalXP, currentStreak, longestStreak, challengesDone, warRoomsDone,
+    prReviewsDone, perfectRuns,
+    topCreatureIds: Array.from(captured).slice(0, 4),
+  };
+
   const rank = getRank(PROFILE.totalXP);
   const { level, progressInLevel, threshold, pct } = getLevel(PROFILE.totalXP);
-  const capturedCount = [...MOCK_CAPTURED].filter(id => CREATURES_BY_ID[id]).length;
+  const capturedCount = [...captured].filter(id => CREATURES_BY_ID[id]).length;
   const profileUrl = `https://engprep.dev/u/${PROFILE.username}`;
 
   const topCreatures = PROFILE.topCreatureIds.map(id => CREATURES_BY_ID[id]).filter(Boolean);
@@ -158,7 +175,7 @@ export default function ProfilePage() {
           {/* Share row */}
           <div className={styles.shareRow}>
             <span className={styles.shareUrl}>{profileUrl}</span>
-            <CopyButton text={profileUrl} />
+            <CopyButton value={profileUrl} />
             <a
               href={`https://twitter.com/intent/tweet?text=I'm a ${rank.title} (Level ${level}) on @engprep_dev — ${capturedCount}/${TOTAL_CREATURES} mastery creatures captured. Can you beat me?&url=${profileUrl}`}
               target="_blank"
@@ -223,7 +240,7 @@ export default function ProfilePage() {
                 <>
                   <span className={styles.rankNextLabel}>XP to next rank:</span>
                   <span className={styles.rankNextVal}>
-                    {((RANKS[RANKS.indexOf(rank) + 1]?.min ?? Infinity) - PROFILE.totalXP).toLocaleString()} XP
+                    {((RANKS[RANKS.indexOf(rank) + 1]?.min ?? Infinity) - totalXP).toLocaleString()} XP
                   </span>
                 </>
               )}
@@ -250,7 +267,7 @@ export default function ProfilePage() {
                   <div className={styles.topCreatureInfo}>
                     <div className={styles.topCreatureName}>
                       {c.name}
-                      {MOCK_SHINY.has(c.id) && <span className={styles.shinyMark}>✦</span>}
+                      {shiny.has(c.id) && <span className={styles.shinyMark}>✦</span>}
                     </div>
                     <div className={styles.topCreatureDomain}>
                       {c.domain.replace('-', ' ')} · Stage {['I', 'II', 'III'][c.stage - 1]}

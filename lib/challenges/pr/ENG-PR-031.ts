@@ -1,5 +1,5 @@
-import { Challenge } from "../types";
-// ─── ENG-PR-031 ─────────────────────────────────────────────────────────────────
+﻿import { Challenge } from "../types";
+// â”€â”€â”€ ENG-PR-031 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-031',
@@ -10,7 +10,7 @@ const challenge: Challenge = {
     timeEst: '~15 min',
     level: 'Senior',
     status: 'Not Started',
-    desc: 'A developer wrote an async recursive function to poll a queue until it’s empty. Under high load, the function loops infinitely. The strange part? The Node.js server stops answering HTTP requests, and `setTimeout` callbacks never fire. The event loop is completely frozen, despite using `async/await`.',
+    desc: 'A developer wrote an async recursive function to poll a queue until itâ€™s empty. Under high load, the function loops infinitely. The strange part? The Node.js server stops answering HTTP requests, and `setTimeout` callbacks never fire. The event loop is completely frozen, despite using `async/await`.',
     solution: 'Promises resolve on the V8 "microtask" queue. Microtasks are processed exhaustively before the event loop is allowed to move on to the "macrotask" queue (timers, I/O, network requests). A recursive `await Promise.resolve()` chain creates an infinite loop in the microtask queue, entirely starving the event loop. Fix: Add a `await new Promise(r => setImmediate(r))` to yield back to the event loop.',
     prReview: {
         prNumber: 66,
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/workers/drainer.ts',
         background: 'Draining an in-memory queue as fast as possible without blocking (or so they thought).',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'When an awaited promise resolves, does it yield to I/O immediately, or does it queue a microtask?',
             'If a function continuously adds microtasks to the microtask queue, when does the event loop process HTTP requests?',

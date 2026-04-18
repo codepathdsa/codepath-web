@@ -1,12 +1,12 @@
-// ─── PR Challenges barrel ──────────────────────────────────────────────────
+﻿// â”€â”€â”€ PR Challenges barrel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // HOW TO ADD A NEW CHALLENGE:
 //   1. Duplicate any existing file, e.g.:  cp ENG-PR-001.ts ENG-PR-011.ts
-//   2. Update the id + all fields — TypeScript enforces the schema.
+//   2. Update the id + all fields â€” TypeScript enforces the schema.
 //   3. Add one import line below.
 //   4. Add it to the array below.
 //   5. Run `npx next build` to verify.
-// ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 import c001 from './ENG-PR-001';
 import c002 from './ENG-PR-002';

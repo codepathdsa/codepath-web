@@ -1,17 +1,17 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-003 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-003 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
   id: 'ENG-PR-003',
   type: 'PR Review',
   badgeClass: 'badge-pr',
-  title: 'await Inside forEach — Silent Async Failure',
+  title: 'await Inside forEach â€” Silent Async Failure',
   companies: ['Stripe', 'Linear'],
   timeEst: '~10 min',
   level: 'Junior',
   status: 'Not Started',
   desc: 'A junior dev refactored the order-fulfilment service to send confirmation emails after each order is marked shipped. QA reports emails are never sent, yet CI is green and no errors appear in logs.',
-  solution: 'forEach ignores the return value of its callback — it does not await the async functions passed to it. The loop fires all the async calls and immediately moves on, so the emails are never awaited. Fix: replace forEach with for...of and await inside it, or use Promise.all(orders.map(sendEmail)).',
+  solution: 'forEach ignores the return value of its callback â€” it does not await the async functions passed to it. The loop fires all the async calls and immediately moves on, so the emails are never awaited. Fix: replace forEach with for...of and await inside it, or use Promise.all(orders.map(sendEmail)).',
   prReview: {
     prNumber: 204,
     prBranch: 'feature/order-email-confirmation',
@@ -21,7 +21,7 @@ const challenge: Challenge = {
     prAge: '2 hours ago',
     background: 'Post-ship emails were previously sent from a cron job. This PR moves the logic inline so emails fire immediately after the DB update, reducing the delay customers see.',
     changes: 'Used forEach to iterate orders and call sendConfirmationEmail for each one. Wrapped the call in async/await so it looks clean.',
-    testing: 'CI passed. Checked the DB — orders are marked shipped correctly.',
+    testing: 'CI passed. Checked the DB â€” orders are marked shipped correctly.',
     hints: [
       'What does Array.prototype.forEach do with the return value of its callback?',
       'If the callback is async, does forEach wait for the returned Promise to settle before the next iteration?',
@@ -47,7 +47,7 @@ const challenge: Challenge = {
       { value: 'missing_await', label: 'Missing top-level await', sub: 'fulfilOrders not awaited by caller' },
     ],
     correctBugType: 'foreach_async',
-    successExplanation: "Spot on. forEach is not promise-aware — it calls the callback, ignores the returned Promise, and moves to the next item immediately. The emails are 'fired' but never awaited, so the fulfilOrders function resolves before any of them complete. Because nothing catches the floating Promises, failures disappear silently. Fix: use for...of with await, or Promise.all(orders.map(sendConfirmationEmail)).",
+    successExplanation: "Spot on. forEach is not promise-aware â€” it calls the callback, ignores the returned Promise, and moves to the next item immediately. The emails are 'fired' but never awaited, so the fulfilOrders function resolves before any of them complete. Because nothing catches the floating Promises, failures disappear silently. Fix: use for...of with await, or Promise.all(orders.map(sendConfirmationEmail)).",
     failExplanation: "The bug is on line 14: forEach does not await async callbacks. It calls sendConfirmationEmail for each order, receives a Promise, and immediately discards it. Execution continues without waiting, so emails either never send or fail silently. Swap forEach for for...of and await inside it, or use await Promise.all(orders.map(sendConfirmationEmail)) to run them concurrently.",
   },
 };

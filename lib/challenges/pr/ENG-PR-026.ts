@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-026 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-026 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-026',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'TypeScript `any` Leaking through Generics',
     companies: ['Microsoft', 'Linear'],
     timeEst: '~10 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A developer created a nice reusable `apiFetch` wrapper. It looks type-safe, but teammates report that if they forget to pass a type parameter, TypeScript silently defaults to `any`, completely disabling type checking for the API response.',
     solution: 'The generic `<T = any>` provides `any` as a fallback. When a developer writes `const user = await apiFetch("/user")` without specifying the type, TypeScript resolves `T` to `any`. They can access `user.fakeProperty` with no errors. Fix: Default to `unknown` (`<T = unknown>`), forcing the caller to either provide an explicit type or parse the response safely using Zod.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/utils/api.ts',
         background: 'Centralizing `fetch` calls to inject auth headers automatically.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What type does `const data = await apiFetch("/data");` assign to `data`?',
             'Is `any` a safe default for untyped API responses?',

@@ -1,5 +1,5 @@
-import type { Challenge } from '../types';
-// ─── ENG-PR-027 ─────────────────────────────────────────────────────────────────
+﻿import type { Challenge } from '../types';
+// â”€â”€â”€ ENG-PR-027 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-027',
@@ -8,7 +8,7 @@ const challenge: Challenge = {
     title: 'CSS Z-Index Stacking Context',
     companies: ['Atlassian', 'Notion'],
     timeEst: '~8 min',
-    level: 'Mid-Level',
+    level: 'Mid',
     status: 'Not Started',
     desc: 'A PR added a subtle fade-in animation to the main application wrapper. Suddenly, all confirmation modals (`z-index: 9999`) are rendering *underneath* the site navigation header (`z-index: 100`).',
     solution: 'Adding `opacity: 0.99` (or `transform`, `filter`, etc.) creates a new "Stacking Context" in CSS. Because the modal is a child of this wrapper, its `9999` z-index is only relative *inside* that wrapper. The whole wrapper is placed beneath the header. Fix: Render modals at the DOM root level using React Portals, or remove opacity from the parent container.',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'mid-dev-44',
         prFile: 'src/styles/layout.css',
         background: 'Adding a quick opacity transition to prevent UI flickering on mount.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'How does the browser handle `z-index` when a parent element has an opacity less than 1?',
             'Is `z-index: 9999` guaranteed to sit on top of the whole page, or just its stacking context?',

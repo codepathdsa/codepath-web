@@ -1,5 +1,5 @@
-import { Challenge } from "../types";
-// ─── ENG-PR-034 ─────────────────────────────────────────────────────────────────
+﻿import { Challenge } from "../types";
+// â”€â”€â”€ ENG-PR-034 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const challenge: Challenge = {
     id: 'ENG-PR-034',
@@ -19,6 +19,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/api/userController.ts',
         background: 'Returning user data with the new 64-bit Snowflake IDs.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'What happens if you type `9223372036854775807` into the Chrome JS console?',
             'What is `Number.MAX_SAFE_INTEGER` in JavaScript?',

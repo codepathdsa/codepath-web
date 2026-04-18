@@ -28,11 +28,17 @@ const TYPE_COLOR: Record<string, string> = {
   'Tech Debt Tribunal': '#10b981',
 };
 
+const TYPE_COUNTS = (['DSA', 'PR Review', 'War Room', 'System Design', 'Tech Debt Tribunal'] as const).map(t => ({
+  type: t,
+  count: CHALLENGES.filter(c => c.type === t).length,
+}));
+
 export default function ChallengesPage() {
   const [search, setSearch] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const itemsPerPage = 15;
 
   const [activeTracks, setActiveTracks] = useState<string[]>(['Junior', 'Mid', 'Senior']);
   const [activeTypes, setActiveTypes] = useState<string[]>(['DSA', 'PR Review', 'War Room', 'System Design', 'Tech Debt Tribunal']);
@@ -73,9 +79,9 @@ export default function ChallengesPage() {
   const clearFilters = () => {
     setSearch('');
     setCurrentPage(1);
-    setActiveTracks([]);
-    setActiveTypes([]);
-    setActiveStatuses([]);
+    setActiveTracks(['Junior', 'Mid', 'Senior']);
+    setActiveTypes(['DSA', 'PR Review', 'War Room', 'System Design', 'Tech Debt Tribunal']);
+    setActiveStatuses(['Not Started', 'In Progress', 'Completed']);
     setActiveLanguages(AVAILABLE_LANGS);
   };
 
@@ -110,14 +116,19 @@ export default function ChallengesPage() {
       {/* -- Raid Banner -------------------------------------------- */}
       <div className={styles.raidBanner}>
         <span className={styles.raidBannerDot} />
-        <strong>RAID LIVE</strong> — Checkout service P0: Redis hit rate dropped to 31%. 847 engineers in.&nbsp;
+        <strong>RAID LIVE</strong> — Checkout Meltdown: Redis cache at 31%. 1,203 engineers in.&nbsp;
         <Link href="/raid" className={styles.raidBannerLink}>Join the raid →</Link>
       </div>
 
       <div className={styles.body}>
 
         {/* -- Sidebar -------------------------------------------- */}
-        <aside className={styles.sidebar}>
+        {/* Mobile filter overlay backdrop */}
+        {showMobileFilters && (
+          <div className={styles.mobileFilterBackdrop} onClick={() => setShowMobileFilters(false)} />
+        )}
+
+        <aside className={`${styles.sidebar} ${showMobileFilters ? styles.sidebarOpen : ''}`}>
           <div className={styles.sidebarTop}>
             <span className={styles.filterHeading}>Filters</span>
             <button className={styles.clearFilters} onClick={clearFilters}>Clear all</button>
@@ -200,22 +211,40 @@ export default function ChallengesPage() {
               <span className={styles.sidebarStatLabel}>Total</span>
             </div>
           </div>
+
+          {/* Category breakdown */}
+          <div className={styles.categoryBreakdown}>
+            {TYPE_COUNTS.map(({ type, count }) => (
+              <div key={type} className={styles.categoryRow}>
+                <span className={styles.filterDot} style={{ '--type-c': TYPE_COLOR[type] } as React.CSSProperties} />
+                <span className={styles.categoryLabel}>{type}</span>
+                <span className={styles.categoryCount}>{count}</span>
+              </div>
+            ))}
+          </div>
         </aside>
 
         {/* -- Main ----------------------------------------------- */}
         <main className={styles.main}>
 
           <div className={styles.pageHeader}>
-            <div>
+            <div className={styles.pageTitleRow}>
               <h1 className={styles.pageTitle}>Challenges</h1>
               <p className={styles.pageSub}>{filteredChallenges.length} of {CHALLENGES.length} scenarios shown</p>
             </div>
             <div className={styles.headerActions}>
+              <button
+                className={styles.filterToggleBtn}
+                onClick={() => setShowMobileFilters(f => !f)}
+                aria-label="Toggle filters"
+              >
+                ☰ Filters
+              </button>
               <div className={styles.searchWrap}>
                 <span className={styles.searchIcon}>⌕</span>
                 <input
                   type="text"
-                  placeholder="Search tickets, topics, keywords…"
+                  placeholder="Search by title, ID, keyword…"
                   className={styles.searchInput}
                   value={search}
                   onChange={handleSearch}
@@ -232,18 +261,23 @@ export default function ChallengesPage() {
 
             {/* Pinned strip */}
             <div className={styles.stripRow}>
-              <div className={styles.stripCard} onClick={(e) => openDrawer(e, CHALLENGES[1])}>
-                <div className={styles.stripCardEyebrow}>This week&apos;s Raid</div>
-                <div className={styles.stripCardTitle}>Checkout failing: Redis hit rate at 31%</div>
+              <Link href="/raid" className={`${styles.stripCard} ${styles.stripCardRaid}`}>
+                <div className={styles.stripCardEyebrow}>🔴 This week&apos;s Raid</div>
+                <div className={styles.stripCardTitle}>Checkout Meltdown: Redis cache at 31%</div>
                 <span className={`badge badge-war ${styles.stripBadge}`}>War Room</span>
-                <div className={styles.stripXp}>+350 XP</div>
-              </div>
-              <div className={styles.stripCard} onClick={(e) => openDrawer(e, CHALLENGES[0])}>
-                <div className={styles.stripCardEyebrow}>Weakness: Data Structures</div>
-                <div className={styles.stripCardTitle}>Payment system double-billing</div>
-                <span className={`badge badge-dsa ${styles.stripBadge}`}>DSA</span>
-                <div className={styles.stripXp}>+150 XP</div>
-              </div>
+                <div className={styles.stripXp}>+1,500 XP · 1,203 engineers live</div>
+              </Link>
+              {(() => {
+                const dsaChallenge = CHALLENGES.find(c => c.id === 'ENG-DSA-001');
+                return dsaChallenge ? (
+                  <div className={styles.stripCard} onClick={(e) => openDrawer(e, dsaChallenge)}>
+                    <div className={styles.stripCardEyebrow}>Weakness: Data Structures</div>
+                    <div className={styles.stripCardTitle}>Payment system double-billing</div>
+                    <span className={`badge badge-dsa ${styles.stripBadge}`}>DSA</span>
+                    <div className={styles.stripXp}>+150 XP</div>
+                  </div>
+                ) : null;
+              })()}
               <div className={styles.stripCard}>
                 <div className={styles.stripCardEyebrow}>Next milestone</div>
                 <div className={styles.stripCardTitle}>Complete 3 PR Reviews → unlock Stripe track</div>

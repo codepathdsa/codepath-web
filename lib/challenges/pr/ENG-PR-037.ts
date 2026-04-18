@@ -1,4 +1,4 @@
-// ─── ENG-PR-037 ─────────────────────────────────────────────────────────────────
+﻿// â”€â”€â”€ ENG-PR-037 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import type { Challenge } from '../types';
 const challenge: Challenge = {
     id: 'ENG-PR-037',
@@ -18,6 +18,9 @@ const challenge: Challenge = {
         prAuthor: 'senior-dev-11',
         prFile: 'src/hooks/useStore.ts',
         background: 'A custom hook to read from a vanilla JS event emitter store.',
+        prAge: '2 hours ago',
+        changes: 'See diff below for the specific lines introduced in this PR.',
+        testing: 'No automated tests were added with this change.',
         hints: [
             'If React pauses rendering between Component A and Component B, and `store.getState()` changes, what happens?',
             'How does React know if external mutable data changed during a render transition?',
