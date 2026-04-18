@@ -1,0 +1,15 @@
+name = "codepath-web"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next"
+
+
+# ── Optional: enable R2 caching for ISR pages (uncomment when ready) ──────────
+# [[r2_buckets]]
+# binding = "CACHE"
+# bucket_name = "codepath-cache"
+
+# ── Optional: R2 for user asset uploads (avatars etc.) ────────────────────────
+# [[r2_buckets]]
+# binding = "ASSETS"
+# bucket_name = "codepath-assets"

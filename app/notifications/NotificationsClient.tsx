@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
-import { createClient } from '@/utils/supabase/client';
+
 import type { DbNotification } from '@/lib/db/notifications';
 
 // --- Types -------------------------------------------------------------------
@@ -67,20 +67,12 @@ export default function NotificationsClient({ initialNotifications }: { initialN
 
   const markAllRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id);
-    }
+    await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markAll' }) });
   };
 
   const markRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', user.id);
-    }
+    await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markOne', id }) });
   };
 
   const tabUnread = (tab: NotifCategory) =>

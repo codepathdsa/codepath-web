@@ -1,7 +1,8 @@
 /**
  * lib/db/notifications.ts
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface DbNotification {
   id: string;
@@ -15,30 +16,27 @@ export interface DbNotification {
 }
 
 export async function getMyNotifications(): Promise<DbNotification[]> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-  const { data } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(50);
+  const data = await sql`
+    SELECT * FROM notifications
+    WHERE user_id = ${session.user.id}
+    ORDER BY created_at DESC
+    LIMIT 50
+  `;
 
   return (data ?? []) as DbNotification[];
 }
 
 export async function markNotificationRead(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', user.id);
+  const session = await auth();
+  if (!session?.user?.id) return;
+  await sql`UPDATE notifications SET is_read = true WHERE id = ${id} AND user_id = ${session.user.id}`;
 }
 
 export async function markAllNotificationsRead() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id);
+  const session = await auth();
+  if (!session?.user?.id) return;
+  await sql`UPDATE notifications SET is_read = true WHERE user_id = ${session.user.id}`;
 }

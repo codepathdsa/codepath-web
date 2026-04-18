@@ -1,116 +1,153 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useSession } from 'next-auth/react';
 import { getCreatureForChallenge } from '@/lib/codex';
 
-export function useProgress() {
-  const [solvedState, setSolvedState] = useState<Record<string, { status: string; ts: number }>>({});
-  const [capturedCodex, setCapturedCodex] = useState<Set<string>>(new Set());
-  const [shinyCodex, setShinyCodex] = useState<Set<string>>(new Set());
-  const [streak, setStreak] = useState(0);
-  const [totalXP, setTotalXP] = useState(0);
-  const [loading, setLoading] = useState(true);
+interface ProgressState {
+  solvedState: Record<string, { status: string; ts: number }>;
+  capturedCodex: Set<string>;
+  shinyCodex: Set<string>;
+  streak: number;
+  totalXP: number;
+  loading: boolean;
+}
 
-  // Load from Supabase on mount
+export function useProgress() {
+  const { data: session, status } = useSession();
+  const [state, setState] = useState<ProgressState>({
+    solvedState: {},
+    capturedCodex: new Set(),
+    shinyCodex: new Set(),
+    streak: 0,
+    totalXP: 0,
+    loading: true,
+  });
+
+  // Load progress from the server API once the session is ready
   useEffect(() => {
-    const supabase = createClient();
+    if (status === 'loading') return;
+
+    if (!session?.user) {
+      setState(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
     let cancelled = false;
 
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || cancelled) { setLoading(false); return; }
+      try {
+        const res = await fetch('/api/progress');
+        if (!res.ok || cancelled) return;
 
-      const [{ data: challenges }, { data: stats }, { data: codex }] = await Promise.all([
-        supabase.from('user_challenges').select('challenge_id, status, solved_at').eq('user_id', user.id),
-        supabase.from('user_stats').select('current_streak, total_xp').eq('id', user.id).single(),
-        supabase.from('user_codex').select('creature_id, is_shiny').eq('user_id', user.id),
-      ]);
+        const { challenges, stats, codex } = await res.json();
 
-      if (cancelled) return;
+        const map: Record<string, { status: string; ts: number }> = {};
+        for (const row of (challenges ?? [])) {
+          map[row.challenge_id] = {
+            status: row.status,
+            ts: new Date(row.solved_at).getTime(),
+          };
+        }
 
-      const map: Record<string, { status: string; ts: number }> = {};
-      for (const row of (challenges ?? [])) {
-        map[row.challenge_id] = { status: row.status, ts: new Date(row.solved_at).getTime() };
+        const newCaptured = new Set<string>();
+        const newShiny = new Set<string>();
+        for (const r of (codex ?? [])) {
+          newCaptured.add(r.creature_id);
+          if (r.is_shiny) newShiny.add(r.creature_id);
+        }
+
+        if (!cancelled) {
+          setState({
+            solvedState: map,
+            capturedCodex: newCaptured,
+            shinyCodex: newShiny,
+            streak: stats?.current_streak ?? 0,
+            totalXP: stats?.total_xp ?? 0,
+            loading: false,
+          });
+        }
+      } catch (err) {
+        console.error('useProgress load error:', err);
+        if (!cancelled) setState(prev => ({ ...prev, loading: false }));
       }
-      setSolvedState(map);
-      
-      const newCaptured = new Set<string>();
-      const newShiny = new Set<string>();
-      for (const r of (codex ?? [])) {
-        newCaptured.add(r.creature_id);
-        if (r.is_shiny) newShiny.add(r.creature_id);
-      }
-      setCapturedCodex(newCaptured);
-      setShinyCodex(newShiny);
-
-      setStreak(stats?.current_streak ?? 0);
-      setTotalXP(stats?.total_xp ?? 0);
-      setLoading(false);
     }
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [session, status]);
 
   const toggleSolve = useCallback(async (
-    slug: string, 
-    xp = 100, 
+    slug: string,
+    xp = 100,
     type: 'dsa' | 'war' | 'pr' | 'design' | 'tribunal' = 'dsa',
-    options?: { isShiny?: boolean }
+    options?: { isShiny?: boolean },
   ) => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Optimistic update
-    setSolvedState(prev => {
-      const next = { ...prev };
-      if (next[slug]?.status === 'solved') {
-        delete next[slug];
-      } else {
-        next[slug] = { status: 'solved', ts: Date.now() };
-      }
-      return next;
-    });
+    if (!session?.user) return;
 
     const creature = getCreatureForChallenge(slug);
     const isShiny = !!options?.isShiny;
 
-    if (creature) {
-      // Optimistic update for codex
-      setCapturedCodex(prev => new Set([...prev, creature.id]));
-      if (isShiny) setShinyCodex(prev => new Set([...prev, creature.id]));
+    // Optimistic UI update
+    setState(prev => {
+      const next = { ...prev };
+      const solvedState = { ...prev.solvedState };
+
+      if (solvedState[slug]?.status === 'solved') {
+        delete solvedState[slug];
+      } else {
+        solvedState[slug] = { status: 'solved', ts: Date.now() };
+      }
+
+      const capturedCodex = new Set(prev.capturedCodex);
+      const shinyCodex = new Set(prev.shinyCodex);
+      if (creature) {
+        capturedCodex.add(creature.id);
+        if (isShiny) shinyCodex.add(creature.id);
+      }
+
+      return { ...next, solvedState, capturedCodex, shinyCodex };
+    });
+
+    // Persist to server
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challengeId: slug,
+          challengeType: type,
+          xp,
+          creatureId: creature?.id ?? null,
+          isShiny,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('Progress sync failed:', res.status);
+        return;
+      }
+
+      const { stats } = await res.json();
+      if (stats) {
+        setState(prev => ({
+          ...prev,
+          streak: stats.current_streak,
+          totalXP: stats.total_xp,
+        }));
+      }
+    } catch (err) {
+      console.error('toggleSolve error:', err);
     }
+  }, [session]);
 
-    // Persist to Supabase
-    const [rpcRes, codexRes] = await Promise.all([
-      supabase.rpc('award_xp', {
-        p_user_id: user.id,
-        p_xp: xp,
-        p_challenge_id: slug,
-        p_challenge_type: type,
-      }),
-      creature ? supabase.from('user_codex').upsert(
-        { user_id: user.id, creature_id: creature.id, is_shiny: isShiny },
-        { onConflict: 'user_id,creature_id' }
-      ) : Promise.resolve({ error: null })
-    ]);
-
-    if (rpcRes.error) console.error("XP Award Error:", rpcRes.error.message);
-    if (codexRes?.error) console.error("Codex Sync Error:", codexRes.error.message);
-
-    // Refresh stats from DB
-    const { data: stats } = await supabase
-      .from('user_stats')
-      .select('current_streak, total_xp')
-      .eq('id', user.id)
-      .single();
-    if (stats) {
-      setStreak(stats.current_streak);
-      setTotalXP(stats.total_xp);
-    }
-  }, []);
-
-  return { solvedState, toggleSolve, streak, totalXP, capturedCodex, shinyCodex, loading };
+  return {
+    solvedState: state.solvedState,
+    toggleSolve,
+    streak: state.streak,
+    totalXP: state.totalXP,
+    capturedCodex: state.capturedCodex,
+    shinyCodex: state.shinyCodex,
+    loading: state.loading,
+  };
 }

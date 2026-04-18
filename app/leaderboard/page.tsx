@@ -1,4 +1,4 @@
-﻿import { getLeaderboard } from '@/lib/db/leaderboard';
+import { getLeaderboard } from '@/lib/db/leaderboard';
 import LeaderboardClient from './LeaderboardClient';
 import type { LeaderRow } from '@/lib/db/leaderboard';
 
@@ -17,6 +17,8 @@ function getInitials(name: string | null, username: string) {
   const n = name ?? username;
   return n.split(' ').map(w => w[0]?.toUpperCase() ?? '').slice(0, 2).join('');
 }
+
+export const dynamic = 'force-dynamic';
 
 export default async function LeaderboardPage() {
   const { rows, myId } = await getLeaderboard(50);

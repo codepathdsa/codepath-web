@@ -8,7 +8,7 @@ import styles from './page.module.css';
 import { CHALLENGES, TestCase } from '@/lib/challenges';
 import CaptureOverlay from '@/app/components/CaptureOverlay';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
-import { createClient } from '@/utils/supabase/client';
+
 import { useProgress } from '@/app/hooks/useProgress';
 
 // --- Types -------------------------------------------------------------------
@@ -101,29 +101,17 @@ const LANG_EXT: Record<string, string> = {
 
 /** Returns the GitHub provider_token from the current Supabase session, or null. */
 async function getGithubProviderToken(): Promise<string | null> {
-  try {
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.provider_token && session?.user?.app_metadata?.provider === 'github') {
-      return session.provider_token;
-    }
-  } catch { /* ignore */ }
+  // TODO: Implement Auth.js session callback to pass through provider token if we want to restore Gist saving
   return null;
 }
 
 /** Redirect to GitHub OAuth requesting the `gist` scope, return here afterwards.
  *  Returns an error string if the auth service is unreachable, null on success (browser will navigate away). */
 async function redirectToGithubOAuth(returnUrl: string): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      scopes: 'read:user,gist',
-      redirectTo: returnUrl,
-      // skipBrowserRedirect: true so we can catch failures before the browser navigates
-      skipBrowserRedirect: true,
-    },
-  });
+  const { signIn } = await import('next-auth/react');
+  await signIn('github', { callbackUrl: returnUrl });
+  const error = null;
+  const data = { url: returnUrl };
 
   if (error || !data.url) {
     return { error: 'Unable to connect to authentication service. Please try again.' };

@@ -40,6 +40,8 @@ const buildHeatmapData = (events: { timestamp: string }[]) => {
   return cols;
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function Dashboard() {
   const [{ profile, stats }, activities] = await Promise.all([
     getMyProfile(),

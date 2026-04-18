@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
 import type { DbDiscussion } from '@/lib/db/discussions';
-import { createClient } from '@/utils/supabase/client';
+
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 interface DiscussionsClientProps {
@@ -224,33 +224,34 @@ export default function DiscussionsClient({ initialDiscussions }: DiscussionsCli
   }, [posts, cat, search, tab]);
 
   function handleVote(id: string) {
+    const isDecrement = voted.has(id);
     setVoted(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-    // Fire-and-forget Supabase vote (non-blocking)
-    const supabase = createClient();
-    supabase.rpc(voted.has(id) ? 'decrement_discussion_votes' : 'increment_discussion_votes', { p_id: id }).then(() => {});
+    // Fire-and-forget fetch vote (non-blocking)
+    fetch('/api/discussions', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action: isDecrement ? 'decrement' : 'increment' })
+    }).catch(() => {});
   }
 
   async function handleNewPost(title: string, body: string, tag: string) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase
-      .from('discussions')
-      .insert({ title, body, tags: [tag], user_id: user.id })
-      .select('*, user_profiles(username)')
-      .single();
-    if (data) {
-      const newPost: DbDiscussion = {
-        ...data,
-        author_username: (data as any).user_profiles?.username ?? 'you',
-        comment_count: 0,
-      };
-      setPosts(prev => [newPost, ...prev]);
-    }
+    try {
+      const res = await fetch('/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, tag })
+      });
+      if (res.ok) {
+        const { data } = await res.json();
+        if (data) {
+          setPosts(prev => [data, ...prev]);
+        }
+      }
+    } catch { /* ignore err */ }
   }
 
   return (

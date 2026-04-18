@@ -1,7 +1,8 @@
 /**
  * lib/db/referrals.ts
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface ReferralRow {
   id: string;
@@ -17,21 +18,22 @@ export interface ReferralRow {
 }
 
 export async function getMyReferrals(): Promise<ReferralRow[]> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-  const { data } = await supabase
-    .from('referrals')
-    .select(`*, referred_profile:user_profiles!referrals_referred_user_id_fkey(username, display_name)`)
-    .eq('referrer_id', user.id)
-    .order('created_at', { ascending: false });
+  const data = await sql`
+    SELECT r.*, p.username as profile_username, p.display_name as profile_display_name
+    FROM referrals r
+    LEFT JOIN user_profiles p ON r.referred_user_id = p.id
+    WHERE r.referrer_id = ${session.user.id}
+    ORDER BY r.created_at DESC
+  `;
 
   if (!data) return [];
 
-  return data.map((row: Record<string, unknown> & { referred_profile?: { username: string; display_name: string } }) => ({
+  return data.map((row: any) => ({
     ...(row as unknown as ReferralRow),
-    referred_display_name: row.referred_profile?.display_name ?? (row.referred_email as string | null)?.split('@')[0] ?? 'Unknown',
-    referred_username: row.referred_profile?.username ?? undefined,
+    referred_display_name: row.profile_display_name ?? (row.referred_email as string | null)?.split('@')[0] ?? 'Unknown',
+    referred_username: row.profile_username ?? undefined,
   }));
 }

@@ -3,7 +3,8 @@
  * Server-side helpers for user_profiles + user_stats.
  * All functions require an authenticated Supabase client.
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface UserProfile {
   id: string;
@@ -34,38 +35,56 @@ export interface UserStats {
 
 /** Fetch the current user's profile + stats in one go */
 export async function getMyProfile(): Promise<{ profile: UserProfile | null; stats: UserStats | null }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { profile: null, stats: null };
+  const session = await auth();
+  if (!session?.user?.id) return { profile: null, stats: null };
 
-  const [{ data: profile }, { data: stats }] = await Promise.all([
-    supabase.from('user_profiles').select('*').eq('id', user.id).single(),
-    supabase.from('user_stats').select('*').eq('id', user.id).single(),
+  const [profileRows, statsRows] = await Promise.all([
+    sql`SELECT * FROM user_profiles WHERE id = ${session.user.id}`,
+    sql`SELECT * FROM user_stats WHERE id = ${session.user.id}`,
   ]);
 
-  return { profile: profile as UserProfile | null, stats: stats as UserStats | null };
+  return { 
+    profile: (profileRows[0] as UserProfile) ?? null, 
+    stats: (statsRows[0] as UserStats) ?? null 
+  };
 }
 
 /** Update mutable profile fields */
 export async function updateProfile(updates: Partial<Pick<UserProfile, 
   'display_name' | 'username' | 'track' | 'target_companies' | 'avatar_color' | 'starter_creature' | 'onboarding_complete'
 >>) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
 
-  const { error } = await supabase
-    .from('user_profiles')
-    .update(updates)
-    .eq('id', user.id);
-
-  return { error: error?.message ?? null };
+  try {
+    const keys = Object.keys(updates);
+    if (keys.length === 0) return { error: null };
+    
+    // Simplistic handling of update via sql tagged template
+    // Since Neon template tag doesn't easily do dynamic keys safely out of the box, we construct it:
+    await sql`
+      UPDATE user_profiles SET
+        display_name = COALESCE(${updates.display_name ?? null}, display_name),
+        username = COALESCE(${updates.username ?? null}, username),
+        track = COALESCE(${updates.track ?? null}, track),
+        avatar_color = COALESCE(${updates.avatar_color ?? null}, avatar_color),
+        starter_creature = COALESCE(${updates.starter_creature ?? null}, starter_creature),
+        onboarding_complete = COALESCE(${updates.onboarding_complete ?? null}, onboarding_complete)
+      WHERE id = ${session.user.id}
+    `;
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message };
+  }
 }
 
 export async function getPublicProfile(username: string): Promise<{ profile: UserProfile | null; stats: UserStats | null }> {
-  const supabase = await createClient();
-  const { data: profile } = await supabase.from('user_profiles').select('*').eq('username', username).single();
+  const profileRows = await sql`SELECT * FROM user_profiles WHERE username = ${username}`;
+  const profile = profileRows[0];
   if (!profile) return { profile: null, stats: null };
-  const { data: stats } = await supabase.from('user_stats').select('*').eq('id', profile.id).single();
-  return { profile: profile as UserProfile, stats: stats as UserStats | null };
+  
+  const statsRows = await sql`SELECT * FROM user_stats WHERE id = ${profile.id}`;
+  const stats = statsRows[0];
+  
+  return { profile: profile as UserProfile, stats: (stats as UserStats) ?? null };
 }

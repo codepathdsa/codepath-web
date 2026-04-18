@@ -2,7 +2,8 @@
  * lib/db/codex.ts
  * Fetch captured/shiny creatures from user_codex table.
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface CodexEntry {
   creature_id: string;
@@ -11,14 +12,13 @@ export interface CodexEntry {
 }
 
 export async function getMyCodex(): Promise<{ captured: Set<string>; shiny: Set<string> }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { captured: new Set(), shiny: new Set() };
+  const session = await auth();
+  if (!session?.user?.id) return { captured: new Set(), shiny: new Set() };
 
-  const { data } = await supabase
-    .from('user_codex')
-    .select('creature_id, is_shiny')
-    .eq('user_id', user.id);
+  const data = await sql`
+    SELECT creature_id, is_shiny FROM user_codex
+    WHERE user_id = ${session.user.id}
+  `;
 
   const captured = new Set<string>();
   const shiny = new Set<string>();
@@ -33,15 +33,18 @@ export async function getMyCodex(): Promise<{ captured: Set<string>; shiny: Set<
 
 /** Capture a creature (e.g., after completing a challenge set) */
 export async function captureCreature(creatureId: string, isShiny = false) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
 
-  const { error } = await supabase
-    .from('user_codex')
-    .upsert({ user_id: user.id, creature_id: creatureId, is_shiny: isShiny })
-    .eq('user_id', user.id)
-    .eq('creature_id', creatureId);
-
-  return { error: error?.message ?? null };
+  try {
+    await sql`
+      INSERT INTO user_codex (user_id, creature_id, is_shiny)
+      VALUES (${session.user.id}, ${creatureId}, ${isShiny})
+      ON CONFLICT (user_id, creature_id) 
+      DO UPDATE SET is_shiny = EXCLUDED.is_shiny
+    `;
+    return { error: null };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }

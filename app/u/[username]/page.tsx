@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import styles from './page.module.css';
 import { CopyShareBtn } from '@/app/components/CopyShareBtn';
 import { getPublicProfile } from '@/lib/db/profile';
-import { createClient } from '@/utils/supabase/server';
+import { sql } from '@/lib/db';
 import { CREATURES_BY_ID } from '@/lib/codex';
 
 // --- Rank helpers ---
@@ -43,7 +43,10 @@ function StarStage({ stage, isShiny }: { stage: number; isShiny: boolean }) {
 }
 
 // --- Main Page ---
-export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
+
+export const dynamic = 'force-dynamic';
+
+export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const { username } = await params;
   const { profile, stats } = await getPublicProfile(username);
   
@@ -52,10 +55,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   }
 
   // Fetch codex
-  const supabase = await createClient();
-  const [{ data: codex }, { data: activities }] = await Promise.all([
-    supabase.from('user_codex').select('*').eq('user_id', profile.id),
-    supabase.from('user_activities').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(10)
+  const [codex, activities] = await Promise.all([
+    sql`SELECT * FROM user_codex WHERE user_id = ${profile.id}`,
+    sql`SELECT * FROM user_activities WHERE user_id = ${profile.id} ORDER BY created_at DESC LIMIT 10`
   ]);
   
   const rank = getRank(stats?.total_xp ?? 0);

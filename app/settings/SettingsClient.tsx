@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
-import { createClient } from '@/utils/supabase/client';
+import { useSession } from 'next-auth/react';
 
 // --- Types -------------------------------------------------------------------
 
@@ -64,6 +64,7 @@ function Toggle({
 // --- Section components ------------------------------------------------------
 
 function AccountSection({ user }: { user: SettingsUser }) {
+  const { data: session } = useSession();
   const [form, setForm] = useState({
     displayName: user.displayName,
     username: user.username,
@@ -72,14 +73,15 @@ function AccountSection({ user }: { user: SettingsUser }) {
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
-    const supabase = createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      await supabase.from('user_profiles').update({
+    if (!session?.user?.id) return;
+    await fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         display_name: form.displayName,
         username: form.username,
-      }).eq('id', authUser.id);
-    }
+      }),
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

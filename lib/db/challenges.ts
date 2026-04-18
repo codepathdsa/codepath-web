@@ -2,7 +2,8 @@
  * lib/db/challenges.ts
  * Helpers for challenge progress (user_challenges) and XP awarding.
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface UserChallenge {
   id: string;
@@ -17,17 +18,16 @@ export interface UserChallenge {
 
 /** Returns a map of challengeId → UserChallenge for the current user */
 export async function getMyChallengeProgress(): Promise<Record<string, UserChallenge>> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return {};
+  const session = await auth();
+  if (!session?.user?.id) return {};
 
-  const { data } = await supabase
-    .from('user_challenges')
-    .select('*')
-    .eq('user_id', user.id);
+  const data = await sql`
+    SELECT * FROM user_challenges
+    WHERE user_id = ${session.user.id}
+  `;
 
   if (!data) return {};
-  return Object.fromEntries(data.map((r: UserChallenge) => [r.challenge_id, r]));
+  return Object.fromEntries(data.map((r: any) => [r.challenge_id, r as UserChallenge]));
 }
 
 /** 
@@ -44,45 +44,34 @@ export async function solveChallenge(params: {
   activityDesc?: string;
   activityStats?: { label: string; value: string }[];
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
+  const userId = session.user.id;
 
-  // Call the atomic PL/pgSQL function
-  const { error: xpError } = await supabase.rpc('award_xp', {
-    p_user_id: user.id,
-    p_xp: params.xp,
-    p_challenge_id: params.challengeId,
-    p_challenge_type: params.type,
-  });
+  try {
+    // Call the atomic PL/pgSQL function directly via SELECT
+    await sql`SELECT award_xp(${userId}, ${params.xp}, ${params.challengeId}, ${params.type})`;
 
-  if (xpError) return { error: xpError.message };
+    // Update score/time on the newly-created row
+    if (params.score !== undefined || params.timeTakenSeconds !== undefined) {
+      const status = params.score === 100 ? 'perfect' : 'solved';
+      await sql`
+        UPDATE user_challenges
+        SET score = ${params.score}, time_taken_s = ${params.timeTakenSeconds}, status = ${status}
+        WHERE user_id = ${userId} AND challenge_id = ${params.challengeId}
+      `;
+    }
 
-  // Update score/time on the newly-created row
-  if (params.score !== undefined || params.timeTakenSeconds !== undefined) {
-    await supabase
-      .from('user_challenges')
-      .update({
-        score: params.score,
-        time_taken_s: params.timeTakenSeconds,
-        status: params.score === 100 ? 'perfect' : 'solved',
-      })
-      .eq('user_id', user.id)
-      .eq('challenge_id', params.challengeId);
+    // Log to activity feed
+    if (params.activityTitle) {
+      await sql`
+        INSERT INTO user_activities (user_id, type, challenge_id, title, description, xp, stats)
+        VALUES (${userId}, ${params.type}, ${params.challengeId}, ${params.activityTitle}, ${params.activityDesc ?? null}, ${params.xp}, ${params.activityStats ? JSON.stringify(params.activityStats) : '[]'}::jsonb)
+      `;
+    }
+
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message };
   }
-
-  // Log to activity feed
-  if (params.activityTitle) {
-    await supabase.from('user_activities').insert({
-      user_id: user.id,
-      type: params.type,
-      challenge_id: params.challengeId,
-      title: params.activityTitle,
-      description: params.activityDesc ?? null,
-      xp: params.xp,
-      stats: params.activityStats ?? [],
-    });
-  }
-
-  return { error: null };
 }

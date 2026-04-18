@@ -3,7 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import PremiumGate from '@/app/components/PremiumGate';
 import { buildMdxComponents } from '@/app/components/mdxComponents';
 import rehypeHighlight from 'rehype-highlight';
@@ -35,9 +35,8 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
 
   const { data, content } = matter(fileContent!);
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const isAuthenticated = !!user;
+  const session = await auth();
+  const isAuthenticated = !!session?.user;
 
   // -- Split MDX: separate "editorial" from "VisualTree" section ---------
   // Everything before the first <VisualTree is the editorial content.

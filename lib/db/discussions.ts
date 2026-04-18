@@ -1,7 +1,8 @@
 /**
  * lib/db/discussions.ts
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface DbDiscussion {
   id: string;
@@ -20,65 +21,70 @@ export interface DbDiscussion {
 }
 
 export async function getDiscussions(limit = 30): Promise<DbDiscussion[]> {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from('discussions')
-    .select(`*, user_profiles(username, display_name)`)
-    .order('is_pinned', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const data = await sql`
+    SELECT d.*, p.username as profile_username, p.display_name as profile_display_name
+    FROM discussions d
+    LEFT JOIN user_profiles p ON d.user_id = p.id
+    ORDER BY is_pinned DESC, created_at DESC
+    LIMIT ${limit}
+  `;
 
   if (!data) return [];
 
-  return data.map((row: Record<string, unknown> & { user_profiles?: { username: string; display_name: string } }) => ({
+  return data.map((row: any) => ({
     ...(row as unknown as DbDiscussion),
-    author_username: row.user_profiles?.username ?? 'anonymous',
-    author_display_name: row.user_profiles?.display_name ?? 'Anonymous',
+    author_username: row.profile_username ?? 'anonymous',
+    author_display_name: row.profile_display_name ?? 'Anonymous',
   }));
 }
 
 export async function createDiscussion(params: { title: string; body?: string; challengeId?: string; tags?: string[] }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated', data: null };
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated', data: null };
 
-  const { data, error } = await supabase
-    .from('discussions')
-    .insert({
-      user_id: user.id,
-      title: params.title,
-      body: params.body ?? null,
-      challenge_id: params.challengeId ?? null,
-      tags: params.tags ?? [],
-    })
-    .select()
-    .single();
+  try {
+    const data = await sql`
+      INSERT INTO discussions (user_id, title, body, challenge_id, tags)
+      VALUES (${session.user.id}, ${params.title}, ${params.body ?? null}, ${params.challengeId ?? null}, ${params.tags ?? []})
+      RETURNING *
+    `;
 
-  return { data, error: error?.message ?? null };
+    return { data: data[0], error: null };
+  } catch (err: any) {
+    return { data: null, error: err.message };
+  }
 }
 
 export async function voteDiscussion(discussionId: string): Promise<{ newVotes: number | null; error: string | null }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { newVotes: null, error: 'Not authenticated' };
+  const session = await auth();
+  if (!session?.user?.id) return { newVotes: null, error: 'Not authenticated' };
 
-  // Try to insert vote; if duplicate, remove it (toggle)
-  const { error: insertError } = await supabase
-    .from('discussion_votes')
-    .insert({ user_id: user.id, discussion_id: discussionId });
-
-  if (insertError?.code === '23505') {
-    // Already voted — remove vote
-    await supabase.from('discussion_votes').delete()
-      .eq('user_id', user.id)
-      .eq('discussion_id', discussionId);
-    // Decrement
-    const { data } = await supabase.rpc('decrement_discussion_votes', { p_id: discussionId });
-    return { newVotes: data, error: null };
+  try {
+    // Try to insert
+    await sql`
+      INSERT INTO discussion_votes (user_id, discussion_id)
+      VALUES (${session.user.id}, ${discussionId})
+    `;
+    // If successful, increment
+    const res = await sql`
+      UPDATE discussions SET votes = votes + 1 WHERE id = ${discussionId}
+      RETURNING votes
+    `;
+    return { newVotes: res[0]?.votes ?? null, error: null };
+  } catch (err: any) {
+    // 23505 is unique violation in Postgres
+    if (err.code === '23505' || err.message?.includes('duplicate key value')) {
+      // Already voted — remove vote
+      await sql`
+        DELETE FROM discussion_votes 
+        WHERE user_id = ${session.user.id} AND discussion_id = ${discussionId}
+      `;
+      const res = await sql`
+        UPDATE discussions SET votes = votes - 1 WHERE id = ${discussionId}
+        RETURNING votes
+      `;
+      return { newVotes: res[0]?.votes ?? null, error: null };
+    }
+    return { newVotes: null, error: err.message };
   }
-
-  // Increment
-  const { data } = await supabase.rpc('increment_discussion_votes', { p_id: discussionId });
-  return { newVotes: data, error: null };
 }

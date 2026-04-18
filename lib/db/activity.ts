@@ -2,32 +2,22 @@
  * lib/db/activity.ts
  * Fetch real activity events from user_activities table.
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 import type { ActivityEvent } from '@/lib/activity';
 
 export async function getMyActivities(limit = 100): Promise<ActivityEvent[]> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-  const { data } = await supabase
-    .from('user_activities')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const data = await sql`
+    SELECT * FROM user_activities
+    WHERE user_id = ${session.user.id}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
 
-  if (!data) return [];
-
-  return data.map((row: {
-    id: string;
-    type: string;
-    created_at: string;
-    title: string;
-    description: string | null;
-    xp: number;
-    stats: { label: string; value: string }[];
-  }) => {
+  return data.map((row: any) => {
     const BADGE_MAP: Record<string, string> = {
       dsa: 'badge-dsa',
       war: 'badge-war',

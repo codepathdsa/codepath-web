@@ -5,20 +5,24 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "npx @opennextjs/cloudflare build",
+    "preview": "npx wrangler pages dev",
+    "deploy": "npx wrangler pages deploy .open-next --project-name=codepath-web",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/neon-adapter": "^1.7.4",
     "@monaco-editor/react": "^4.7.0",
-    "@supabase/ssr": "^0.9.0",
-    "@supabase/supabase-js": "^2.99.3",
+    "@neondatabase/serverless": "^1.0.0",
     "@xyflow/react": "^12.10.2",
     "dotenv": "^17.3.1",
+    "eslint-config-next": "15.3.1",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
     "lucide-react": "^1.7.0",
-    "next": "15.3.1",
-    "eslint-config-next": "15.3.1",
+    "next": "15.5.15",
+    "next-auth": "^5.0.0-beta.29",
     "next-mdx-remote": "^6.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -27,6 +31,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

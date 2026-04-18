@@ -1,22 +1,22 @@
-﻿import { getMyProfile } from '@/lib/db/profile';
-import { createClient } from '@/utils/supabase/server';
+import { getMyProfile } from '@/lib/db/profile';
+import { auth } from '@/auth';
+
+export const dynamic = 'force-dynamic';
 import SettingsClient from './SettingsClient';
 import type { SettingsUser } from './SettingsClient';
 
 export default async function SettingsPage() {
-  const [{ profile }, supabase] = await Promise.all([
+  const [{ profile }, session] = await Promise.all([
     getMyProfile(),
-    createClient(),
+    auth(),
   ]);
-
-  const { data: { user } } = await supabase.auth.getUser();
 
   const settingsUser: SettingsUser = {
     displayName: profile?.display_name ?? profile?.username ?? '',
     username: profile?.username ?? '',
-    email: user?.email ?? '',
+    email: session?.user?.email ?? '',
     avatarInitials: (profile?.display_name ?? profile?.username ?? '')
-      .split(' ').map(w => w[0]?.toUpperCase() ?? '').slice(0, 2).join(''),
+      .split(' ').map((w: string) => w[0]?.toUpperCase() ?? '').slice(0, 2).join(''),
     track: profile?.track ?? 'SDE II',
     targetCompanies: profile?.target_companies ?? [],
     subscriptionTier: (profile?.subscription_tier as SettingsUser['subscriptionTier']) ?? 'free',

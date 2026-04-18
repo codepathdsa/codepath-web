@@ -2,7 +2,8 @@
  * lib/db/leaderboard.ts
  * Fetches from the leaderboard_view (no PII exposed beyond username/displayName).
  */
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
+import { sql } from '@/lib/db';
 
 export interface LeaderRow {
   id: string;
@@ -19,17 +20,16 @@ export interface LeaderRow {
 }
 
 export async function getLeaderboard(limit = 50): Promise<{ rows: LeaderRow[]; myId: string | null }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
 
-  const { data } = await supabase
-    .from('leaderboard_view')
-    .select('*')
-    .order('rank', { ascending: true })
-    .limit(limit);
+  const data = await sql`
+    SELECT * FROM leaderboard_view
+    ORDER BY rank ASC
+    LIMIT ${limit}
+  `;
 
   return {
     rows: (data ?? []) as LeaderRow[],
-    myId: user?.id ?? null,
+    myId: session?.user?.id ?? null,
   };
 }

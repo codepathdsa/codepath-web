@@ -1,52 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+
 import Link from 'next/link';
 
 export default function NotesPanel({ slug, isAuthenticated }: { slug: string; isAuthenticated: boolean }) {
   const [note, setNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const supabase = createClient();
-
   useEffect(() => {
     if (!isAuthenticated) return;
     async function loadNote() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('user_notes')
-        .select('content, updated_at')
-        .eq('user_id', user.id)
-        .eq('problem_slug', slug)
-        .maybeSingle(); // maybeSingle so it doesn't throw if 0 rows
-      
-      if (data) {
-        setNote(data.content);
-        setLastSaved(new Date(data.updated_at));
-      }
+      try {
+        const res = await fetch(`/api/notes?slug=${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.note) {
+            setNote(data.note.content);
+            setLastSaved(new Date(data.note.updated_at));
+          }
+        }
+      } catch { /* ignore */ }
     }
     loadNote();
-  }, [isAuthenticated, slug, supabase]);
+  }, [isAuthenticated, slug]);
 
   const handleSave = async () => {
     if (!isAuthenticated) return;
     setIsSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('user_notes')
-      .upsert({ 
-        user_id: user.id, 
-        problem_slug: slug, 
-        content: note, 
-        updated_at: new Date().toISOString() 
-      }, { onConflict: 'user_id, problem_slug' });
-
+    try {
+      const res = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, content: note }),
+      });
+      if (res.ok) setLastSaved(new Date());
+    } catch { /* ignore */ }
     setIsSaving(false);
-    if (!error) setLastSaved(new Date());
   };
 
   if (!isAuthenticated) {

@@ -1,4 +1,3 @@
-import { login } from './actions';
 import OAuthButtons from '../components/OAuthButtons';
 import Link from 'next/link';
 import styles from '../auth.module.css';
@@ -6,16 +5,16 @@ import styles from '../auth.module.css';
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>
+  searchParams: Promise<{ error?: string; next?: string }>
 }) {
-  const { error, message } = await searchParams;
+  const { error, next = '/dashboard' } = await searchParams;
 
   return (
     <div className={styles.container}>
       <Link href="/" className={styles.topLogo}>
         engprep<span className={styles.logoCursor}></span>
       </Link>
-      
+
       {/* Left Panel */}
       <div className={styles.leftPanel}>
         <div className={styles.didYouKnow}>
@@ -36,43 +35,12 @@ export default async function LoginPage({
             <p className={styles.subtitle}>Sign in to save your progress and access premium scenarios.</p>
           </div>
 
-          {error && <div className={styles.errorMsg}>{error}</div>}
-          {message && <div className={styles.successMsg}>{message}</div>}
+          {error && <div className={styles.errorMsg}>{decodeURIComponent(error)}</div>}
 
-          <OAuthButtons next="/dashboard" />
-
-          <div className={styles.divider}>
-            <div className={styles.dividerLine}></div>
-            <span className={styles.dividerText}>or</span>
-            <div className={styles.dividerLine}></div>
-          </div>
-
-          <form action={login} className={styles.form}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="email" className={styles.label}>Email address</label>
-              <input id="email" name="email" type="email" placeholder="you@example.com" required className={styles.input} suppressHydrationWarning />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="password" className={styles.label}>
-                Password
-                <Link href="#" className={styles.forgotLink}>Forgot password?</Link>
-              </label>
-              <input id="password" name="password" type="password" placeholder="••••••••" required className={styles.input} suppressHydrationWarning />
-            </div>
-
-            <div className={styles.checkboxGroup}>
-              <input type="checkbox" id="remember" name="remember" className={styles.checkbox} />
-              <label htmlFor="remember" className={styles.checkboxLabel}>Remember me</label>
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 'var(--space-2)' }}>
-              Log In
-            </button>
-          </form>
+          <OAuthButtons next={next} />
 
           <div className={styles.bottomLink}>
-            Don't have an account? <Link href="/signup">Sign up →</Link>
+            Don&apos;t have an account? <Link href="/signup">Sign up →</Link>
           </div>
         </div>
       </div>

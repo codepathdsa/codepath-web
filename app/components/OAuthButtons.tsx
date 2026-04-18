@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { getOAuthUrl } from '../login/actions';
+import { oauthSignIn } from '../login/actions';
 import styles from '../auth.module.css';
 
 interface OAuthButtonsProps {
-  /** Where to send the user after successful login (e.g. '/dashboard' or '/onboarding') */
+  /** Where to send the user after successful login */
   next: string;
 }
 
@@ -17,17 +17,13 @@ export default function OAuthButtons({ next }: OAuthButtonsProps) {
     setError(null);
     setLoading(provider);
 
-    // Server action: tests reachability first, then returns a verified OAuth URL
-    const { url, error: oauthError } = await getOAuthUrl(provider, next);
+    const { error: oauthError } = await oauthSignIn(provider, next);
 
-    if (oauthError || !url) {
-      setError(oauthError ?? 'Authentication service unavailable. Please try again.');
+    if (oauthError) {
+      setError(oauthError);
       setLoading(null);
-      return;
     }
-
-    // Only navigate once the server has confirmed Supabase is reachable
-    window.location.href = url;
+    // On success Auth.js redirects automatically — no need to set loading back
   };
 
   return (
