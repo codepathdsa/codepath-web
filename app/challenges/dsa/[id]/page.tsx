@@ -371,6 +371,7 @@ export default function DSAWorkspace() {
   }, []);
 
   const doGistSave = async (token: string) => {
+    if (!challenge) return;
     setGhSaving(true);
     setGhResult(null);
     try {
@@ -389,6 +390,7 @@ export default function DSAWorkspace() {
   };
 
   const triggerOAuth = async () => {
+    if (!challenge) return;
     // Use sessionStorage (not URL param) so shared links don't trigger saves for other users
     try { sessionStorage.setItem(PENDING_GIST_KEY, `${challenge.id}:${language}`); } catch { /* ignore */ }
     const returnUrl = window.location.href.split('?')[0]; // No query params in return URL
