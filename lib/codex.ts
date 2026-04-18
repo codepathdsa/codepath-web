@@ -597,27 +597,7 @@ export const CATEGORIES_BY_ID: Record<string, CodexCategory> = Object.fromEntrie
 
 export const TOTAL_CREATURES = CREATURES.length;
 
-// Mock captured set — in production this comes from Supabase (codex_entries table)
-// Stage 1 complete, partial stage 2, nothing stage 3 — realistic early-user state
-export const MOCK_CAPTURED: Set<string> = new Set([
-  'cache-miss',
-  'n1-phantom',
-  'deadlock-specter',
-  'memory-leak-ooze',
-  'sql-ghost',
-  'spaghetti-hatchling',
-  '502-hydra',
-  'kafka-poison-pill',
-  'null-gremlin',
-  'cache-stampede',    // evolved one
-  'query-wraith',      // evolved one
-  'the-recruiter',     // referral bonus
-]);
-
-export const MOCK_SHINY: Set<string> = new Set([
-  'cache-miss',    // one perfect run
-  'sql-ghost',     // one perfect run
-]);
+// No mock data needed anymore, dynamically fetched from supabase
 
 export function getCategoryProgress(categoryId: string, captured: Set<string>) {
   const cat = CATEGORIES_BY_ID[categoryId];

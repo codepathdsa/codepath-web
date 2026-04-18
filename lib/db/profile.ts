@@ -61,3 +61,11 @@ export async function updateProfile(updates: Partial<Pick<UserProfile,
 
   return { error: error?.message ?? null };
 }
+
+export async function getPublicProfile(username: string): Promise<{ profile: UserProfile | null; stats: UserStats | null }> {
+  const supabase = await createClient();
+  const { data: profile } = await supabase.from('user_profiles').select('*').eq('username', username).single();
+  if (!profile) return { profile: null, stats: null };
+  const { data: stats } = await supabase.from('user_stats').select('*').eq('id', profile.id).single();
+  return { profile: profile as UserProfile, stats: stats as UserStats | null };
+}

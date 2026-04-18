@@ -37,25 +37,6 @@ function getLevel(xp: number) {
   return { level, progressInLevel, threshold, pct };
 }
 
-// --- Mock profile -------------------------------------------------------------
-
-const PROFILE = {
-  username:        'venkat_builds',
-  displayName:     'Venkateshwaran P.',
-  avatarInitials:  'VP',
-  totalXP:         12450,
-  currentStreak:   23,
-  longestStreak:   31,
-  challengesDone:  42,
-  warRoomsDone:    3,
-  prReviewsDone:   14,
-  perfectRuns:     2,
-  joinedDate:      'Jan 2026',
-  track:           'SDE II',
-  targetCompanies: ['Meta', 'Stripe', 'Notion'],
-  topCreatureIds:  ['cache-hydra', 'n1-phantom', 'concurrency-lord', 'sql-ghost'],
-};
-
 // --- Sub-components -----------------------------------------------------------
 
 function StatTile({ value, label, accent }: { value: string | number; label: string; accent?: string }) {

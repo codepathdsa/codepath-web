@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
   getCreatureForChallenge,
-  MOCK_CAPTURED,
   TOTAL_CREATURES,
   CREATURES_BY_ID,
 } from '@/lib/codex';
+import { useProgress } from '@/app/hooks/useProgress';
 import styles from './CaptureOverlay.module.css';
 
 interface CaptureOverlayProps {
@@ -50,9 +50,10 @@ export default function CaptureOverlay({
   nextChallengeHref,
   onClose,
 }: CaptureOverlayProps) {
+  const { capturedCodex } = useProgress();
   const creature = getCreatureForChallenge(challengeId);
-  const isAlreadyCaptured = MOCK_CAPTURED.has(creature.id);
-  const capturedCount = MOCK_CAPTURED.size + (isAlreadyCaptured ? 0 : 1);
+  const isAlreadyCaptured = capturedCodex.has(creature.id);
+  const capturedCount = capturedCodex.size + (isAlreadyCaptured ? 0 : 1);
 
   const evolvedTo = creature.evolvesTo ? CREATURES_BY_ID[creature.evolvesTo] : null;
 

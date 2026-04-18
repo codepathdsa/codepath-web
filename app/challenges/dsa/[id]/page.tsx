@@ -9,6 +9,7 @@ import { CHALLENGES, TestCase } from '@/lib/challenges';
 import CaptureOverlay from '@/app/components/CaptureOverlay';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
 import { createClient } from '@/utils/supabase/client';
+import { useProgress } from '@/app/hooks/useProgress';
 
 // --- Types -------------------------------------------------------------------
 interface TestResult {
@@ -284,6 +285,7 @@ function spawnCodeParticles(el: HTMLElement, count: number, color: string, sprea
 export default function DSAWorkspace() {
   const params = useParams();
   const challengeId = params.id as string;
+  const { toggleSolve } = useProgress();
 
   const challenge = useMemo(
     () =>
@@ -590,6 +592,10 @@ export default function DSAWorkspace() {
         // Persist code + outcome to localStorage (zero cost)
         const allPassed = collectedResults.every(r => r.passed);
         saveSubmission(challenge.id, language, code, allPassed);
+        
+        if (allPassed) {
+           toggleSolve(challenge.id, 150, 'dsa', { isShiny: true });
+        }
       }
     }
   };

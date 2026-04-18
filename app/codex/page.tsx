@@ -1,15 +1,13 @@
 'use client';
-
-import { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import AppNav from '@/app/components/AppNav';
 import styles from './page.module.css';
+import { useProgress } from '@/app/hooks/useProgress';
 import {
   CREATURES,
   CODEX_CATEGORIES,
   CREATURES_BY_ID,
-  MOCK_CAPTURED,
-  MOCK_SHINY,
   TOTAL_CREATURES,
   getCategoryProgress,
   type CodexCategory,
@@ -48,10 +46,7 @@ function CreatureCard({
     >
       {captured ? (
         <>
-          {/* Glow ring on hover */}
           <div className={styles.creatureGlow} />
-
-          {/* Stage indicator pills */}
           <div className={styles.stageRow}>
             {[1, 2, 3].map(s => (
               <span
@@ -60,20 +55,12 @@ function CreatureCard({
               />
             ))}
           </div>
-
-          {/* Shiny sparkle */}
           {isShiny && <span className={styles.shinyBadge}>✦</span>}
-
-          {/* Creature icon */}
           <div className={styles.creatureIcon}>{creature.icon}</div>
-
-          {/* Name & meta */}
           <div className={styles.creatureName}>{creature.name}</div>
           <div className={styles.creatureMeta}>
             <span className={styles.stagePill}>{stageLabel}</span>
-            <span
-              className={`${styles.rarityPill} ${styles[`rarityColor_${creature.rarity}`]}`}
-            >
+            <span className={`${styles.rarityPill} ${styles[`rarityColor_${creature.rarity}`]}`}>
               {rarityLabel}
             </span>
           </div>
@@ -91,17 +78,17 @@ function CreatureCard({
 
 function CategoryRow({
   category,
-  captured,
+  capturedSet,
   selectedCategory,
   onSelect,
 }: {
   category: CodexCategory;
-  captured: Set<string>;
+  capturedSet: Set<string>;
   selectedCategory: string | null;
   onSelect: (id: string | null) => void;
 }) {
-  const progress = getCategoryProgress(category.id, captured);
-  const isComplete = progress.captured === progress.total;
+  const progress = getCategoryProgress(category.id, capturedSet);
+  const isComplete = progress.captured === progress.total && progress.total > 0;
   const isSelected = selectedCategory === category.id;
 
   return (
@@ -137,11 +124,13 @@ function CreatureDetailPanel({
   creature,
   captured,
   isShiny,
+  capturedSet,
   onClose,
 }: {
   creature: Creature | null;
   captured: boolean;
   isShiny: boolean;
+  capturedSet: Set<string>;
   onClose: () => void;
 }) {
   if (!creature) return null;
@@ -158,12 +147,10 @@ function CreatureDetailPanel({
         className={`${styles.detailPanel} ${captured ? styles.detailCaptured : ''}`}
         style={{ '--creature-color': creature.color } as React.CSSProperties}
       >
-        {/* Close */}
         <button className={styles.detailClose} onClick={onClose}>
           ✕
         </button>
 
-        {/* Header */}
         <div className={styles.detailHeader}>
           <div className={styles.detailIconWrap}>
             <div className={styles.detailIconGlow} />
@@ -182,7 +169,6 @@ function CreatureDetailPanel({
                 {creature.rarity.charAt(0).toUpperCase() + creature.rarity.slice(1)}
               </span>
             </div>
-            {/* Stage dots */}
             <div className={styles.detailStages}>
               {[1, 2, 3].map(s => (
                 <span
@@ -197,30 +183,27 @@ function CreatureDetailPanel({
           </div>
         </div>
 
-        {/* Description */}
         {captured && (
           <p className={styles.detailDesc}>{creature.description}</p>
         )}
 
-        {/* XP value */}
         <div className={styles.detailXP}>
           <span className={styles.detailXPLabel}>XP Value</span>
           <span className={styles.detailXPVal}>+{creature.xpValue} XP</span>
         </div>
 
-        {/* Evolution chain */}
         {(prevCreature || nextCreature) && (
           <div className={styles.evolutionChain}>
             <div className={styles.evolutionTitle}>Evolution Chain</div>
             <div className={styles.evolutionRow}>
               {prevCreature && (
                 <>
-                  <div className={`${styles.evoNode} ${MOCK_CAPTURED.has(prevCreature.id) ? styles.evoCaptured : styles.evoLocked}`}>
+                  <div className={`${styles.evoNode} ${capturedSet.has(prevCreature.id) ? styles.evoCaptured : styles.evoLocked}`}>
                     <span className={styles.evoIcon}>
-                      {MOCK_CAPTURED.has(prevCreature.id) ? prevCreature.icon : '?'}
+                      {capturedSet.has(prevCreature.id) ? prevCreature.icon : '?'}
                     </span>
                     <span className={styles.evoName}>
-                      {MOCK_CAPTURED.has(prevCreature.id) ? prevCreature.name : '???'}
+                      {capturedSet.has(prevCreature.id) ? prevCreature.name : '???'}
                     </span>
                   </div>
                   <div className={styles.evoArrow}>→</div>
@@ -233,12 +216,12 @@ function CreatureDetailPanel({
               {nextCreature && (
                 <>
                   <div className={styles.evoArrow}>→</div>
-                  <div className={`${styles.evoNode} ${MOCK_CAPTURED.has(nextCreature.id) ? styles.evoCaptured : styles.evoLocked}`}>
+                  <div className={`${styles.evoNode} ${capturedSet.has(nextCreature.id) ? styles.evoCaptured : styles.evoLocked}`}>
                     <span className={styles.evoIcon}>
-                      {MOCK_CAPTURED.has(nextCreature.id) ? nextCreature.icon : '?'}
+                      {capturedSet.has(nextCreature.id) ? nextCreature.icon : '?'}
                     </span>
                     <span className={styles.evoName}>
-                      {MOCK_CAPTURED.has(nextCreature.id) ? nextCreature.name : '???'}
+                      {capturedSet.has(nextCreature.id) ? nextCreature.name : '???'}
                     </span>
                   </div>
                 </>
@@ -247,7 +230,6 @@ function CreatureDetailPanel({
           </div>
         )}
 
-        {/* CTA */}
         {!captured && (
           <Link href="/challenges" className="btn-primary" style={{ justifyContent: 'center', marginTop: 'var(--space-4)' }}>
             Solve a challenge to capture →
@@ -261,9 +243,21 @@ function CreatureDetailPanel({
 // --- Main Page ---------------------------------------------------------------
 
 export default function CodexPage() {
+  const { capturedCodex, shinyCodex, loading } = useProgress();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'captured' | 'undiscovered'>('all');
   const [detailCreature, setDetailCreature] = useState<Creature | null>(null);
+
+  if (loading) {
+    return (
+      <div className={styles.layout}>
+        <AppNav />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+          Hydrating Codex…
+        </div>
+      </div>
+    );
+  }
 
   // Derive display list
   const allCreatures = selectedCategory
@@ -271,21 +265,18 @@ export default function CodexPage() {
     : CREATURES;
 
   const displayCreatures = allCreatures.filter(c => {
-    if (filter === 'captured') return MOCK_CAPTURED.has(c.id);
-    if (filter === 'undiscovered') return !MOCK_CAPTURED.has(c.id);
+    if (filter === 'captured') return capturedCodex.has(c.id);
+    if (filter === 'undiscovered') return !capturedCodex.has(c.id);
     return true;
   });
 
-  const capturedCount = [...MOCK_CAPTURED].filter(id => CREATURES_BY_ID[id]).length;
+  const capturedCount = [...capturedCodex].filter(id => CREATURES_BY_ID[id]).length;
   const totalPct = Math.round((capturedCount / TOTAL_CREATURES) * 100);
 
   return (
     <div className={styles.layout}>
-      {/* -- Top Nav --------------------------------------------------------- */}
       <AppNav />
-
       <main className={styles.main}>
-        {/* -- Page Header ------------------------------------------------- */}
         <div className={styles.pageHeader}>
           <div>
             <div className="t-section-label" style={{ marginBottom: 'var(--space-2)' }}>
@@ -298,7 +289,6 @@ export default function CodexPage() {
             </p>
           </div>
 
-          {/* Global progress ring */}
           <div className={styles.globalProgress}>
             <svg className={styles.ringChart} viewBox="0 0 80 80">
               <circle
@@ -325,9 +315,7 @@ export default function CodexPage() {
           </div>
         </div>
 
-        {/* -- Body: two-column layout -------------------------------------- */}
         <div className={styles.body}>
-          {/* -- Left: Category Sidebar ------------------------------------ */}
           <aside className={styles.sidebar}>
             <div className={styles.sidebarTitle}>Categories</div>
             <button
@@ -353,16 +341,14 @@ export default function CodexPage() {
               <CategoryRow
                 key={cat.id}
                 category={cat}
-                captured={MOCK_CAPTURED}
+                capturedSet={capturedCodex}
                 selectedCategory={selectedCategory}
                 onSelect={setSelectedCategory}
               />
             ))}
           </aside>
 
-          {/* -- Right: Creature Grid --------------------------------------- */}
           <section className={styles.gridSection}>
-            {/* Filter bar */}
             <div className={styles.filterBar}>
               <div className={styles.filterTabs}>
                 {(['all', 'captured', 'undiscovered'] as const).map(f => (
@@ -386,14 +372,13 @@ export default function CodexPage() {
               </div>
             </div>
 
-            {/* Grid */}
             <div className={styles.creatureGrid}>
               {displayCreatures.map(creature => (
                 <CreatureCard
                   key={creature.id}
                   creature={creature}
-                  captured={MOCK_CAPTURED.has(creature.id)}
-                  isShiny={MOCK_SHINY.has(creature.id)}
+                  captured={capturedCodex.has(creature.id)}
+                  isShiny={shinyCodex.has(creature.id)}
                   onClick={setDetailCreature}
                 />
               ))}
@@ -419,11 +404,11 @@ export default function CodexPage() {
         </div>
       </main>
 
-      {/* -- Detail Panel ---------------------------------------------------- */}
       <CreatureDetailPanel
         creature={detailCreature}
-        captured={detailCreature ? MOCK_CAPTURED.has(detailCreature.id) : false}
-        isShiny={detailCreature ? MOCK_SHINY.has(detailCreature.id) : false}
+        captured={detailCreature ? capturedCodex.has(detailCreature.id) : false}
+        isShiny={detailCreature ? shinyCodex.has(detailCreature.id) : false}
+        capturedSet={capturedCodex}
         onClose={() => setDetailCreature(null)}
       />
     </div>

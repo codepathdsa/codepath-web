@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, MouseEvent } from 'react';
+import React, { useState, MouseEvent } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 
 import { CHALLENGES, Challenge } from '@/lib/challenges';
 import AppNav from '@/app/components/AppNav';
-import { getCreatureForChallenge, MOCK_CAPTURED } from '@/lib/codex';
+import { getCreatureForChallenge } from '@/lib/codex';
+import { useProgress } from '@/app/hooks/useProgress';
 
 const TYPE_XP: Record<string, number> = {
   'War Room': 350,
@@ -34,11 +35,20 @@ const TYPE_COUNTS = (['DSA', 'PR Review', 'War Room', 'System Design', 'Tech Deb
 }));
 
 export default function ChallengesPage() {
+  const { solvedState, capturedCodex } = useProgress();
   const [search, setSearch] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const itemsPerPage = 15;
+
+  const enrichedChallenges = CHALLENGES.map(c => {
+    let currentStatus = c.status;
+    if (solvedState[c.id]) {
+      currentStatus = solvedState[c.id].status === 'solved' ? 'Completed' : 'In Progress';
+    }
+    return { ...c, status: currentStatus };
+  });
 
   const [activeTracks, setActiveTracks] = useState<string[]>(['Junior', 'Mid', 'Senior']);
   const [activeTypes, setActiveTypes] = useState<string[]>(['DSA', 'PR Review', 'War Room', 'System Design', 'Tech Debt Tribunal']);
@@ -60,7 +70,7 @@ export default function ChallengesPage() {
 
   const closeDrawer = () => setSelectedChallenge(null);
 
-  const filteredChallenges = CHALLENGES.filter(c => {
+  const filteredChallenges = enrichedChallenges.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) || c.id.toLowerCase().includes(search.toLowerCase());
     const matchesTrack = activeTracks.length === 0 ? true : activeTracks.includes(c.level);
     const matchesType = activeTypes.length === 0 ? true : activeTypes.includes(c.type);
@@ -86,8 +96,8 @@ export default function ChallengesPage() {
   };
 
   const handleRandomChallenge = () => {
-    const randomIndex = Math.floor(Math.random() * CHALLENGES.length);
-    setSelectedChallenge(CHALLENGES[randomIndex]);
+    const randomIndex = Math.floor(Math.random() * enrichedChallenges.length);
+    setSelectedChallenge(enrichedChallenges[randomIndex]);
   };
 
   const getChallengeLink = (c: Challenge) => {
@@ -199,15 +209,15 @@ export default function ChallengesPage() {
 
           <div className={styles.sidebarStats}>
             <div className={styles.sidebarStat}>
-              <span className={styles.sidebarStatVal}>{CHALLENGES.filter(c => c.status === 'Completed').length}</span>
+              <span className={styles.sidebarStatVal}>{enrichedChallenges.filter(c => c.status === 'Completed').length}</span>
               <span className={styles.sidebarStatLabel}>Solved</span>
             </div>
             <div className={styles.sidebarStat}>
-              <span className={styles.sidebarStatVal}>{CHALLENGES.filter(c => c.status === 'In Progress').length}</span>
+              <span className={styles.sidebarStatVal}>{enrichedChallenges.filter(c => c.status === 'In Progress').length}</span>
               <span className={styles.sidebarStatLabel}>In Progress</span>
             </div>
             <div className={styles.sidebarStat}>
-              <span className={styles.sidebarStatVal}>{CHALLENGES.length}</span>
+              <span className={styles.sidebarStatVal}>{enrichedChallenges.length}</span>
               <span className={styles.sidebarStatLabel}>Total</span>
             </div>
           </div>
@@ -230,7 +240,7 @@ export default function ChallengesPage() {
           <div className={styles.pageHeader}>
             <div className={styles.pageTitleRow}>
               <h1 className={styles.pageTitle}>Challenges</h1>
-              <p className={styles.pageSub}>{filteredChallenges.length} of {CHALLENGES.length} scenarios shown</p>
+              <p className={styles.pageSub}>{filteredChallenges.length} of {enrichedChallenges.length} scenarios shown</p>
             </div>
             <div className={styles.headerActions}>
               <button
@@ -268,7 +278,7 @@ export default function ChallengesPage() {
                 <div className={styles.stripXp}>+1,500 XP · 1,203 engineers live</div>
               </Link>
               {(() => {
-                const dsaChallenge = CHALLENGES.find(c => c.id === 'ENG-DSA-001');
+                const dsaChallenge = enrichedChallenges.find(c => c.id === 'ENG-DSA-001');
                 return dsaChallenge ? (
                   <div className={styles.stripCard} onClick={(e) => openDrawer(e, dsaChallenge)}>
                     <div className={styles.stripCardEyebrow}>Weakness: Data Structures</div>
@@ -321,7 +331,7 @@ export default function ChallengesPage() {
                 </div>
               ) : paginatedChallenges.map(c => {
                 const creature = getCreatureForChallenge(c.id);
-                const isCaptured = MOCK_CAPTURED.has(creature.id);
+                const isCaptured = capturedCodex.has(creature.id);
                 return (
                 <div key={c.id} className={styles.challengeCard} onClick={(e) => openDrawer(e, c)}>
                   <div className={styles.cardLeft}>

@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useProgress } from '@/app/hooks/useProgress';
 import styles from './AppNav.module.css';
 
 export default function AppNav() {
   const pathname = usePathname();
+  const { totalXP, streak } = useProgress();
   const active = (href: string) =>
     pathname === href || pathname.startsWith(href + '/');
 
@@ -29,12 +31,12 @@ export default function AppNav() {
 
       <div className={styles.right}>
         <div className={styles.xpPill}>
-          <span>&#9889;</span>
-          <span>2,480 XP</span>
+          <span>⚡</span>
+          <span>{totalXP.toLocaleString()} XP</span>
         </div>
         <div className={styles.streakPill}>
-          <span>&#128293;</span>
-          <span>12d</span>
+          <span>🔥</span>
+          <span>{streak}d</span>
         </div>
 
         {/* Notification bell */}
