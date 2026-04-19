@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @opennextjs/cloudflare build && Rename-Item .open-next\\worker.js _worker.js -ErrorAction SilentlyContinue && Copy-Item -Path .open-next\\assets\\* -Destination .open-next -Recurse -Force -ErrorAction SilentlyContinue && Set-Content -Path .open-next\\_routes.json -Value '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/_next/static/*\",\"/*.ico\",\"/*.svg\"]}'",
+    "build:cf": "npx @opennextjs/cloudflare build && powershell -Command \"Rename-Item .open-next/worker.js _worker.js -ErrorAction SilentlyContinue; Copy-Item -Path .open-next/assets/* -Destination .open-next -Recurse -Force -ErrorAction SilentlyContinue; Set-Content -Path .open-next/_routes.json -Value '{\\\"version\\\":1,\\\"include\\\":[\\\"/*\\\"],\\\"exclude\\\":[\\\"/_next/static/*\\\",\\\"/*.ico\\\",\\\"/*.svg\\\"]}'\"",
     "preview": "npx wrangler pages dev",
-    "deploy": "npx wrangler pages deploy .open-next --project-name=codepath-web",
+    "deploy": "npm run build:cf && npx wrangler pages deploy .open-next --project-name=codepath-web",
     "start": "next start",
     "lint": "eslint"
   },
