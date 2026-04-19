@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @opennextjs/cloudflare build",
+    "build:cf": "npx @opennextjs/cloudflare build && Rename-Item .open-next\\worker.js _worker.js -ErrorAction SilentlyContinue && Copy-Item -Path .open-next\\assets\\* -Destination .open-next -Recurse -Force -ErrorAction SilentlyContinue && Set-Content -Path .open-next\\_routes.json -Value '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/_next/static/*\",\"/*.ico\",\"/*.svg\"]}'",
     "preview": "npx wrangler pages dev",
     "deploy": "npx wrangler pages deploy .open-next --project-name=codepath-web",
     "start": "next start",
@@ -15,7 +15,9 @@
     "@auth/neon-adapter": "^1.7.4",
     "@monaco-editor/react": "^4.7.0",
     "@neondatabase/serverless": "^1.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@xyflow/react": "^12.10.2",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^17.3.1",
     "eslint-config-next": "15.3.1",
     "gray-matter": "^4.0.3",
@@ -27,6 +29,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "rehype-highlight": "^7.0.2",
+    "resend": "^6.12.0",
     "stripe": "^20.4.1",
     "zustand": "^5.0.12"
   },

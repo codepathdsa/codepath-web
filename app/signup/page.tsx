@@ -1,6 +1,7 @@
 import OAuthButtons from '../components/OAuthButtons';
 import Link from 'next/link';
 import styles from '../auth.module.css';
+import { signup } from '../login/actions';
 
 export default async function SignupPage({
   searchParams,
@@ -37,11 +38,49 @@ export default async function SignupPage({
 
           {error && <div className={styles.errorMsg}>{decodeURIComponent(error)}</div>}
 
-          {/* 
-            Auth.js creates a new account automatically on first OAuth sign-in.
-            No separate registration step needed. 
-          */}
           <OAuthButtons next="/onboarding" />
+
+          <div className={styles.divider}>
+            <div className={styles.dividerLine}></div>
+            <span className={styles.dividerText}>or</span>
+            <div className={styles.dividerLine}></div>
+          </div>
+
+          <form className={styles.form} action={signup}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Full Name</label>
+              <input 
+                type="text" 
+                name="name" 
+                placeholder="Linus Torvalds" 
+                className={styles.input} 
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Email Address</label>
+              <input 
+                type="email" 
+                name="email" 
+                placeholder="engineer@company.com" 
+                className={styles.input} 
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Password</label>
+              <input 
+                type="password" 
+                name="password" 
+                placeholder="••••••••" 
+                className={styles.input} 
+                required 
+              />
+            </div>
+            <button type="submit" className="btn-primary" style={{ marginTop: 'var(--space-2)' }}>
+              Create Account
+            </button>
+          </form>
 
           <div className={styles.terms}>
             By signing up you agree to our <Link href="#">Terms</Link> and <Link href="#">Privacy Policy</Link>

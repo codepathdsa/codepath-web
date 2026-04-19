@@ -1,13 +1,14 @@
 import OAuthButtons from '../components/OAuthButtons';
 import Link from 'next/link';
 import styles from '../auth.module.css';
+import { credentialsSignIn } from './actions';
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>
+  searchParams: Promise<{ error?: string; success?: string; next?: string }>
 }) {
-  const { error, next = '/dashboard' } = await searchParams;
+  const { error, success, next = '/dashboard' } = await searchParams;
 
   return (
     <div className={styles.container}>
@@ -32,12 +33,49 @@ export default async function LoginPage({
         <div className={styles.formWrapper}>
           <div className={styles.header}>
             <h1 className={styles.title}>Welcome back</h1>
-            <p className={styles.subtitle}>Sign in to save your progress and access premium scenarios.</p>
+            <p className={styles.subtitle}>Sign in with your verified account to access premium scenarios.</p>
           </div>
 
           {error && <div className={styles.errorMsg}>{decodeURIComponent(error)}</div>}
+          {success && <div className={styles.successMsg}>{decodeURIComponent(success)}</div>}
 
           <OAuthButtons next={next} />
+
+          <div className={styles.divider}>
+            <div className={styles.dividerLine}></div>
+            <span className={styles.dividerText}>or</span>
+            <div className={styles.dividerLine}></div>
+          </div>
+
+          <form className={styles.form} action={credentialsSignIn}>
+            <input type="hidden" name="next" value={next} />
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Email Address</label>
+              <input 
+                type="email" 
+                name="email" 
+                placeholder="engineer@company.com" 
+                className={styles.input} 
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>
+                Password
+                <Link href="#" className={styles.forgotLink}>Forgot?</Link>
+              </label>
+              <input 
+                type="password" 
+                name="password" 
+                placeholder="••••••••" 
+                className={styles.input} 
+                required 
+              />
+            </div>
+            <button type="submit" className="btn-primary" style={{ marginTop: 'var(--space-2)' }}>
+              Sign In
+            </button>
+          </form>
 
           <div className={styles.bottomLink}>
             Don&apos;t have an account? <Link href="/signup">Sign up →</Link>
