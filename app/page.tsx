@@ -1,39 +1,40 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 
-/* --- Parallax hook ------------------------------------------------------- */
-function useParallax(speed: number) {
-  const ref = useRef<HTMLDivElement>(null);
+/* ─── Intersection observer hook ─────────────────────────────────────────── */
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const onScroll = () => {
-      el.style.transform = `translateY(${window.scrollY * speed}px)`;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [speed]);
-  return ref;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
 }
 
-/* --- Animated counter ---------------------------------------------------- */
-function AnimatedStat({ end, suffix = '', label }: { end: number; suffix?: string; label: string }) {
+/* ─── Animated counter ────────────────────────────────────────────────────── */
+function AnimatedStat({ end, suffix = '', label, prefix = '' }: { end: number; suffix?: string; prefix?: string; label: string }) {
   const [value, setValue] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const animated = useRef(false);
-
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !animated.current) {
         animated.current = true;
         const start = performance.now();
-        const duration = 900;
+        const duration = 1400;
         const update = (now: number) => {
           const t = Math.min((now - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - t, 3);
+          const eased = 1 - Math.pow(1 - t, 4);
           setValue(Math.round(eased * end));
           if (t < 1) requestAnimationFrame(update);
         };
@@ -43,125 +44,118 @@ function AnimatedStat({ end, suffix = '', label }: { end: number; suffix?: strin
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [end]);
-
   return (
     <div ref={ref} className={styles.statItem}>
-      <div className={styles.statValue}>
-        {value.toLocaleString()}<span className={styles.statAccent}>{suffix}</span>
-      </div>
+      <div className={styles.statValue}>{prefix}{value.toLocaleString()}<span className={styles.statSuffix}>{suffix}</span></div>
       <div className={styles.statLabel}>{label}</div>
     </div>
   );
 }
 
-/* --- Ticker (marquee) ---------------------------------------------------- */
-const COMPANIES = ['Google','Stripe','Amazon','Vercel','Shopify','Cloudflare','Datadog','Linear','Discord','Figma','Notion','PlanetScale'];
+/* ─── Scroll progress hook ────────────────────────────────────────────────── */
+function useScrollProgress() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const max = document.body.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? window.scrollY / max : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return progress;
+}
 
-/* --- Creatures preview data ---------------------------------------------- */
+/* ─── Data ────────────────────────────────────────────────────────────────── */
+const COMPANIES = ['Google','Stripe','Amazon','Vercel','Shopify','Cloudflare','Datadog','Linear','Discord','Figma','Notion','PlanetScale','GitHub','Atlassian','Twilio'];
+
 const CREATURES_PREVIEW = [
-  { emoji: '🐉', name: 'Cache Hydra',      rarity: 'Legendary', color: '#f59e0b' },
-  { emoji: '👻', name: 'N+1 Phantom',       rarity: 'Rare',      color: '#8b5cf6' },
-  { emoji: '⚔',  name: 'Concurrency Lord',  rarity: 'Epic',      color: '#ef4444' },
-  { emoji: '🌀', name: 'Race Condition',    rarity: 'Rare',      color: '#3b82f6' },
-  { emoji: '💳', name: 'Webhook Phantom',   rarity: 'Epic',      color: '#ec4899' },
-  { emoji: '🌩', name: 'Thunder Cache',     rarity: 'Rare',      color: '#06b6d4' },
-  { emoji: '🔮', name: 'Deadlock Specter',  rarity: 'Uncommon',  color: '#62de61' },
-  { emoji: '🦠', name: 'Memory Parasite',   rarity: 'Common',    color: '#10b981' },
+  { name: 'Cache Hydra',      rarity: 'Legendary', color: 'oklch(0.78 0.16 75)',  glyph: '⬡' },
+  { name: 'N+1 Phantom',      rarity: 'Rare',      color: 'oklch(0.62 0.18 290)', glyph: '◈' },
+  { name: 'Concurrency Lord', rarity: 'Epic',      color: 'oklch(0.62 0.22 27)',  glyph: '⬟' },
+  { name: 'Race Condition',   rarity: 'Rare',      color: 'oklch(0.62 0.18 240)', glyph: '◉' },
+  { name: 'Webhook Phantom',  rarity: 'Epic',      color: 'oklch(0.65 0.20 350)', glyph: '⬢' },
+  { name: 'Thunder Cache',    rarity: 'Rare',      color: 'oklch(0.72 0.15 200)', glyph: '◆' },
+  { name: 'Deadlock Specter', rarity: 'Uncommon',  color: 'oklch(0.72 0.18 142)', glyph: '◇' },
+  { name: 'Memory Parasite',  rarity: 'Common',    color: 'oklch(0.68 0.14 155)', glyph: '○' },
 ];
 
-/* --- Testimonials -------------------------------------------------------- */
 const TESTIMONIALS = [
-  {
-    handle: '@priya_srini',
-    name: 'Priya S.',
-    sub: 'SWE II → Staff · Stripe',
-    body: `I've failed 4 staff-level system design loops. After 3 weeks on engprep, I passed 3 in a row. The War Room scenarios are eerily close to what they actually ask.`,
-    stars: 5,
-  },
-  {
-    handle: '@backend_dev_nyc',
-    name: 'Marcus T.',
-    sub: 'Senior SWE · Cloudflare',
-    body: `Finally. An interview tool that doesn't make me feel like I'm studying for a math competition. The War Room stuff is exactly what we ask in our senior loops.`,
-    stars: 5,
-  },
-  {
-    handle: '@frontend_monk',
-    name: 'Aisha L.',
-    sub: 'Mid → Senior · Shopify',
-    body: `I was failing System Design interviews for 3 months. engprep's simulator showed me WHERE my bottlenecks were instead of making me draw boxes on a whiteboard.`,
-    stars: 5,
-  },
-  {
-    handle: '@siddharth_g_dev',
-    name: 'Siddharth G.',
-    sub: 'SWE III · Google',
-    body: 'The PR Review mode caught exactly the kind of bugs that show up in real code reviews. I felt prepared for actual work, not just whiteboard tricks.',
-    stars: 5,
-  },
+  { handle: '@priya_srini',     name: 'Priya S.',      sub: 'SWE II → Staff · Stripe',  body: `Failed 4 staff-level system design loops. After 3 weeks on engprep, passed 3 in a row. The War Room scenarios are eerily close to what they actually ask.` },
+  { handle: '@backend_dev_nyc', name: 'Marcus T.',     sub: 'Senior SWE · Cloudflare',  body: `Finally. A tool that doesn't make me feel like I'm studying for a math competition. The War Room is exactly what we ask in our senior loops.` },
+  { handle: '@frontend_monk',   name: 'Aisha L.',      sub: 'Mid → Senior · Shopify',   body: `Was failing System Design for 3 months. engprep showed me WHERE my bottlenecks were instead of making me draw boxes on a whiteboard.` },
+  { handle: '@siddharth_g_dev', name: 'Siddharth G.', sub: 'SWE III · Google',          body: 'The PR Review mode caught exactly the kind of bugs that show up in real code reviews. I felt prepared for actual work, not just whiteboard tricks.' },
 ];
 
-/* --- Main Page ----------------------------------------------------------- */
+const MODES = [
+  { id: 'war', label: 'War Room', badge: 'P0 Incident', color: 'oklch(0.62 0.22 27)', desc: 'Live debugging under real time pressure. Something is broken and customers are impacted. Own it.' },
+  { id: 'pr',  label: 'PR Review', badge: 'Security', color: 'oklch(0.78 0.16 75)', desc: 'Catch real vulnerabilities, logic errors, and performance bugs in code just like your senior engineers do.' },
+  { id: 'sys', label: 'System Design', badge: 'Architecture', color: 'oklch(0.62 0.18 240)', desc: 'Drop components on a canvas, connect them into an architecture, validate against real engineering constraints.' },
+  { id: 'dsa', label: 'Contextual DSA', badge: 'On-Call', color: 'oklch(0.62 0.18 290)', desc: 'Algorithms framed in actual engineering scenarios. Not "reverse a linked list" — "debug why the retry queue is exploding."' },
+];
+
+/* ─── Main Page ──────────────────────────────────────────────────────────── */
 export default function Home() {
-  const [activeFeatureTab, setActiveFeatureTab] = useState('war-room');
-  const [demoSelected, setDemoSelected] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeEngineers] = useState(847);
-
-  const dotGridRef = useParallax(0.25);
-  const bloomRef   = useParallax(0.12);
-  const orbsRef    = useParallax(0.08);
+  const [demoSelected, setDemoSelected] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [activeMode, setActiveMode] = useState(0);
+  const scrollProgress = useScrollProgress();
 
   useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 40);
+    const onScroll = () => setNavScrolled(window.scrollY > 60);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const copyCommand = () => {
+  const copyCommand = useCallback(() => {
     navigator.clipboard.writeText('npm install -g engprep').catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }, []);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <div className={styles.main}>
+    <div className={styles.root}>
 
-      {/* Warli art background texture */}
-      <div className={styles.warliBg} aria-hidden="true" />
+      {/* ── Scroll progress ─────────────────────────────────────────────── */}
+      <div className={styles.progressBar} style={{ transform: `scaleX(${scrollProgress})` }} />
 
-      {/* -- Nav ----------------------------------------------------------- */}
-      <nav className={`${styles.nav} ${navScrolled ? styles.navScrolled : ''}`}>
-        <Link href="/" className={styles.navLogo}>
-          engprep<span className={styles.navLogoCursor} />
+      {/* ── Background layers ───────────────────────────────────────────── */}
+      <div className={styles.bgGrid} aria-hidden="true" />
+      <div className={styles.bgBloom} aria-hidden="true" />
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          NAV — Frosted glass, collapses to glassmorphism on scroll
+      ═══════════════════════════════════════════════════════════════════ */}
+      <nav className={`${styles.nav} ${navScrolled ? styles.navScrolled : ''}`} role="navigation">
+        <Link href="/" className={styles.navBrand}>
+          engprep<span className={styles.navBrandCursor} />
         </Link>
 
-        <div className={styles.navLinks}>
+        <div className={styles.navCenter}>
           <Link href="/challenges" className={styles.navLink}>Challenges</Link>
           <Link href="/leaderboard" className={styles.navLink}>Leaderboard</Link>
           <Link href="/raid" className={styles.navLink}>
-            <span className={styles.navRaidDot} />Raid
+            <span className={styles.raidDot} aria-label="live" />
+            Raid
           </Link>
           <Link href="/codex" className={styles.navLink}>Codex</Link>
           <a href="#pricing" className={styles.navLink} onClick={e => { e.preventDefault(); scrollTo('pricing'); }}>Pricing</a>
         </div>
 
-        <div className={styles.navActions}>
-          <div className={styles.navLive}>
+        <div className={styles.navRight}>
+          <div className={styles.navLivePill}>
             <span className={styles.navLiveDot} />
-            {activeEngineers.toLocaleString()} online
+            <span>847 online</span>
           </div>
           <Link href="/login"  className={`${styles.navBtn} ${styles.navBtnGhost}`}>Log in</Link>
           <Link href="/signup" className={`${styles.navBtn} ${styles.navBtnPrimary}`}>Start free →</Link>
         </div>
 
-        <button className={styles.hamburger} onClick={() => setMobileMenuOpen(p => !p)} aria-label="Menu">
+        <button className={styles.hamburger} onClick={() => setMobileMenuOpen(p => !p)} aria-label="Open menu">
           <span /><span /><span />
         </button>
       </nav>
@@ -170,91 +164,98 @@ export default function Home() {
         <div className={styles.mobileMenu}>
           <Link href="/challenges" onClick={() => setMobileMenuOpen(false)}>Challenges</Link>
           <Link href="/leaderboard" onClick={() => setMobileMenuOpen(false)}>Leaderboard</Link>
-          <Link href="/raid" onClick={() => setMobileMenuOpen(false)}>⚔ Raid</Link>
+          <Link href="/raid" onClick={() => setMobileMenuOpen(false)}>Raid</Link>
           <Link href="/codex" onClick={() => setMobileMenuOpen(false)}>Codex</Link>
           <Link href="/signup" className={styles.mobileMenuCta} onClick={() => setMobileMenuOpen(false)}>Start free →</Link>
         </div>
       )}
 
-      {/* -- Hero ----------------------------------------------------------- */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          HERO — Split emphasis, terminal as proof not hero
+      ═══════════════════════════════════════════════════════════════════ */}
       <section className={styles.hero}>
-        <div ref={dotGridRef} className={`${styles.parallaxLayer} ${styles.heroDotGrid}`} />
-        <div ref={bloomRef}   className={`${styles.parallaxLayer} ${styles.heroBloom}`} />
-        <div ref={orbsRef}    className={`${styles.parallaxLayer} ${styles.heroOrbs}`} />
+        <div className={styles.heroGlowLeft}  aria-hidden="true" />
+        <div className={styles.heroGlowRight} aria-hidden="true" />
 
-        <div className={styles.heroContent}>
-          <div className="container">
-            <div className={styles.heroBadge}>
-              <span className={styles.heroBadgeDot} />
-              Built for working engineers
-            </div>
+        <div className={styles.heroInner}>
+          {/* Badge */}
+          <div className={styles.heroBadge}>
+            <span className={styles.heroBadgeDot} />
+            4,200+ engineers from Google, Stripe, Cloudflare
+          </div>
 
-            <h1 className={styles.heroHeadline}>
-              Stop reversing<br />
-              <span className={styles.heroGradient}>binary trees.</span><br />
-              Start engineering.
-            </h1>
+          {/* Split-emphasis headline — Skills.md 3.2 */}
+          <h1 className={styles.heroHeadline}>
+            <span className={styles.heroHeadlineDim}>Stop reversing binary trees.</span>
+            <br />
+            <span className={styles.heroHeadlineBright}>Start engineering.</span>
+          </h1>
 
-            <p className={styles.heroSub}>
-              The only interview platform built around how software actually works —
-              incidents, PR reviews, system failures, and real trade-offs.
-            </p>
+          <p className={styles.heroSub}>
+            LeetCode is fine. But your job looks like this: a checkout is failing at 3am,
+            a PR is hiding a race condition, and your system just hit 10M users. Train for that.
+          </p>
 
-            <div className={styles.heroActions}>
-              <Link href="/signup" className={styles.heroCta}>Start Free — no card needed</Link>
-              <button className={styles.heroGhost} onClick={() => scrollTo('demo')}>See how it works ↓</button>
-            </div>
+          <div className={styles.heroActions}>
+            <Link href="/signup" className={styles.heroCta} id="hero-cta-primary">
+              Start free — no card needed
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{marginLeft:6}}><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </Link>
+            <button className={styles.heroSecondary} onClick={() => scrollTo('modes')} id="hero-see-how">
+              See how it works
+            </button>
+          </div>
 
-            <div className={styles.heroAvatarRow}>
-              {['SG','PR','AK','MN','OS','CL'].map((i, n) => (
-                <div key={n} className={styles.heroAvatar} style={{ marginLeft: n > 0 ? -10 : 0, zIndex: 6 - n }} />
+          {/* Social proof */}
+          <div className={styles.heroProof}>
+            <div className={styles.heroAvatarStack}>
+              {[0,1,2,3,4,5].map(n => (
+                <div key={n} className={`${styles.heroAvatar} ${styles[`heroAvatar${n}` as keyof typeof styles]}`} />
               ))}
-              <div className={styles.heroAvatarText}>
-                Joined by <strong>4,200+</strong> engineers from Google, Stripe, Amazon, Vercel
-              </div>
             </div>
+            <span className={styles.heroProofText}>
+              Joined by <strong>4,200+</strong> engineers from Google, Stripe, and Cloudflare
+            </span>
+          </div>
 
-            {/* CLI block */}
-            <div className={styles.heroCliWrap}>
-              <div className={styles.cliCard}>
-                <div className={styles.cliBar}>
-                  <span className={styles.cliDot} style={{ background: '#ef4444' }} />
-                  <span className={styles.cliDot} style={{ background: '#f59e0b' }} />
-                  <span className={styles.cliDot} style={{ background: '#62de61' }} />
-                  <span className={styles.cliTitle}>terminal</span>
-                  <button className={`${styles.cliCopy} ${copied ? styles.cliCopyDone : ''}`} onClick={copyCommand}>
-                    {copied ? '✓' : 'copy'}
-                  </button>
-                </div>
-                <div className={styles.cliBody}>
-                  <div className={styles.cliLine}>
-                    <span className={styles.cliPrompt}>$</span>
-                    <span className={styles.cliCmd}>npm install -g engprep</span>
-                  </div>
-                  <div className={styles.cliOut}>✓ engprep installed (v2.1.0)</div>
-                  <div className={styles.cliLine}>
-                    <span className={styles.cliPrompt}>$</span>
-                    <span className={styles.cliCmd}>engprep pull war-room-42</span>
-                  </div>
-                  <div className={styles.cliOut}>✓ Incident bundle downloaded → ./engprep/incidents/war-room-42/</div>
-                  <div className={styles.cliLine}>
-                    <span className={styles.cliPrompt}>$</span>
-                    <span className={styles.cliCursor} />
-                  </div>
-                </div>
+          {/* Terminal — proof, not the main focus */}
+          <div className={styles.heroTerminal}>
+            <div className={styles.termBar}>
+              <span className={styles.termDot} style={{ background: '#ef4444' }} />
+              <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+              <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
+              <span className={styles.termTitle}>incident — war-room-42</span>
+              <button className={`${styles.termCopy} ${copied ? styles.termCopyDone : ''}`} onClick={copyCommand}>
+                {copied ? '✓ copied' : 'copy'}
+              </button>
+            </div>
+            <div className={styles.termBody}>
+              <div className={styles.termLine}>
+                <span className={styles.termPrompt}>$</span>
+                <span className={styles.termCmd}>engprep pull war-room-42</span>
+              </div>
+              <div className={styles.termOut}>✓ incident bundle → ./incidents/war-room-42/</div>
+              <div className={styles.termLine}>
+                <span className={styles.termPrompt}>$</span>
+                <span className={styles.termCmd}>engprep run --mode=war-room</span>
+              </div>
+              <div className={styles.termOut} style={{color:'oklch(0.62 0.22 27)'}}>⚠ [P0] payment-processor: latency 34,212ms · 6 regions down</div>
+              <div className={styles.termLine}>
+                <span className={styles.termPrompt}>$</span>
+                <span className={styles.termCursor} />
               </div>
             </div>
           </div>
         </div>
 
-        <button className={styles.scrollHint} onClick={() => scrollTo('problem')} aria-label="Scroll">
+        <button className={styles.scrollHint} onClick={() => scrollTo('ticker')} aria-label="Scroll down">
           <div className={styles.scrollHintLine} />
-          <span>Scroll</span>
+          <span>scroll</span>
         </button>
       </section>
 
-      {/* -- Company ticker ------------------------------------------------- */}
-      <div className={styles.ticker}>
+      {/* ── Company ticker ──────────────────────────────────────────────── */}
+      <div className={styles.ticker} id="ticker">
         <div className={styles.tickerFadeLeft} />
         <div className={styles.tickerTrack}>
           {[...COMPANIES, ...COMPANIES].map((c, i) => (
@@ -264,16 +265,26 @@ export default function Home() {
         <div className={styles.tickerFadeRight} />
       </div>
 
-      {/* -- Problem Statement ---------------------------------------------- */}
-      <section id="problem" className={styles.problemStatement}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          PROBLEM FRAMING — Honest, not attacking LeetCode
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.problem}>
         <div className="container">
-          <p className={styles.sectionLabel}>The problem with LeetCode</p>
-          <h2 className={`t-heading ${styles.problemHeader}`}>You've been practicing the wrong thing.</h2>
+          <p className={styles.eyebrow}>The gap</p>
+          <h2 className={styles.problemHeadline}>
+            <span className={styles.dimText}>LeetCode is fine.</span>
+            <br />But your job looks like this.
+          </h2>
+          <p className={styles.problemSub}>
+            Both matter. Only one of them actually gets you hired and makes you a better engineer.
+          </p>
+
           <div className={styles.problemGrid}>
+            {/* LeetCode side — low contrast, de-emphasised */}
             <div className={styles.problemColumn}>
               <div className={styles.problemColHeader}>
-                <span className={styles.problemBadgeBad}>LeetCode</span>
-                What it tests
+                <span className={styles.problemBadgeMuted}>LeetCode</span>
+                <span className={styles.problemColTitle}>Interview prep</span>
               </div>
               {[
                 'Reverse a linked list in O(n)',
@@ -281,37 +292,43 @@ export default function Home() {
                 'Implement BFS from memory',
                 'Solve DP problems in 20 minutes',
               ].map(t => (
-                <div key={t} className={`${styles.problemItem} ${styles.problemBad}`}>
-                  <span className={styles.problemX}>✗</span>{t}
+                <div key={t} className={`${styles.problemRow} ${styles.problemRowMuted}`}>
+                  <span className={styles.problemBullet}>–</span>
+                  <span>{t}</span>
                 </div>
               ))}
             </div>
-            <div className={styles.problemVs}>vs</div>
-            <div className={styles.problemColumn}>
+
+            <div className={styles.problemDivider}><span>vs</span></div>
+
+            {/* EngPrep side — full brightness */}
+            <div className={`${styles.problemColumn} ${styles.problemColumnGood}`}>
               <div className={styles.problemColHeader}>
                 <span className={styles.problemBadgeGood}>engprep</span>
-                What your job requires
+                <span className={styles.problemColTitle}>What your job requires</span>
               </div>
               {[
-                'Debug why checkout is failing for 12% of users',
-                'Review a PR that will cause a memory leak',
-                'Design a system that won\'t crash at 10M users',
+                'Debug why checkout fails for 12% of users',
+                'Review a PR hiding a memory leak',
+                'Design a system handling 10M users/day',
                 'Own a P0 incident under real time pressure',
               ].map(t => (
-                <div key={t} className={`${styles.problemItem} ${styles.problemGood}`}>
-                  <span className={styles.problemCheck}>✓</span>{t}
+                <div key={t} className={`${styles.problemRow} ${styles.problemRowGood}`}>
+                  <span className={styles.problemCheck}>✓</span>
+                  <span>{t}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className={styles.problemNote}>
-            Both matter. Only one of them actually gets you hired <em>and</em> makes you a better engineer.
-          </div>
+
+          <p className={styles.problemNote}>
+            Both matter. Only one of them gets you hired <em>and</em> makes you a better engineer.
+          </p>
         </div>
       </section>
 
-      {/* -- Stats ---------------------------------------------------------- */}
-      <section className={styles.statsSection}>
+      {/* ── Stats bar ────────────────────────────────────────────────────── */}
+      <div className={styles.statsBar}>
         <div className="container">
           <div className={styles.statsGrid}>
             <AnimatedStat end={4200}  suffix="+" label="Engineers enrolled" />
@@ -320,160 +337,74 @@ export default function Home() {
             <AnimatedStat end={3}     suffix="mo" label="Avg. prep time saved" />
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* -- Feature Tabs --------------------------------------------------- */}
-      <section className={styles.features}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          FOUR MODES — Show the product, not the description
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.modes} id="modes">
         <div className="container">
-          <div className={styles.featuresHeader}>
-            <p className={styles.sectionLabel}>What you practice</p>
-            <h2 className="t-heading">Four modes. Zero toy problems.</h2>
-            <p className={styles.featuresSub}>
-              Every mode mirrors a real interview or on-the-job scenario.
-            </p>
-          </div>
+          <p className={styles.eyebrow}>Four practice modes</p>
+          <h2 className={styles.sectionHeadline}>
+            Zero toy problems.
+          </h2>
+          <p className={styles.sectionSub}>
+            Every session simulates real engineering: a live incident, a vulnerable PR, a system under load. Pick your mode.
+          </p>
 
-          <div className={styles.tabsWrapper}>
-            {[
-              { id: 'war-room', label: '⚡ War Room',       color: '#ef4444' },
-              { id: 'dsa',      label: '🧩 Contextual DSA', color: '#3b82f6' },
-              { id: 'pr',       label: '🔍 PR Review',      color: '#f59e0b' },
-              { id: 'system',   label: '🏗 System Design',  color: '#8b5cf6' },
-            ].map(({ id, label, color }) => (
+          {/* Mode nav */}
+          <div className={styles.modeNav}>
+            {MODES.map((m, i) => (
               <button
-                key={id}
-                className={`${styles.featureTab} ${activeFeatureTab === id ? styles.featureTabActive : ''}`}
-                style={activeFeatureTab === id ? { '--tab-color': color } as React.CSSProperties : undefined}
-                onClick={() => setActiveFeatureTab(id)}
+                key={m.id}
+                className={`${styles.modeTab} ${activeMode === i ? styles.modeTabActive : ''}`}
+                style={activeMode === i ? { '--mode-color': m.color } as React.CSSProperties : undefined}
+                onClick={() => setActiveMode(i)}
               >
-                {label}
+                <span className={styles.modeTabBadge} style={activeMode === i ? { background: m.color + '22', color: m.color, borderColor: m.color + '44' } : undefined}>
+                  {m.badge}
+                </span>
+                {m.label}
               </button>
             ))}
           </div>
 
-          <div className={styles.featureContent}>
-            <div className={styles.mockupHeader}>
-              <span className={styles.mockupDot} style={{ background: '#ef4444' }} />
-              <span className={styles.mockupDot} style={{ background: '#f59e0b' }} />
-              <span className={styles.mockupDot} style={{ background: '#62de61' }} />
-              <span className={styles.mockupTitle}>workspace — {activeFeatureTab}</span>
+          {/* Mode panel */}
+          <div className={styles.modePanel} style={{ '--mode-color': MODES[activeMode].color } as React.CSSProperties}>
+            <div className={styles.modePanelLeft}>
+              <p className={styles.modePanelEyebrow} style={{ color: MODES[activeMode].color }}>{MODES[activeMode].label}</p>
+              <h3 className={styles.modePanelTitle}>{MODES[activeMode].desc}</h3>
+              <Link href="/signup" className={styles.modePanelBtn} style={{ background: MODES[activeMode].color }}>
+                Try {MODES[activeMode].label} →
+              </Link>
             </div>
-            <div className={styles.mockupBody}>
-              {activeFeatureTab === 'war-room' && (
-                <div className={styles.warRoomPreview}>
-                  <div className={styles.warRoomAlert}>
-                    <span className={styles.warRoomAlertDot} />
-                    ENG-911: Checkout failure · 12% error rate · Redis hit rate 94% → 31% · Deploy at 14:28
-                  </div>
-                  <div className={styles.warRoomMetrics}>
-                    {[
-                      { label: 'Error Rate', value: '12.4%', danger: true },
-                      { label: 'P99 Latency', value: '2.4s', danger: true },
-                      { label: 'Cache Hits', value: '31%', danger: true },
-                      { label: 'DB CPU', value: '97%', danger: true },
-                    ].map(m => (
-                      <div key={m.label} className={styles.warMetric}>
-                        <div className={styles.warMetricLabel}>{m.label}</div>
-                        <div className={`${styles.warMetricVal} ${m.danger ? styles.danger : ''}`}>{m.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={styles.warTerminal}>
-                    <div className={styles.warLog}><span className={styles.logWarn}>[WARN]</span>  14:31:02 · Cache eviction rate exceeded threshold</div>
-                    <div className={styles.warLog}><span className={styles.logError}>[ERROR]</span> 14:31:45 · DB connection pool exhausted (512/512)</div>
-                    <div className={styles.warLog}><span className={styles.logError}>[FATAL]</span> 14:31:57 · payment-processor-3: OOM killed</div>
-                    <div className={styles.warLog}><span className={styles.cliPrompt}>$</span> <span className={styles.cliCursor} /></div>
-                  </div>
-                </div>
-              )}
-              {activeFeatureTab === 'dsa' && (
-                <div className={styles.dsaPreview}>
-                  <div className={styles.dsaLabel}>CONTEXTUAL DSA — SCENARIO MODE</div>
-                  <div className={styles.dsaScenario}>
-                    You are on-call. A payment retry queue is growing exponentially.
-                    Identify, in O(n log n), which payment IDs are duplicated so they
-                    can be deduplicated before re-processing.
-                  </div>
-                  <div className={styles.dsaCode}>
-                    <span className={styles.codeComment}>{'// Input: paymentIds = ["p-001","p-003","p-001","p-007","p-003"]'}</span>{'\n'}
-                    <span className={styles.codeComment}>{'// Expected output: ["p-001","p-003"]'}</span>{'\n\n'}
-                    <span className={styles.codeKw}>function</span>{' '}
-                    <span className={styles.codeFn}>findDuplicates</span>
-                    {'(paymentIds: string[]): string[] {\n'}
-                    {'  '}<span className={styles.codeComment}>{'// your solution here'}</span>{'\n'}
-                    {'}'}
-                  </div>
-                </div>
-              )}
-              {activeFeatureTab === 'pr' && (
-                <div className={styles.prPreview}>
-                  <div className={styles.prFileBar}>auth/session.ts — spot the vulnerability</div>
-                  {[
-                    { n: 12, type: '',        code: 'export async function createSession(userId: string) {' },
-                    { n: 13, type: '',        code: "  const token = Math.random().toString(36);" },
-                    { n: 14, type: 'removed', code: '  await db.sessions.insert({ userId, token, expires: Date.now() + 86400000 });' },
-                    { n: 15, type: 'added',   code: '  await db.sessions.insert({ userId, token, expires: Date.now() + 86400000 * 30 });' },
-                    { n: 16, type: '',        code: '  return token;' },
-                    { n: 17, type: '',        code: '}' },
-                  ].map((line, i) => (
-                    <div key={i} className={`${styles.diffLine} ${line.type === 'removed' ? styles.diffRemoved : line.type === 'added' ? styles.diffAdded : ''}`}>
-                      <span className={styles.diffNum}>{line.n}</span>
-                      <span className={styles.diffSign}>{line.type === 'removed' ? '−' : line.type === 'added' ? '+' : ' '}</span>
-                      <span className={styles.diffCode}>{line.code}</span>
-                    </div>
-                  ))}
-                  <div className={styles.prHint}>→ Two vulnerabilities. Click any line to leave a review comment.</div>
-                </div>
-              )}
-              {activeFeatureTab === 'system' && (
-                <div className={styles.sysPreview}>
-                  <div className={styles.sysLabel}>System Design Canvas</div>
-                  <div className={styles.sysDiagram}>
-                    {[
-                      { label: 'Client', x: 8,  y: 42, color: '#3b82f6' },
-                      { label: 'CDN',    x: 30, y: 18, color: '#8b5cf6' },
-                      { label: 'API',    x: 50, y: 42, color: '#62de61' },
-                      { label: 'Cache',  x: 72, y: 20, color: '#f59e0b' },
-                      { label: 'DB',     x: 72, y: 62, color: '#ef4444' },
-                    ].map(node => (
-                      <div
-                        key={node.label}
-                        className={styles.sysNode}
-                        style={{ left: `${node.x}%`, top: `${node.y}%`, borderColor: node.color, color: node.color }}
-                      >
-                        {node.label}
-                      </div>
-                    ))}
-                    <svg className={styles.sysLines} viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <line x1="14" y1="44" x2="32" y2="22" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
-                      <line x1="14" y1="46" x2="52" y2="46" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
-                      <line x1="56" y1="44" x2="72" y2="24" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
-                      <line x1="56" y1="48" x2="72" y2="64" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
-                    </svg>
-                  </div>
-                  <div className={styles.sysPrompt}>Design a URL shortener handling 100K writes/sec</div>
-                  <Link href="/challenges/system-design/512" className={styles.sysBtn}>Open Canvas →</Link>
-                </div>
-              )}
+            <div className={styles.modePanelRight}>
+              {activeMode === 0 && <WarRoomVisual />}
+              {activeMode === 1 && <PRReviewVisual />}
+              {activeMode === 2 && <SystemDesignVisual />}
+              {activeMode === 3 && <DSAVisual />}
             </div>
           </div>
         </div>
       </section>
 
-      {/* -- Creature Codex ------------------------------------------------- */}
-      <section className={styles.codexSection}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          MASTERY CODEX — SVG glyphs, ambient glow, honest copy
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.codex}>
         <div className="container">
           <div className={styles.codexHeaderRow}>
             <div>
-              <p className={styles.sectionLabel}>Mastery Codex</p>
-              <h2 className="t-heading">Defeat bugs. Collect creatures.</h2>
-              <p className={styles.codexSub}>
-                Every challenge you solve drops a creature into your Codex. Rare patterns unlock Legendary creatures.
-                Your collection becomes a living record of your engineering depth.
+              <p className={styles.eyebrow}>Mastery Codex</p>
+              <h2 className={styles.sectionHeadline}>Every bug you kill becomes lore.</h2>
+              <p className={styles.sectionSub}>
+                Solve challenges to capture creatures. Rare engineering patterns unlock Legendary creatures.
+                Your collection is living proof of engineering depth — not just solved problems.
               </p>
             </div>
             <Link href="/codex" className={styles.codexCta}>Explore Codex →</Link>
           </div>
+
           <div className={styles.codexGrid}>
             {CREATURES_PREVIEW.map((c, i) => (
               <div
@@ -481,62 +412,78 @@ export default function Home() {
                 className={styles.codexCard}
                 style={{ '--creature-color': c.color } as React.CSSProperties}
               >
-                <div className={styles.codexEmoji}>{c.emoji}</div>
+                <div className={styles.codexGlow} />
+                <div className={styles.codexGlyph}>{c.glyph}</div>
                 <div className={styles.codexName}>{c.name}</div>
-                <div className={styles.codexRarity} style={{ color: c.color }}>{c.rarity}</div>
+                <div className={styles.codexRarity}>{c.rarity}</div>
               </div>
             ))}
           </div>
-          <div className={styles.codexFooter}>31 creatures across 10 engineering archetypes</div>
+          <div className={styles.codexFootnote}>31 creatures across 10 engineering archetypes</div>
         </div>
       </section>
 
-      {/* -- Weekly Raid ---------------------------------------------------- */}
-      <section className={styles.raidSection}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          WEEKLY RAID — Live broadcast treatment
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.raid}>
+        <div className={styles.raidAmbient} aria-hidden="true" />
         <div className="container">
           <div className={styles.raidInner}>
             <div className={styles.raidLeft}>
               <div className={styles.raidEyebrow}>
-                <span className={styles.raidDot} />Weekly Raid — LIVE
+                <span className={styles.raidLiveDot} />
+                Weekly Raid — LIVE
               </div>
               <h2 className={styles.raidTitle}>
-                847 engineers are<br />responding to a P0 right now.
+                <span className={styles.dimText}>847 engineers</span> are responding
+                <br />to a P0 right now.
               </h2>
               <p className={styles.raidDesc}>
                 Every Friday, a global P0 incident drops. Every engineer on the platform
                 responds together. The fastest resolvers earn Legendary drops and XP bonuses.
+                Engineering is competitive — own it.
               </p>
               <div className={styles.raidStats}>
-                <div className={styles.raidStat}>
-                  <div className={styles.raidStatVal}>847</div>
-                  <div className={styles.raidStatLabel}>Engineers in</div>
-                </div>
-                <div className={styles.raidStat}>
-                  <div className={styles.raidStatVal}>37%</div>
-                  <div className={styles.raidStatLabel}>Solve rate</div>
-                </div>
-                <div className={styles.raidStat}>
-                  <div className={styles.raidStatVal}>2d 23h</div>
-                  <div className={styles.raidStatLabel}>Time left</div>
-                </div>
+                {[
+                  { val: '847', label: 'Engineers in' },
+                  { val: '37%', label: 'Solve rate' },
+                  { val: '2d 23h', label: 'Time left' },
+                ].map(s => (
+                  <div key={s.label} className={styles.raidStat}>
+                    <div className={styles.raidStatVal}>{s.val}</div>
+                    <div className={styles.raidStatLabel}>{s.label}</div>
+                  </div>
+                ))}
               </div>
               <Link href="/raid" className={styles.raidCta}>Join the Raid →</Link>
             </div>
+
             <div className={styles.raidRight}>
               <div className={styles.raidTerminal}>
                 <div className={styles.raidTermBar}>
-                  <span className={styles.raidTermDot} style={{ background: '#ef4444' }} />
-                  <span className={styles.raidTermDot} style={{ background: '#f59e0b' }} />
-                  <span className={styles.raidTermDot} style={{ background: '#62de61' }} />
+                  <span className={styles.termDot} style={{ background: '#ef4444' }} />
+                  <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+                  <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
                   <span className={styles.raidTermTitle}>Global Payment Rail Meltdown</span>
                   <span className={styles.raidLiveBadge}>⬤ LIVE</span>
                 </div>
                 <div className={styles.raidLog}>
-                  <div className={styles.raidLogLine}><span className={styles.logError}>[P0]</span> payment-processor: latency 34,212ms · 6 regions</div>
-                  <div className={styles.raidLogLine}><span className={styles.logError}>[FATAL]</span> pgbouncer: pool exhausted 14500/14500</div>
-                  <div className={styles.raidLogLine}><span className={styles.logWarn}>[WARN]</span> stripe-ingest: 14,832 webhook events / 60s</div>
-                  <div className={styles.raidLogLine}><span className={styles.logError}>[ERROR]</span> webhook-dispatcher: no concurrency limit set</div>
-                  <div className={styles.raidLogLine}><span className={styles.cliPrompt}>$</span> <span className={styles.cliCursor} /></div>
+                  {[
+                    { level: 'P0',    color: 'oklch(0.62 0.22 27)', msg: 'payment-processor: latency 34,212ms · 6 regions' },
+                    { level: 'FATAL', color: 'oklch(0.62 0.22 27)', msg: 'pgbouncer: pool exhausted 14500/14500' },
+                    { level: 'WARN',  color: 'oklch(0.78 0.16 75)', msg: 'stripe-ingest: 14,832 webhook events / 60s' },
+                    { level: 'ERROR', color: 'oklch(0.62 0.22 27)', msg: 'webhook-dispatcher: no concurrency limit set' },
+                  ].map((l, i) => (
+                    <div key={i} className={styles.raidLogLine}>
+                      <span className={styles.raidLogLevel} style={{ color: l.color }}>[{l.level}]</span>
+                      {l.msg}
+                    </div>
+                  ))}
+                  <div className={styles.raidLogLine}>
+                    <span className={styles.termPrompt}>$</span>
+                    <span className={styles.termCursor} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -544,88 +491,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* -- Leaderboard Teaser --------------------------------------------- */}
-      <section className={styles.lbSection}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          TESTIMONIALS — Deterministic gradient hashes, "You" anchor
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.testimonials}>
         <div className="container">
-          <div className={styles.lbHeaderRow}>
-            <div>
-              <p className={styles.sectionLabel}>Leaderboard</p>
-              <h2 className="t-heading">Engineering is competitive. Own it.</h2>
-            </div>
-            <Link href="/leaderboard" className={styles.lbCta}>See full leaderboard →</Link>
-          </div>
-          <div className={styles.lbPodium}>
-            {[
-              { rank: 2, name: 'Priya R.',    xp: '41,200', color: '#94a3b8', initials: 'PR', height: 110 },
-              { rank: 1, name: 'Siddharth G.',xp: '58,900', color: '#f59e0b', initials: 'SG', height: 140 },
-              { rank: 3, name: 'Alex K.',     xp: '33,400', color: '#cd7f32', initials: 'AK', height: 90  },
-            ].map(p => (
-              <div key={p.rank} className={styles.lbEntry} style={{ '--lb-color': p.color } as React.CSSProperties}>
-                <div className={styles.lbAvatar} style={{ background: p.color }}>
-                  {p.initials}
+          <p className={styles.eyebrow} style={{ textAlign: 'center' }}>What engineers say</p>
+          <h2 className={styles.sectionHeadline} style={{ textAlign: 'center' }}>Real quotes. No made-up testimonials.</h2>
+          <div className={styles.testimonialsGrid}>
+            {TESTIMONIALS.map((t, i) => (
+              <div key={i} className={styles.testimonialCard}>
+                <div className={styles.testimonialHeader}>
+                  <div
+                    className={styles.testimonialAvatar}
+                    style={{ background: `linear-gradient(135deg, oklch(0.62 0.18 ${(i * 80 + 120) % 360}), oklch(0.62 0.18 ${(i * 80 + 200) % 360}))` }}
+                  >
+                    {t.name.split(' ').map(p => p[0]).join('')}
+                  </div>
+                  <div>
+                    <div className={styles.testimonialName}>{t.name}</div>
+                    <div className={styles.testimonialSub}>{t.sub}</div>
+                  </div>
+                  <div className={styles.xLogo}>𝕏</div>
                 </div>
-                <div className={styles.lbName}>{p.name}</div>
-                <div className={styles.lbXp}>{p.xp} XP</div>
-                <div className={styles.lbBar} style={{ height: p.height }} />
-                <div className={styles.lbRankNum} style={{ background: p.color }}>#{p.rank}</div>
+                <p className={styles.testimonialBody}>&ldquo;{t.body}&rdquo;</p>
+                <div className={styles.testimonialHandle}>{t.handle}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* -- Roles / Tracks ------------------------------------------------- */}
-      <section className={styles.roles}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          INTERACTIVE DEMO — Give user agency, interaction > broadcast
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.demo} id="demo">
         <div className="container">
-          <p className={styles.sectionLabel}>Career tracks</p>
-          <h2 className="t-heading" style={{ textAlign: 'center' }}>
-            Built for where you are.<br />Designed for where you&apos;re going.
-          </h2>
-          <div className={styles.rolesGrid}>
-            {[
-              {
-                track: 'Entry level · 0–2 yrs', title: 'Junior',
-                gradient: styles.roleGradient1,
-                features: ['Contextual DSA workspace','PR review basics','War Room Level 1','Behavioral scenarios'],
-                href: '/challenges?track=junior',
-              },
-              {
-                track: 'Mid level · 2–5 yrs', title: 'Mid',
-                gradient: styles.roleGradient2,
-                features: ['Everything in Junior','Architecture Autopsy','System Design fundamentals','Company-specific tracks'],
-                href: '/challenges?track=mid',
-              },
-              {
-                track: 'Senior level · 5+ yrs', title: 'Senior',
-                gradient: styles.roleGradient3,
-                features: ['Everything in Mid','Tech Debt Tribunal','Advanced system design','Staff-level War Room scenarios'],
-                href: '/challenges?track=senior',
-              },
-            ].map(r => (
-              <div key={r.title} className={`${styles.roleCard} ${r.gradient}`}>
-                <div className={styles.roleTrack}>{r.track}</div>
-                <div className={styles.roleTitle}>{r.title}</div>
-                <ul className={styles.roleFeatures}>
-                  {r.features.map(f => <li key={f}>✓ {f}</li>)}
-                </ul>
-                <Link href={r.href} className={styles.roleBtn}>Explore Track →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* -- War Room Demo -------------------------------------------------- */}
-      <section id="demo" className={styles.demo}>
-        <div className="container">
-          <p className={styles.sectionLabel}>Try it now</p>
-          <h2 className={`t-heading ${styles.demoH}`}>
+          <p className={styles.eyebrow} style={{ textAlign: 'center' }}>Try it now</p>
+          <h2 className={styles.sectionHeadline} style={{ textAlign: 'center' }}>
             &ldquo;Any AI can pass a coding test.<br />Only you can own the incident.&rdquo;
           </h2>
-          <div className={styles.demoBox}>
+
+          <div className={styles.demoCard}>
             <div className={styles.demoAlert}>
               <span className={styles.demoAlertDot} />
-              [CRITICAL] 2026-04-03 14:31:22 · Payment Gateway Latency &gt; 5000ms · $2.4M/hr revenue impact
+              <span>[CRITICAL] 2026-04-03 14:31 · Payment Gateway &gt;5000ms · $2.4M/hr impact</span>
             </div>
             <p className={styles.demoQ}>
               A massive traffic spike hits your API. Database CPU is at 99%. P99 latency is failing checkouts.
@@ -635,9 +545,9 @@ export default function Home() {
               {[
                 { id: 1, text: 'A.  Restart the database cluster' },
                 { id: 2, text: 'B.  Enable the emergency request rate limiter' },
-                { id: 3, text: 'C.  SSH into the primary db and run EXPLAIN on active queries' },
+                { id: 3, text: 'C.  SSH into primary db and run EXPLAIN on active queries' },
               ].map(({ id, text }) => (
-                <div
+                <button
                   key={id}
                   className={`${styles.demoOption}
                     ${demoSelected === id && id === 2 ? styles.demoOptionCorrect : ''}
@@ -645,19 +555,19 @@ export default function Home() {
                     ${demoSelected !== null && demoSelected !== id ? styles.demoOptionDimmed : ''}`}
                   onClick={() => setDemoSelected(id)}
                 >
-                  {text}
+                  <span>{text}</span>
                   {demoSelected === id && id === 2 && <span className={styles.demoCheck}>✓</span>}
-                  {demoSelected === id && id !== 2 && <span className={styles.demoX}>✗</span>}
-                </div>
+                  {demoSelected === id && id !== 2 && <span className={styles.demoWrong}>✗</span>}
+                </button>
               ))}
             </div>
             {demoSelected !== null && (
               <div className={`${styles.demoResult} ${demoSelected === 2 ? styles.demoResultCorrect : styles.demoResultWrong}`}>
                 {demoSelected === 2
-                  ? '✓ Correct. Shedding load is the fastest way to save the database and allow valid requests to succeed. Debug the root cause once the system is stable.'
+                  ? '✓ Correct. Shedding load is the fastest way to save the database and allow valid requests to succeed. Debug root cause once stable.'
                   : demoSelected === 1
-                    ? '✗ Restarting under load will likely cause a cache stampede or connection storm upon reboot, worsening the issue.'
-                    : '✗ While investigating is good, the system is actively failing checkouts. Mitigate impact before deep debugging.'}
+                    ? '✗ Restarting under load causes a cache stampede or connection storm upon reboot — worsens the incident.'
+                    : '✗ While investigating is good, the system is actively failing. Mitigate impact first, then debug root cause.'}
               </div>
             )}
             <div className={styles.demoCta}>
@@ -667,43 +577,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* -- Testimonials --------------------------------------------------- */}
-      <section className={styles.social}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          PRICING — Honest, no fake urgency, monthly equivalents
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.pricing} id="pricing">
         <div className="container">
-          <p className={styles.sectionLabel}>What engineers say</p>
-          <h2 className="t-heading" style={{ textAlign: 'center' }}>Real quotes. No made-up testimonials.</h2>
-          <div className={styles.socialGrid}>
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className={styles.tweet}>
-                <div className={styles.tweetHeader}>
-                  <div className={styles.tweetAvatar} style={{ background: `hsl(${i * 80 + 120}, 60%, 55%)` }}>
-                    {t.name.split(' ').map(p => p[0]).join('')}
-                  </div>
-                  <div>
-                    <div className={styles.tweetName}>{t.name}</div>
-                    <div className={styles.tweetUser}>{t.sub}</div>
-                  </div>
-                  <div className={styles.tweetX}>𝕏</div>
-                </div>
-                <div className={styles.tweetStars}>{'★'.repeat(t.stars)}</div>
-                <div className={styles.tweetBody}>&ldquo;{t.body}&rdquo;</div>
-                <div className={styles.tweetHandle}>{t.handle}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          <p className={styles.eyebrow} style={{ textAlign: 'center' }}>Pricing</p>
+          <h2 className={styles.sectionHeadline} style={{ textAlign: 'center' }}>Simple. Honest. No dark patterns.</h2>
 
-      {/* -- Pricing -------------------------------------------------------- */}
-      <section id="pricing" className={styles.pricing}>
-        <div className="container">
-          <p className={styles.sectionLabel}>Pricing</p>
-          <h2 className="t-heading" style={{ textAlign: 'center' }}>Simple. Honest. No dark patterns.</h2>
           <div className={styles.pricingGrid}>
+
             <div className={styles.priceCard}>
-              <div className={styles.priceTitle}>🌱 Free</div>
+              <div className={styles.priceTitle}>Free</div>
               <div className={styles.priceSub}>Explore the platform</div>
-              <div className={styles.priceValue}>$0<span className={styles.pricePer}> forever</span></div>
+              <div className={styles.priceAmt}>$0<span className={styles.pricePer}> forever</span></div>
               <ul className={styles.priceFeatures}>
                 <li>10 challenges (sampler set)</li>
                 <li>2 War Room attempts</li>
@@ -711,62 +598,90 @@ export default function Home() {
                 <li>Streak tracking</li>
                 <li>Public profile &amp; rank card</li>
               </ul>
-              <Link href="/signup" className={styles.priceBtn}>Start for free</Link>
+              <Link href="/signup" className={styles.priceBtnFree}>Start for free</Link>
             </div>
-            <div className={`${styles.priceCard} ${styles.priceCardAccent}`}>
-              <div className={styles.pricePopular}>Most Popular</div>
-              <div className={styles.priceTitle}>⚡ Pro</div>
+
+            <div className={`${styles.priceCard} ${styles.priceCardPro}`}>
+              <div className={styles.priceTitle}>Pro</div>
               <div className={styles.priceSub}>Serious interview prep</div>
-              <div className={styles.priceValue}>
+              <div className={styles.priceAmt}>
                 $399<span className={styles.pricePer}>/yr</span>
               </div>
+              <div className={styles.priceEquiv}>= $33/mo billed annually</div>
               <ul className={styles.priceFeatures}>
                 <li>Everything in Free</li>
                 <li><strong>All 150+ challenges</strong></li>
                 <li>Unlimited War Rooms</li>
                 <li>Advanced System Design simulator</li>
                 <li>Company-specific interview tracks</li>
-                <li>12-week roadmap</li>
+                <li>12-week structured roadmap</li>
               </ul>
-              <Link href="/pricing" className={styles.priceBtnAccent}>Upgrade to Pro →</Link>
+              <Link href="/pricing" className={styles.priceBtnPro}>Upgrade to Pro →</Link>
             </div>
-            <div className={`${styles.priceCard} ${styles.priceCardLegend}`}>
-              <div className={styles.priceLegendBadge}>🔮 Legendary</div>
+
+            <div className={`${styles.priceCard} ${styles.priceCardLegendary}`}>
               <div className={styles.priceTitle}>Legendary</div>
               <div className={styles.priceSub}>For the obsessive few</div>
-              <div className={`${styles.priceValue} ${styles.priceValueGold}`}>
+              <div className={`${styles.priceAmt} ${styles.priceAmtGold}`}>
                 $799<span className={styles.pricePer}>/yr</span>
               </div>
+              <div className={styles.priceEquiv}>= $67/mo billed annually</div>
               <ul className={styles.priceFeatures}>
                 <li>Everything in Pro</li>
                 <li><strong>Shiny creature variants</strong></li>
-                <li>1-on-1 mock interviews (× 2/mo)</li>
+                <li>1-on-1 mock interviews (×2/mo)</li>
                 <li>Priority Discord support</li>
                 <li>Founding member badge</li>
               </ul>
-              <Link href="/pricing" className={styles.priceBtnLegend}>Go Legendary →</Link>
+              <Link href="/pricing" className={styles.priceBtnLegendary}>Go Legendary →</Link>
             </div>
+
           </div>
-          <p className={styles.pricingNote}>All plans include a 7-day money-back guarantee. <Link href="/pricing">See full feature comparison →</Link></p>
+          <p className={styles.pricingNote}>
+            All plans include a 7-day money-back guarantee.{' '}
+            <Link href="/pricing" style={{ color: 'oklch(0.72 0.18 142)' }}>Full comparison →</Link>
+          </p>
         </div>
       </section>
 
-      {/* -- Footer --------------------------------------------------------- */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          FINAL CTA
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className={styles.finalCta}>
+        <div className={styles.finalCtaGlow} />
+        <div className="container">
+          <div className={styles.finalCtaInner}>
+            <p className={styles.eyebrow} style={{ textAlign: 'center' }}>Ready?</p>
+            <h2 className={styles.finalCtaHeadline}>
+              <span className={styles.dimText}>A better engineer</span>
+              <br />
+              <span className={styles.finalCtaAccent}>starts today.</span>
+            </h2>
+            <p className={styles.finalCtaBody}>
+              Join 4,200+ engineers who stopped grinding LeetCode<br />and started training like the job actually works.
+            </p>
+            <Link href="/signup" className={styles.heroCta} id="final-cta">
+              Start free — no card needed →
+            </Link>
+            <p className={styles.finalCtaHint}>Free forever. Upgrade when you&apos;re ready.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className="container">
           <div className={styles.footerInner}>
             <div className={styles.footerBrand}>
-              <div className={styles.footerLogo}>
-                engprep<span className={styles.navLogoCursor} />
-              </div>
-              <div className={styles.footerTag}>Real engineering. Real interviews. Real growth.</div>
+              <div className={styles.footerLogo}>engprep<span className={styles.navBrandCursor} /></div>
+              <div className={styles.footerTagline}>Real engineering. Real interviews. Real growth.</div>
               <div className={styles.footerSocials}>
                 <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className={styles.footerSocial}>𝕏</a>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.footerSocial}>GH</a>
-                <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" className={styles.footerSocial}>DC</a>
+                <a href="https://github.com"  target="_blank" rel="noopener noreferrer" className={styles.footerSocial}>GH</a>
+                <a href="https://discord.gg"  target="_blank" rel="noopener noreferrer" className={styles.footerSocial}>DC</a>
               </div>
             </div>
-            <div className={styles.footerLinks}>
+            <div className={styles.footerCol}>
               <h4>Practice</h4>
               <ul>
                 <li><Link href="/challenges">Challenges</Link></li>
@@ -775,7 +690,7 @@ export default function Home() {
                 <li><Link href="/codex">Mastery Codex</Link></li>
               </ul>
             </div>
-            <div className={styles.footerLinks}>
+            <div className={styles.footerCol}>
               <h4>Account</h4>
               <ul>
                 <li><Link href="/dashboard">Dashboard</Link></li>
@@ -797,6 +712,140 @@ export default function Home() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/* ─── Visual Components ───────────────────────────────────────────────────── */
+
+function WarRoomVisual() {
+  return (
+    <div className={styles.visualCard}>
+      <div className={styles.vcBar}>
+        <span className={styles.termDot} style={{ background: '#ef4444' }} />
+        <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+        <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
+        <span className={styles.vcTitle}>war-room — P0 incident</span>
+        <span className={styles.vcLive}>⬤ LIVE</span>
+      </div>
+      <div className={styles.vcBody}>
+        <div className={styles.incidentAlert}>
+          <span className={styles.incidentDot} />
+          ENG-911: Checkout failure · 12% error rate · Deploy at 14:28
+        </div>
+        <div className={styles.metricsRow}>
+          {[
+            { l: 'Error Rate',  v: '12.4%',  crit: true },
+            { l: 'P99 Latency', v: '2.4s',   crit: true },
+            { l: 'Cache Hits',  v: '31%',    crit: false },
+            { l: 'DB CPU',      v: '97%',    crit: true },
+          ].map(m => (
+            <div key={m.l} className={`${styles.metricBox} ${m.crit ? styles.metricBoxCrit : ''}`}>
+              <div className={styles.metricLabel}>{m.l}</div>
+              <div className={styles.metricValue}>{m.v}</div>
+            </div>
+          ))}
+        </div>
+        <div className={styles.logBlock}>
+          <div className={styles.logLine}><span style={{ color: 'oklch(0.78 0.16 75)' }}>[WARN]</span>  14:31:02 · Cache eviction rate exceeded</div>
+          <div className={styles.logLine}><span style={{ color: 'oklch(0.62 0.22 27)' }}>[ERROR]</span> 14:31:45 · DB connection pool exhausted (512/512)</div>
+          <div className={styles.logLine}><span style={{ color: 'oklch(0.62 0.22 27)' }}>[FATAL]</span> 14:31:57 · payment-processor-3: OOM killed</div>
+          <div className={styles.logLine}><span className={styles.termPrompt}>$</span> <span className={styles.termCursor} /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PRReviewVisual() {
+  return (
+    <div className={styles.visualCard}>
+      <div className={styles.vcBar}>
+        <span className={styles.termDot} style={{ background: '#ef4444' }} />
+        <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+        <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
+        <span className={styles.vcTitle}>auth/session.ts — spot the vulnerability</span>
+      </div>
+      <div className={styles.vcBody}>
+        {[
+          { n: 12, type: '',        code: 'export async function createSession(userId: string) {' },
+          { n: 13, type: '',        code: '  const token = Math.random().toString(36);' },
+          { n: 14, type: 'removed', code: '  await db.sessions.insert({ userId, token, expires: Date.now() + 86400000 });' },
+          { n: 15, type: 'added',   code: '  await db.sessions.insert({ userId, token, expires: Date.now() + 86400000 * 30 });' },
+          { n: 16, type: '',        code: '  return token;' },
+          { n: 17, type: '',        code: '}' },
+        ].map((line, i) => (
+          <div key={i} className={`${styles.diffLine} ${line.type === 'removed' ? styles.diffRemoved : line.type === 'added' ? styles.diffAdded : ''}`}>
+            <span className={styles.diffNum}>{line.n}</span>
+            <span className={styles.diffSign}>{line.type === 'removed' ? '−' : line.type === 'added' ? '+' : ' '}</span>
+            <span className={styles.diffCode}>{line.code}</span>
+          </div>
+        ))}
+        <div className={styles.prHint}>→ Two vulnerabilities. Can you find them?</div>
+      </div>
+    </div>
+  );
+}
+
+function SystemDesignVisual() {
+  const NODES = [
+    { label: 'Client',      x: 6,  y: 40, color: 'oklch(0.62 0.18 240)' },
+    { label: 'CDN',         x: 28, y: 14, color: 'oklch(0.62 0.18 290)' },
+    { label: 'API Gateway', x: 50, y: 40, color: 'oklch(0.72 0.18 142)' },
+    { label: 'Redis',       x: 72, y: 16, color: 'oklch(0.78 0.16 75)'  },
+    { label: 'Postgres',    x: 72, y: 62, color: 'oklch(0.62 0.22 27)'  },
+  ];
+  return (
+    <div className={styles.visualCard}>
+      <div className={styles.vcBar}>
+        <span className={styles.termDot} style={{ background: '#ef4444' }} />
+        <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+        <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
+        <span className={styles.vcTitle}>system-design canvas</span>
+      </div>
+      <div className={styles.vcBody} style={{ position: 'relative', minHeight: 160 }}>
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line x1="14" y1="43" x2="30" y2="19" stroke="rgba(255,255,255,0.10)" strokeWidth="0.6" />
+          <line x1="14" y1="45" x2="52" y2="45" stroke="rgba(255,255,255,0.10)" strokeWidth="0.6" />
+          <line x1="58" y1="43" x2="73" y2="21" stroke="rgba(255,255,255,0.10)" strokeWidth="0.6" />
+          <line x1="58" y1="47" x2="73" y2="64" stroke="rgba(255,255,255,0.10)" strokeWidth="0.6" />
+        </svg>
+        {NODES.map(n => (
+          <div key={n.label} className={styles.sysNode} style={{ left: `${n.x}%`, top: `${n.y}%`, borderColor: n.color, color: n.color }}>
+            {n.label}
+          </div>
+        ))}
+        <div className={styles.sysPrompt}>Design a URL shortener at 100K writes/sec</div>
+      </div>
+    </div>
+  );
+}
+
+function DSAVisual() {
+  return (
+    <div className={styles.visualCard}>
+      <div className={styles.vcBar}>
+        <span className={styles.termDot} style={{ background: '#ef4444' }} />
+        <span className={styles.termDot} style={{ background: '#f59e0b' }} />
+        <span className={styles.termDot} style={{ background: 'oklch(0.72 0.18 142)' }} />
+        <span className={styles.vcTitle}>contextual-dsa — on-call</span>
+      </div>
+      <div className={styles.vcBody}>
+        <div className={styles.dsaScenario}>
+          You&apos;re on-call at 2am. A payment retry queue is growing exponentially.
+          Identify duplicated payment IDs before the queue exhausts memory.
+        </div>
+        <div className={styles.dsaCode}>
+          <span style={{color:'#8a8a96'}}>{'// Input: ["p-001","p-003","p-001","p-007","p-003"]'}</span>{'\n'}
+          <span style={{color:'#8a8a96'}}>{'// Output: ["p-001","p-003"] — O(n log n)'}</span>{'\n\n'}
+          <span style={{color:'oklch(0.62 0.18 290)'}}>function </span>
+          <span style={{color:'oklch(0.62 0.18 240)'}}>findDuplicates</span>
+          {'(ids: string[]): string[] {\n'}
+          {'  '}
+          <span style={{color:'#8a8a96'}}>{'// your solution here'}</span>
+          {'\n}'}
+        </div>
+      </div>
     </div>
   );
 }
